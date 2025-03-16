@@ -25,7 +25,7 @@ This method of testing is only available for Android versions below 12. Alternat
 
     - **Generate the APKs:**
         ```bash
-        java -jar bundletool-all-<version>.jar build-apks --bundle=/build/app/outputs/bundle/release/app-release.aab --output=<your_temp_dir>/app-release-pad-test.apks --local-testing
+        java -jar bundletool-all-<version>.jar build-apks --bundle=build/app/outputs/bundle/release/app-release.aab --output=<your_temp_dir>/app-release-pad-test.apks --local-testing
         ```
 
     - **Install the APKs on your device:**
