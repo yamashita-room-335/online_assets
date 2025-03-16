@@ -278,14 +278,14 @@ class OnDemandResourcesHostApiMethods {
     }
   }
 
-  Future<String?> getAbsoluteAssetPath(String tag, String relativeAssetPath) async {
+  Future<String?> getAbsoluteAssetPath(String tag, String relativeAssetPath, {int extensionLevel = 1, }) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.getAbsoluteAssetPath$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tag, relativeAssetPath]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tag, relativeAssetPath, extensionLevel]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {

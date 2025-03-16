@@ -22,7 +22,11 @@ abstract class OnDemandResourcesHostApiMethods {
   @async
   IOSOnDemandResourcesPigeon beginAccessingResources(List<String> tags);
 
-  String? getAbsoluteAssetPath(String tag, String relativeAssetPath);
+  String? getAbsoluteAssetPath(
+    String tag,
+    String relativeAssetPath, {
+    int extensionLevel = 1,
+  });
 }
 
 /// Holder

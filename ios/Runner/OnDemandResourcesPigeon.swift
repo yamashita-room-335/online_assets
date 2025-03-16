@@ -65,7 +65,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
         var resourceMap: [String: IOSOnDemandResourcePigeon] = [:]
         for tag in tags {
             if resourceRequests[tag] == nil {
-                let request = NSBundleResourceRequest(tags: [tag])
+                let request = NSBundleResourceRequest(tags: [tag], bundle: .main)
                 resourceRequests[tag] = (request, false)
             }
 
@@ -171,7 +171,9 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
     }
 
     /// Get the absolute path of the asset
-    func getAbsoluteAssetPath(tag: String, relativeAssetPath: String) throws -> String? {
+    func getAbsoluteAssetPath(tag: String, relativeAssetPath: String, extensionLevel: Int64) throws
+        -> String?
+    {
         print("getAbsoluteAssetPath(tag: \(tag), relativeAssetPath: \(relativeAssetPath))")
         guard let (request, _) = resourceRequests[tag] else {
             return nil
@@ -187,10 +189,13 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
 
             // Try to get the extension
             let components = relativeAssetPath.components(separatedBy: ".")
-            if components.count > 1 {
-                let name = components.dropLast().joined(separator: ".")
+            if components.count > extensionLevel {
+                let pathWithoutExt = components.dropLast(Int(truncatingIfNeeded: extensionLevel))
+                    .joined(separator: ".")
                 let ext = components.last
-                if let resourceURL = Bundle.main.url(forResource: name, withExtension: ext) {
+                if let resourceURL = Bundle.main.url(
+                    forResource: pathWithoutExt, withExtension: ext)
+                {
                     return resourceURL.path
                 }
             }
