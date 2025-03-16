@@ -36,6 +36,9 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
         forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?,
         context: UnsafeMutableRawPointer?
     ) {
+        print(
+            "observeValue(keyPath: \(String(describing: keyPath)), of: \(String(describing: object)), change: \(String(describing: change)), context: \(String(describing: context)))"
+        )
         switch keyPath {
         case progressKeyPath:
             guard let progress = object as? Progress else {
@@ -43,7 +46,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
             }
 
             // Find the corresponding tag
-            for (tag, (request, calledBeginAccessingResources)) in resourceRequests
+            for (tag, (request, _)) in resourceRequests
             where request.progress == progress {
                 let resource = IOSOnDemandResourcePigeon.fromIOS(
                     tag: tag, request: request, overrideProgress: progress)
@@ -58,6 +61,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
 
     /// Obtains NSBundleResourceRequest information for the specified tag.
     func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon {
+        print("requestNSBundleResourceRequests(tags: \(tags))")
         var resourceMap: [String: IOSOnDemandResourcePigeon] = [:]
         for tag in tags {
             if resourceRequests[tag] == nil {
@@ -65,7 +69,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
                 resourceRequests[tag] = (request, false)
             }
 
-            let (request, calledBeginAccessingResources) = resourceRequests[tag]!
+            let (request, _) = resourceRequests[tag]!
             // Set up progress monitoring
             request.progress.addObserver(
                 self, forKeyPath: progressKeyPath, options: [.new], context: nil)
@@ -81,6 +85,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
     func beginAccessingResources(
         tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void
     ) {
+        print("beginAccessingResources(tags: \(tags)) start")
         // Returns an error if the value contained in tags does not exist in requestsToFetch
         guard tags.allSatisfy(resourceRequests.keys.contains) else {
             completion(
@@ -103,15 +108,21 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
         var resourceMap: [String: IOSOnDemandResourcePigeon] = [:]
 
         for (tag, (request, calledBeginAccessingResources)) in requestsToFetch {
-            group.enter()
-
             // Filter down resources to fetch
             // Create each time because calling beginAccessingResources() multiple times with the same NSBundleResourceRequest will result in an exception.
-            let request = NSBundleResourceRequest(tags: [tag])
+            if calledBeginAccessingResources {
+                continue
+            }
+            self.resourceRequests[tag] = (request, true)
+
+            group.enter()
 
             // Downloaded or not
+            print("request.conditionallyBeginAccessingResources")
             request.conditionallyBeginAccessingResources { (condition) in
+                print("beginAccessingResources tag: \(tag), condition: \(condition)")
                 if condition {
+                    print("existing resource, tag: \(tag)")
                     let resource = IOSOnDemandResourcePigeon.fromIOS(
                         tag: tag, request: request, condition: condition)
 
@@ -119,17 +130,19 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
 
                     group.leave()
                 } else if !calledBeginAccessingResources {
-                    self.resourceRequests[tag] = (request, true)
                     // ダウンロード開始
+                    print("request.beginAccessingResources tag: \(tag) start")
                     request.beginAccessingResources { (error) in
                         defer { group.leave() }
 
                         if let error = error as? NSError {
+                            print("tag: \(tag) error: \(error)")
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, error: error, condition: condition)
 
                             resourceMap[tag] = resource
                         } else {
+                            print("download finish tag: \(tag)")
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, condition: condition)
 
@@ -137,6 +150,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
                         }
                     }
                 } else {
+                    print("before call request.beginAccessingResources tag: \(tag). Nothing to do")
                     // Nothing to do here because the download is called elsewhere
                     let resource = IOSOnDemandResourcePigeon.fromIOS(
                         tag: tag, request: request, condition: condition)
@@ -150,6 +164,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
 
         // Call completion when all resource access processing is complete
         group.notify(queue: .main) {
+            print("beginAccessingResources(tags: \(tags)) notify")
             let response = IOSOnDemandResourcesPigeon(resourceMap: resourceMap)
             completion(.success(response))
         }
@@ -157,7 +172,8 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
 
     /// Get the absolute path of the asset
     func getAbsoluteAssetPath(tag: String, relativeAssetPath: String) throws -> String? {
-        guard let (request, calledBeginAccessingResources) = resourceRequests[tag] else {
+        print("getAbsoluteAssetPath(tag: \(tag), relativeAssetPath: \(relativeAssetPath))")
+        guard let (request, _) = resourceRequests[tag] else {
             return nil
         }
 
