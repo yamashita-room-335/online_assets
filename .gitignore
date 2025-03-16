@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# BundleTool to be used as Asset Delivery test for Android
+bundletool-all-*.jar
