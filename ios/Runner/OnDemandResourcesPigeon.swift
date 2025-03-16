@@ -9,7 +9,9 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
     private let progressKeyPath = "fractionCompleted"
 
     // Map holding resource requests
-    private var resourceRequests: [String: NSBundleResourceRequest] = [:]
+    // Multiple calls to beginAccessingResources() on the same NSBundleResourceRequest will result in an exception.
+    // Therefore, calls to beginAccessingResources() should be held as true.
+    private var resourceRequests: [String: (NSBundleResourceRequest, Bool)] = [:]
 
     // Sink for stream
     private var eventSink: PigeonEventSink<IOSOnDemandResourcePigeon>? = nil
@@ -41,7 +43,8 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
             }
 
             // Find the corresponding tag
-            for (tag, request) in resourceRequests where request.progress == progress {
+            for (tag, (request, calledBeginAccessingResources)) in resourceRequests
+            where request.progress == progress {
                 let resource = IOSOnDemandResourcePigeon.fromIOS(
                     tag: tag, request: request, overrideProgress: progress)
                 // Send progress information
@@ -59,10 +62,10 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
         for tag in tags {
             if resourceRequests[tag] == nil {
                 let request = NSBundleResourceRequest(tags: [tag])
-                resourceRequests[tag] = request
+                resourceRequests[tag] = (request, false)
             }
 
-            let request = resourceRequests[tag]!
+            let (request, calledBeginAccessingResources) = resourceRequests[tag]!
             // Set up progress monitoring
             request.progress.addObserver(
                 self, forKeyPath: progressKeyPath, options: [.new], context: nil)
@@ -99,8 +102,12 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
         // Map to store results
         var resourceMap: [String: IOSOnDemandResourcePigeon] = [:]
 
-        for (tag, request) in requestsToFetch {
+        for (tag, (request, calledBeginAccessingResources)) in requestsToFetch {
             group.enter()
+
+            // Filter down resources to fetch
+            // Create each time because calling beginAccessingResources() multiple times with the same NSBundleResourceRequest will result in an exception.
+            let request = NSBundleResourceRequest(tags: [tag])
 
             // Downloaded or not
             request.conditionallyBeginAccessingResources { (condition) in
@@ -111,7 +118,8 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
                     resourceMap[tag] = resource
 
                     group.leave()
-                } else {
+                } else if !calledBeginAccessingResources {
+                    self.resourceRequests[tag] = (request, true)
                     // ダウンロード開始
                     request.beginAccessingResources { (error) in
                         defer { group.leave() }
@@ -128,6 +136,14 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
                             resourceMap[tag] = resource
                         }
                     }
+                } else {
+                    // Nothing to do here because the download is called elsewhere
+                    let resource = IOSOnDemandResourcePigeon.fromIOS(
+                        tag: tag, request: request, condition: condition)
+
+                    resourceMap[tag] = resource
+
+                    group.leave()
                 }
             }
         }
@@ -141,7 +157,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
 
     /// Get the absolute path of the asset
     func getAbsoluteAssetPath(tag: String, relativeAssetPath: String) throws -> String? {
-        guard let request = resourceRequests[tag] else {
+        guard let (request, calledBeginAccessingResources) = resourceRequests[tag] else {
             return nil
         }
 
