@@ -9,6 +9,8 @@ android {
     namespace = "com.kourokuroom.online_assets"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+    // https://developer.android.com/guide/playcore/asset-delivery/integrate-java#build_for_kotlin_and_java
+    assetPacks += listOf(":install_time_sample_pack")
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -44,7 +46,7 @@ flutter {
 }
 
 dependencies {
-    // https://developer.android.com/guide/playcore/asset-delivery/integrate-java?hl=ja#kts
+    // https://developer.android.com/guide/playcore/asset-delivery/integrate-java#kts
     implementation("com.google.android.play:asset-delivery:2.3.0")
     implementation("com.google.android.play:asset-delivery-ktx:2.3.0")
 }
