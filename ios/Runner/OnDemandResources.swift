@@ -2,9 +2,9 @@ import Flutter
 import Foundation
 
 /// Class that implements On-Demand Resource for iOS
-class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
+class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
 
-    private let logTag = "OnDemandResourcesPigeon"
+    private let logTag = "OnDemandResources"
 
     private let progressKeyPath = "fractionCompleted"
 
@@ -17,7 +17,7 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
     private var eventSink: PigeonEventSink<IOSOnDemandResourcePigeon>? = nil
 
     // Singleton
-    static let shared = OnDemandResourcesPigeon()
+    static let shared = OnDemandResources()
 
     private override init() {
         super.init()
@@ -178,27 +178,60 @@ class OnDemandResourcesPigeon: NSObject, OnDemandResourcesHostApiMethods {
         guard let (request, _) = resourceRequests[tag] else {
             return nil
         }
+        
+        guard request.progress.isFinished else {
+            return nil
+        }
+        
+        let fileManager = FileManager.default
+        let dir = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let subfolderURL = dir.appendingPathComponent(tag)
 
-        // Check if the resource is accessible
-        if request.progress.isFinished {
-            // ODR resources are located in ODR-related directories in Bundle.main
-            if let resourceURL = Bundle.main.url(forResource: relativeAssetPath, withExtension: nil)
-            {
-                return resourceURL.path
-            }
-
-            // Try to get the extension
-            let components = relativeAssetPath.components(separatedBy: ".")
-            if components.count > extensionLevel {
-                let pathWithoutExt = components.dropLast(Int(truncatingIfNeeded: extensionLevel))
-                    .joined(separator: ".")
-                let ext = components.last
-                if let resourceURL = Bundle.main.url(
-                    forResource: pathWithoutExt, withExtension: ext)
-                {
-                    return resourceURL.path
+        do {
+            try fileManager.createDirectory(
+                at: subfolderURL, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            print("fileManager.createDirectory error: \(error)")
+            return nil
+        }
+        
+        var relativeAssetPathWithoutExtension = relativeAssetPath
+        var assetExtension = ""
+        let components = relativeAssetPath.components(separatedBy: ".")
+        if components.count > extensionLevel {
+            relativeAssetPathWithoutExtension = components.dropLast(Int(truncatingIfNeeded: extensionLevel))
+                .joined(separator: ".")
+            assetExtension = relativeAssetPath.replacingOccurrences(of: "\(relativeAssetPathWithoutExtension).", with: "")
+        }
+        
+        print("relativeAssetPathWithoutExtension: \(relativeAssetPathWithoutExtension), assetExtension: \(assetExtension), tag: \(tag), dir: \(dir), subfolderURL: \(subfolderURL),")
+        if let image = UIImage(named: relativeAssetPathWithoutExtension) {
+            // Save image as PNG or JPG
+            let fileURL = subfolderURL.appendingPathComponent("\(relativeAssetPathWithoutExtension).\(assetExtension)")
+            if let imageData = image.pngData() {
+                do {
+                    print("image: \(image), fileURL: \(fileURL)")
+                    try imageData.write(to: fileURL)
+                    return fileURL.path
+                } catch {
+                    print("imageData.write error: \(error)")
+                    return nil
                 }
             }
+        } else if let asset = NSDataAsset(name: relativeAssetPathWithoutExtension) {
+            // Save as raw data for videos, sounds, etc.
+            let fileURL = subfolderURL.appendingPathComponent("\(relativeAssetPathWithoutExtension).\(assetExtension)")
+            do {
+                print("asset: \(asset), fileURL: \(fileURL)")
+                try asset.data.write(to: fileURL)
+                return fileURL.path
+            } catch {
+                print("asset.data.write error: \(error)")
+                return nil
+            }
+        } else {
+            print("Can not load asset \(relativeAssetPath) for tag: \(tag)")
+            return nil
         }
 
         return nil
@@ -210,11 +243,11 @@ class OnDemandResourcePigeonStreamHandler: StreamOnDemandResourceStreamHandler {
     override func onListen(
         withArguments arguments: Any?, sink: PigeonEventSink<IOSOnDemandResourcePigeon>
     ) {
-        OnDemandResourcesPigeon.shared.onListen(withArguments: arguments, sink: sink)
+        OnDemandResources.shared.onListen(withArguments: arguments, sink: sink)
     }
 
     override func onCancel(withArguments arguments: Any?) {
-        OnDemandResourcesPigeon.shared.onCancel(withArguments: arguments)
+        OnDemandResources.shared.onCancel(withArguments: arguments)
     }
 }
 

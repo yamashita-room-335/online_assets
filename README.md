@@ -21,7 +21,7 @@ This method of testing is only available for Android versions below 12. Alternat
 
     - **Generate the APKs:**
         ```bash
-        java -jar bundletool-all-1.18.1.jar build-apks --bundle=build/app/outputs/bundle/release/app-release.aab --output=build/app/outputs/bundle/release/app-release-pad-test.apks --local-testing
+        java -jar bundletool-all-1.18.1.jar build-apks --overwrite --bundle=build/app/outputs/bundle/release/app-release.aab --output=build/app/outputs/bundle/release/app-release-pad-test.apks --local-testing
         ```
 
     - **Install the APKs on your device:**
@@ -31,6 +31,6 @@ This method of testing is only available for Android versions below 12. Alternat
 
 4. To get the final APK size:
     ```bash
-    java -jar bundletool-all-<version>.jar get-size total --apks=<your_temp_dir>/app-release-pad-test.apks --dimensions=SDK
+    java -jar bundletool-all-1.18.1.jar get-size total --apks=build/app/outputs/bundle/release/app-release-pad-test.apks --dimensions=SDK
     ```
 

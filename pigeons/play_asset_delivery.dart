@@ -4,10 +4,10 @@ import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
   PigeonOptions(
-    dartOut: 'lib/play_asset_delivery_pigeon.pigeon.dart',
+    dartOut: 'lib/play_asset_delivery.g.dart',
     dartOptions: DartOptions(),
     kotlinOut:
-        'android/app/src/main/kotlin/com/kourokuroom/online_assets/PlayAssetDeliveryPigeon.pigeon.kt',
+        'android/app/src/main/kotlin/com/kourokuroom/online_assets/PlayAssetDelivery.g.kt',
     kotlinOptions: KotlinOptions(),
   ),
 )

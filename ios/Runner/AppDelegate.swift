@@ -15,7 +15,7 @@ import UIKit
    // Setup HostAPI
       OnDemandResourcesHostApiMethodsSetup.setUp(
         binaryMessenger: window?.rootViewController as! FlutterBinaryMessenger,
-        api: OnDemandResourcesPigeon.shared
+        api: OnDemandResources.shared
     )
 
     GeneratedPluginRegistrant.register(with: self)

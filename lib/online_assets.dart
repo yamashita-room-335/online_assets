@@ -6,8 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
-import 'on_demand_resources_pigeon.pigeon.dart';
-import 'play_asset_delivery_pigeon.pigeon.dart';
+import 'on_demand_resources.g.dart';
+import 'play_asset_delivery.g.dart';
 
 part 'online_assets.freezed.dart';
 

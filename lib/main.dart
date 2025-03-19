@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:online_assets/online_assets.dart';
 
@@ -52,15 +54,15 @@ class StreamImagePage extends StatelessWidget {
       appBar: AppBar(title: Text('Stream Image Page')),
       body: Column(
         children: [
-          OnlineAssetWidget.image(
+          StreamAssetWidget.image(
             assetName: 'install_time_sample_pack',
-            relativePath: 'dog/dog_corgi_tricolor.png',
+            relativePath: 'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
           ),
-          OnlineAssetWidget.image(
+          StreamAssetWidget.image(
             assetName: 'install_time_sample_pack',
-            relativePath: 'dog/dog_great_pyrenees.png',
+            relativePath: 'dog${Platform.pathSeparator}dog_great_pyrenees.png',
           ),
-          OnlineAssetWidget.image(
+          StreamAssetWidget.image(
             assetName: 'install_time_sample_pack',
             relativePath: 'dog_shetland_sheepdog_blue_merle.png',
           ),

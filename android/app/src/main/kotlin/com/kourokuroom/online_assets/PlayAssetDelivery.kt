@@ -18,6 +18,7 @@ import com.google.android.play.core.assetpacks.model.AssetPackErrorCode
 import com.google.android.play.core.assetpacks.model.AssetPackStatus
 import com.google.android.play.core.ktx.requestFetch
 import com.google.android.play.core.ktx.requestPackStates
+import io.flutter.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -74,6 +75,7 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
         scope.launch {
             try {
                 val assetPackStates = assetPackManager.requestPackStates(packNames)
+                Log.d(tag, "requestPackStates assetPackStates: $assetPackStates")
                 callback(Result.success(assetPackStates.convertPigeon()))
             } catch (e: Exception) {
                 callback(
@@ -96,6 +98,7 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
         scope.launch {
             try {
                 val assetPackStates = assetPackManager.requestFetch(packNames)
+                Log.d(tag, "requestFetch assetPackStates: $assetPackStates")
                 callback(Result.success(assetPackStates.convertPigeon()))
             } catch (e: Exception) {
                 callback(
@@ -118,7 +121,9 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
         try {
             val assetPackLocation = assetPackManager.getPackLocation(assetPackName) ?: return null
             val assetsPath = assetPackLocation.assetsPath() ?: return null
-            return File(assetsPath, relativeAssetPath).absolutePath
+            val file = File(assetsPath, relativeAssetPath)
+            Log.d(tag, "file: $file")
+            return file.absolutePath
         } catch (e: Exception) {
             throw FlutterError(
                 code = tag,
@@ -129,7 +134,6 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
     }
 }
 
-// Pigeonへの型変換
 fun AssetPackStates.convertPigeon(): AndroidAssetPackStatesPigeon {
     return AndroidAssetPackStatesPigeon(
         totalBytes = totalBytes(),

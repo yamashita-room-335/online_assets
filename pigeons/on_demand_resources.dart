@@ -4,9 +4,9 @@ import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
   PigeonOptions(
-    dartOut: 'lib/on_demand_resources_pigeon.pigeon.dart',
+    dartOut: 'lib/on_demand_resources.g.dart',
     dartOptions: DartOptions(),
-    swiftOut: 'ios/Runner/OnDemandResourcesPigeon.pigeon.swift',
+    swiftOut: 'ios/Runner/OnDemandResources.g.swift',
     swiftOptions: SwiftOptions(),
   ),
 )

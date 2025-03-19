@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'online_assets.dart';
 
-class OnlineAssetWidget extends StatelessWidget {
-  const OnlineAssetWidget.image({
+class StreamAssetWidget extends StatelessWidget {
+  const StreamAssetWidget.image({
     super.key,
     required this.assetName,
     required this.relativePath,
