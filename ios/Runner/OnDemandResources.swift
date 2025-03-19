@@ -219,14 +219,14 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
             targetURL = targetFolderURL.appendingPathComponent("\(fileNameWithoutExtension).\(fileExtension)")
         }
         
-        let named: String
+        let name: String
         if (nestFolders.isEmpty) {
-            named = fileNameWithoutExtension
+            name = fileNameWithoutExtension
         } else {
-            named = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
+            name = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
         }
-        print("targetURL: \(targetURL), named: \(named)")
-        if let image = UIImage(named: named) {
+        print("targetURL: \(targetURL), named: \(name)")
+        if let image = UIImage(named: name) {
             if let imageData = image.pngData() {
                 do {
                     print("image: \(image), targetURL: \(targetURL)")
@@ -237,7 +237,7 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
                     return nil
                 }
             }
-        } else if let asset = NSDataAsset(name: fileNameWithoutExtension) {
+        } else if let asset = NSDataAsset(name: name) {
             do {
                 print("asset: \(asset), targetURL: \(targetURL)")
                 try asset.data.write(to: targetURL)

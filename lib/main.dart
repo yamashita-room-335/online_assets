@@ -39,6 +39,15 @@ class MyHomePage extends StatelessWidget {
               );
             },
           ),
+          ElevatedButton(
+            child: Text('Stream Video'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => StreamVideoPage()),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -71,6 +80,23 @@ class StreamImagePage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+class StreamVideoPage extends StatelessWidget {
+  const StreamVideoPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Stream Image Page')),
+      body: StreamAssetWidget.video(
+        assetName: 'install_time_sample_pack',
+        relativePath:
+        'dog${Platform.pathSeparator}run_moive.mp4',
       ),
     );
   }

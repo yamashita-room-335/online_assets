@@ -42,6 +42,9 @@ dependencies:
   # https://pub.dev/packages/freezed#install
   freezed_annotation: ^3.0.0
 
+  # For Example Video
+  video_player: ^2.9.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

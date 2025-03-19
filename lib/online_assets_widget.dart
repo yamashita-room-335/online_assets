@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import 'online_assets.dart';
 
@@ -11,12 +12,21 @@ class StreamAssetWidget extends StatelessWidget {
     required this.relativePath,
     this.width,
     this.height,
-  });
+  }) : isImage = true;
+
+  const StreamAssetWidget.video({
+    super.key,
+    required this.assetName,
+    required this.relativePath,
+  }) : width = null,
+       height = null,
+       isImage = false;
 
   final String assetName;
   final String relativePath;
   final double? width;
   final double? height;
+  final bool isImage;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +42,12 @@ class StreamAssetWidget extends StatelessWidget {
           if (snapshot.hasData) {
             final (file, onlinePack) = snapshot.data!;
             if (file != null) {
-              return Image.file(file, width: width, height: height);
+
+              if (isImage) {
+                return Image.file(file, width: width, height: height);
+              } else {
+                return PlayVideoPage(file: file);
+              }
             }
 
             if (onlinePack.hasError) {
@@ -62,6 +77,59 @@ class StreamAssetWidget extends StatelessWidget {
           return const SizedBox();
         },
       ),
+    );
+  }
+}
+
+class PlayVideoPage extends StatefulWidget {
+  const PlayVideoPage({super.key, required this.file});
+
+  final File file;
+
+  @override
+  State<PlayVideoPage> createState() => _PlayVideoPageState();
+}
+
+class _PlayVideoPageState extends State<PlayVideoPage> {
+  late VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    _controller = VideoPlayerController.file(widget.file)
+      ..initialize().then((_) {
+        setState(() {});
+      });
+
+    _controller.play();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Center(
+          child:
+              _controller.value.isInitialized
+                  ? AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio,
+                    child: VideoPlayer(_controller),
+                  )
+                  : Container(),
+        ),
+        FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              _controller.value.isPlaying
+                  ? _controller.pause()
+                  : _controller.play();
+            });
+          },
+          child: Icon(
+            _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+          ),
+        ),
+      ],
     );
   }
 }
