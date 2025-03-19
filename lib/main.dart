@@ -52,21 +52,25 @@ class StreamImagePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Stream Image Page')),
-      body: Column(
-        children: [
-          StreamAssetWidget.image(
-            assetName: 'install_time_sample_pack',
-            relativePath: 'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
-          ),
-          StreamAssetWidget.image(
-            assetName: 'install_time_sample_pack',
-            relativePath: 'dog${Platform.pathSeparator}dog_great_pyrenees.png',
-          ),
-          StreamAssetWidget.image(
-            assetName: 'install_time_sample_pack',
-            relativePath: 'dog_shetland_sheepdog_blue_merle.png',
-          ),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            StreamAssetWidget.image(
+              assetName: 'install_time_sample_pack',
+              relativePath:
+                  'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
+            ),
+            StreamAssetWidget.image(
+              assetName: 'install_time_sample_pack',
+              relativePath:
+                  'dog${Platform.pathSeparator}dog_great_pyrenees.png',
+            ),
+            StreamAssetWidget.image(
+              assetName: 'install_time_sample_pack',
+              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+            ),
+          ],
+        ),
       ),
     );
   }

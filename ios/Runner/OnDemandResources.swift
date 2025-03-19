@@ -185,46 +185,63 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
         
         let fileManager = FileManager.default
         let dir = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let subfolderURL = dir.appendingPathComponent(tag)
+        var targetFolderURL = dir.appendingPathComponent(tag)
+        let relativePathComponents = relativeAssetPath.components(separatedBy: "/")
+        let nestFolders = relativePathComponents.dropLast()
+        let fileName = relativePathComponents.last!
+        
+        for folderName in nestFolders {
+            targetFolderURL = targetFolderURL.appendingPathComponent(folderName)
+        }
+        print("targetFolderURL: \(targetFolderURL), fileName: \(fileName)")
 
         do {
             try fileManager.createDirectory(
-                at: subfolderURL, withIntermediateDirectories: true, attributes: nil)
+                at: targetFolderURL, withIntermediateDirectories: true, attributes: nil)
         } catch {
             print("fileManager.createDirectory error: \(error)")
             return nil
         }
         
-        var relativeAssetPathWithoutExtension = relativeAssetPath
-        var assetExtension = ""
-        let components = relativeAssetPath.components(separatedBy: ".")
-        if components.count > extensionLevel {
-            relativeAssetPathWithoutExtension = components.dropLast(Int(truncatingIfNeeded: extensionLevel))
+        var fileNameWithoutExtension = fileName
+        var fileExtension = ""
+        let fileNameComponents = fileName.components(separatedBy: ".")
+        if fileNameComponents.count > extensionLevel {
+            fileNameWithoutExtension = fileNameComponents.dropLast(Int(truncatingIfNeeded: extensionLevel))
                 .joined(separator: ".")
-            assetExtension = relativeAssetPath.replacingOccurrences(of: "\(relativeAssetPathWithoutExtension).", with: "")
+            fileExtension = fileName.replacingOccurrences(of: "\(fileNameWithoutExtension).", with: "")
         }
         
-        print("relativeAssetPathWithoutExtension: \(relativeAssetPathWithoutExtension), assetExtension: \(assetExtension), tag: \(tag), dir: \(dir), subfolderURL: \(subfolderURL),")
-        if let image = UIImage(named: relativeAssetPathWithoutExtension) {
-            // Save image as PNG or JPG
-            let fileURL = subfolderURL.appendingPathComponent("\(relativeAssetPathWithoutExtension).\(assetExtension)")
+        let targetURL: URL
+        if (fileExtension.isEmpty) {
+            targetURL = targetFolderURL.appendingPathComponent("\(fileNameWithoutExtension)")
+        } else {
+            targetURL = targetFolderURL.appendingPathComponent("\(fileNameWithoutExtension).\(fileExtension)")
+        }
+        
+        let named: String
+        if (nestFolders.isEmpty) {
+            named = fileNameWithoutExtension
+        } else {
+            named = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
+        }
+        print("targetURL: \(targetURL), named: \(named)")
+        if let image = UIImage(named: named) {
             if let imageData = image.pngData() {
                 do {
-                    print("image: \(image), fileURL: \(fileURL)")
-                    try imageData.write(to: fileURL)
-                    return fileURL.path
+                    print("image: \(image), targetURL: \(targetURL)")
+                    try imageData.write(to: targetURL)
+                    return targetURL.path
                 } catch {
                     print("imageData.write error: \(error)")
                     return nil
                 }
             }
-        } else if let asset = NSDataAsset(name: relativeAssetPathWithoutExtension) {
-            // Save as raw data for videos, sounds, etc.
-            let fileURL = subfolderURL.appendingPathComponent("\(relativeAssetPathWithoutExtension).\(assetExtension)")
+        } else if let asset = NSDataAsset(name: fileNameWithoutExtension) {
             do {
-                print("asset: \(asset), fileURL: \(fileURL)")
-                try asset.data.write(to: fileURL)
-                return fileURL.path
+                print("asset: \(asset), targetURL: \(targetURL)")
+                try asset.data.write(to: targetURL)
+                return targetURL.path
             } catch {
                 print("asset.data.write error: \(error)")
                 return nil
