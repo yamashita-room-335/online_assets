@@ -62,7 +62,7 @@ class StreamImagePage extends StatelessWidget {
           ),
           OnlineAssetWidget.image(
             assetName: 'install_time_sample_pack',
-            relativePath: 'dog/dog_shetland_sheepdog_blue_merle.png',
+            relativePath: 'dog_shetland_sheepdog_blue_merle.png',
           ),
         ],
       ),
