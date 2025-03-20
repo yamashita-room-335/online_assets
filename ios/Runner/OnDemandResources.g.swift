@@ -315,7 +315,7 @@ class StreamOnDemandResourceStreamHandler: PigeonEventChannelWrapper<IOSOnDemand
 protocol OnDemandResourcesHostApiMethods {
   func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon
   func beginAccessingResources(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
-  func getAbsoluteAssetPath(tag: String, relativeAssetPath: String, extensionLevel: Int64) throws -> String?
+  func getAbsoluteAssetPath(tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64) throws -> String?
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -361,10 +361,10 @@ class OnDemandResourcesHostApiMethodsSetup {
       getAbsoluteAssetPathChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let tagArg = args[0] as! String
-        let relativeAssetPathArg = args[1] as! String
+        let relativeAssetPathWithTagNamespaceArg = args[1] as! String
         let extensionLevelArg = args[2] as! Int64
         do {
-          let result = try api.getAbsoluteAssetPath(tag: tagArg, relativeAssetPath: relativeAssetPathArg, extensionLevel: extensionLevelArg)
+          let result = try api.getAbsoluteAssetPath(tag: tagArg, relativeAssetPathWithTagNamespace: relativeAssetPathWithTagNamespaceArg, extensionLevel: extensionLevelArg)
           reply(wrapResult(result))
         } catch {
           reply(wrapError(error))

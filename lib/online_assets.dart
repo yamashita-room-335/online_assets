@@ -280,11 +280,11 @@ class OnlineAssets {
       final OnlinePackHolder packHolder;
       if (Platform.isAndroid) {
         packHolder = OnlinePackHolder.fromAndroid(
-          await androidApi.requestPackStates(assetNames),
+          await androidApi.requestPackStates(packNames: assetNames),
         );
       } else {
         packHolder = OnlinePackHolder.fromIOS(
-          await iosApi.requestNSBundleResourceRequests(assetNames),
+          await iosApi.requestNSBundleResourceRequests(tags: assetNames),
         );
       }
 
@@ -316,11 +316,11 @@ class OnlineAssets {
       final OnlinePackHolder packHolder;
       if (Platform.isAndroid) {
         packHolder = OnlinePackHolder.fromAndroid(
-          await androidApi.requestFetch(assetNames),
+          await androidApi.requestFetch(packNames: assetNames),
         );
       } else {
         packHolder = OnlinePackHolder.fromIOS(
-          await iosApi.beginAccessingResources(assetNames),
+          await iosApi.beginAccessingResources(tags: assetNames),
         );
       }
 
@@ -352,9 +352,16 @@ class OnlineAssets {
     try {
       final String? path;
       if (Platform.isAndroid) {
-        path = await androidApi.getAbsoluteAssetPath(assetName, relativePath);
+        path = await androidApi.getAbsoluteAssetPath(
+          assetPackName: assetName,
+          relativeAssetPath: relativePath,
+        );
       } else {
-        path = await iosApi.getAbsoluteAssetPath(assetName, relativePath);
+        path = await iosApi.getAbsoluteAssetPath(
+          tag: assetName,
+          relativeAssetPathWithTagNamespace:
+              '$assetName${Platform.pathSeparator}$relativePath',
+        );
       }
 
       if (path == null) {

@@ -171,10 +171,9 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
     }
 
     /// Get the absolute path of the asset
-    func getAbsoluteAssetPath(tag: String, relativeAssetPath: String, extensionLevel: Int64) throws
-        -> String?
+    func getAbsoluteAssetPath(tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64) throws -> String?
     {
-        print("getAbsoluteAssetPath(tag: \(tag), relativeAssetPath: \(relativeAssetPath))")
+        print("getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))")
         guard let (request, _) = resourceRequests[tag] else {
             return nil
         }
@@ -184,9 +183,8 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
         }
         
         let fileManager = FileManager.default
-        let dir = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        var targetFolderURL = dir.appendingPathComponent(tag)
-        let relativePathComponents = relativeAssetPath.components(separatedBy: "/")
+        var targetFolderURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let relativePathComponents = relativeAssetPathWithTagNamespace.components(separatedBy: "/")
         let nestFolders = relativePathComponents.dropLast()
         let fileName = relativePathComponents.last!
         
@@ -247,7 +245,7 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
                 return nil
             }
         } else {
-            print("Can not load asset \(relativeAssetPath) for tag: \(tag)")
+            print("Can not load asset \(relativeAssetPathWithTagNamespace) for tag: \(tag)")
             return nil
         }
 

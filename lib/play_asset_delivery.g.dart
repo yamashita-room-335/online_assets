@@ -193,7 +193,7 @@ class PlayAssetDeliveryHostApiMethods {
 
   final String pigeonVar_messageChannelSuffix;
 
-  Future<AndroidAssetPackStatesPigeon> requestPackStates(List<String> packNames) async {
+  Future<AndroidAssetPackStatesPigeon> requestPackStates({required List<String> packNames}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.requestPackStates$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -221,7 +221,7 @@ class PlayAssetDeliveryHostApiMethods {
     }
   }
 
-  Future<AndroidAssetPackStatesPigeon> requestFetch(List<String> packNames) async {
+  Future<AndroidAssetPackStatesPigeon> requestFetch({required List<String> packNames}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.requestFetch$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -249,7 +249,7 @@ class PlayAssetDeliveryHostApiMethods {
     }
   }
 
-  Future<String?> getAbsoluteAssetPath(String assetPackName, String relativeAssetPath) async {
+  Future<String?> getAbsoluteAssetPath({required String assetPackName, required String relativeAssetPath}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAbsoluteAssetPath$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,

@@ -17,14 +17,19 @@ abstract class OnDemandResourcesEventChannelMethods {
 
 @HostApi()
 abstract class OnDemandResourcesHostApiMethods {
-  IOSOnDemandResourcesPigeon requestNSBundleResourceRequests(List<String> tags);
+  IOSOnDemandResourcesPigeon requestNSBundleResourceRequests({
+    required List<String> tags,
+  });
 
   @async
-  IOSOnDemandResourcesPigeon beginAccessingResources(List<String> tags);
+  IOSOnDemandResourcesPigeon beginAccessingResources({
+    required List<String> tags,
+  });
 
-  String? getAbsoluteAssetPath(
-    String tag,
-    String relativeAssetPath, {
+  /// The reason for including the tag namespace in the path is so that there is no problem if the filename is same with other asset packs.
+  String? getAbsoluteAssetPath({
+    required String tag,
+    required String relativeAssetPathWithTagNamespace,
     int extensionLevel = 1,
   });
 }

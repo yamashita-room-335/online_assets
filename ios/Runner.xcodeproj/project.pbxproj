@@ -109,7 +109,6 @@
 				91110102F7BDBACFB4E39895 /* Pods-RunnerTests.release.xcconfig */,
 				3A5E334C92B58614072F6509 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -223,7 +222,9 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				KnownAssetTags = (
+					fast_follow_sample_pack,
 					install_time_sample_pack,
+					on_demand_sample_pack,
 				);
 				LastUpgradeCheck = 1510;
 				ORGANIZATIONNAME = "";

@@ -222,7 +222,7 @@ class OnDemandResourcesHostApiMethods {
 
   final String pigeonVar_messageChannelSuffix;
 
-  Future<IOSOnDemandResourcesPigeon> requestNSBundleResourceRequests(List<String> tags) async {
+  Future<IOSOnDemandResourcesPigeon> requestNSBundleResourceRequests({required List<String> tags}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.requestNSBundleResourceRequests$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -250,7 +250,7 @@ class OnDemandResourcesHostApiMethods {
     }
   }
 
-  Future<IOSOnDemandResourcesPigeon> beginAccessingResources(List<String> tags) async {
+  Future<IOSOnDemandResourcesPigeon> beginAccessingResources({required List<String> tags}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.beginAccessingResources$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -278,14 +278,14 @@ class OnDemandResourcesHostApiMethods {
     }
   }
 
-  Future<String?> getAbsoluteAssetPath(String tag, String relativeAssetPath, {int extensionLevel = 1, }) async {
+  Future<String?> getAbsoluteAssetPath({required String tag, required String relativeAssetPathWithTagNamespace, int extensionLevel = 1, }) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.getAbsoluteAssetPath$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tag, relativeAssetPath, extensionLevel]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tag, relativeAssetPathWithTagNamespace, extensionLevel]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {

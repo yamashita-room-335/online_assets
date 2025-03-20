@@ -19,12 +19,17 @@ abstract class PlayAssetDeliveryEventChannelMethods {
 @HostApi()
 abstract class PlayAssetDeliveryHostApiMethods {
   @async
-  AndroidAssetPackStatesPigeon requestPackStates(List<String> packNames);
+  AndroidAssetPackStatesPigeon requestPackStates({
+    required List<String> packNames,
+  });
 
   @async
-  AndroidAssetPackStatesPigeon requestFetch(List<String> packNames);
+  AndroidAssetPackStatesPigeon requestFetch({required List<String> packNames});
 
-  String? getAbsoluteAssetPath(String assetPackName, String relativeAssetPath);
+  String? getAbsoluteAssetPath({
+    required String assetPackName,
+    required String relativeAssetPath,
+  });
 }
 
 /// https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackStates
