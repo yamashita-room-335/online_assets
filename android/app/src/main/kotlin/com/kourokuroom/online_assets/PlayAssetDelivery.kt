@@ -19,6 +19,7 @@ import com.google.android.play.core.assetpacks.model.AssetPackStatus
 import com.google.android.play.core.ktx.requestFetch
 import com.google.android.play.core.ktx.requestPackStates
 import io.flutter.Log
+import io.flutter.embedding.engine.plugins.FlutterPlugin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,7 +27,6 @@ import java.io.File
 
 class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethods,
     StreamAssetPackStateStreamHandler() {
-    private val tag = "AssetDelivery"
     private val assetPackManager: AssetPackManager = AssetPackManagerFactory.getInstance(context)
     private val scope = CoroutineScope(Dispatchers.Main)
     private var eventSink: PigeonEventSink<AndroidAssetPackStatePigeon>? = null
@@ -35,34 +35,55 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
     }
 
     companion object {
-        fun register(flutterPluginBinding: io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding) {
-            val plugin = PlayAssetDeliveryPigeon(flutterPluginBinding.applicationContext)
+        private const val TAG = "AssetDelivery"
+
+        fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+            Log.d(TAG, "[onAttachedToEngine(binding: $binding)]")
+            val plugin = PlayAssetDeliveryPigeon(binding.applicationContext)
 
             // Register EventListener
             register(
-                flutterPluginBinding.binaryMessenger,
+                binding.binaryMessenger,
                 plugin
             )
 
             // Setup HostAPI
             PlayAssetDeliveryHostApiMethods.setUp(
-                flutterPluginBinding.binaryMessenger,
+                binding.binaryMessenger,
                 plugin
+            )
+        }
+
+        fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+            Log.d(TAG, "[onDetachedFromEngine(binding: $binding)]")
+            // Remove HostAPI
+            PlayAssetDeliveryHostApiMethods.setUp(
+                binding.binaryMessenger,
+                null
             )
         }
     }
 
     init {
+        Log.d(TAG, "[init]")
         assetPackManager.registerListener(assetPackStateUpdateListener)
+    }
+
+    protected fun finalize() {
+        Log.d(TAG, "[finalize()]")
+        assetPackManager.unregisterListener(assetPackStateUpdateListener)
+        eventSink = null
     }
 
     // EventChannel
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<AndroidAssetPackStatePigeon>) {
+        Log.d(TAG, "[onListen(p0: $p0, sink: $sink)]")
         eventSink = sink
     }
 
     override fun onCancel(p0: Any?) {
+        Log.d(TAG, "[onCancel(p0: $p0)]")
         eventSink = null
     }
 
@@ -72,16 +93,20 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
         packNames: List<String>,
         callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit
     ) {
+        Log.d(TAG, "[requestPackStates(packNames: $packNames)]")
         scope.launch {
             try {
                 val assetPackStates = assetPackManager.requestPackStates(packNames)
-                Log.d(tag, "requestPackStates assetPackStates: $assetPackStates")
+                Log.d(
+                    TAG,
+                    "[requestPackStates(packNames: $packNames)] assetPackStates: $assetPackStates"
+                )
                 callback(Result.success(assetPackStates.convertPigeon()))
             } catch (e: Exception) {
                 callback(
                     Result.failure(
                         FlutterError(
-                            code = tag,
+                            code = TAG,
                             message = e.message,
                             details = e.toString()
                         )
@@ -95,16 +120,20 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
         packNames: List<String>,
         callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit
     ) {
+        Log.d(TAG, "[requestFetch(packNames: $packNames)]")
         scope.launch {
             try {
                 val assetPackStates = assetPackManager.requestFetch(packNames)
-                Log.d(tag, "requestFetch assetPackStates: $assetPackStates")
+                Log.d(
+                    TAG,
+                    "[requestFetch(packNames: $packNames)] assetPackStates: $assetPackStates"
+                )
                 callback(Result.success(assetPackStates.convertPigeon()))
             } catch (e: Exception) {
                 callback(
                     Result.failure(
                         FlutterError(
-                            code = tag,
+                            code = TAG,
                             message = e.message,
                             details = e.toString()
                         )
@@ -118,15 +147,22 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
         assetPackName: String,
         relativeAssetPath: String,
     ): String? {
+        Log.d(
+            TAG,
+            "[getAbsoluteAssetPath(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
+        )
         try {
             val assetPackLocation = assetPackManager.getPackLocation(assetPackName) ?: return null
             val assetsPath = assetPackLocation.assetsPath() ?: return null
             val file = File(assetsPath, relativeAssetPath)
-            Log.d(tag, "file: $file")
+            Log.d(
+                TAG,
+                "[getAbsoluteAssetPath(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)] file: $file"
+            )
             return file.absolutePath
         } catch (e: Exception) {
             throw FlutterError(
-                code = tag,
+                code = TAG,
                 message = e.message,
                 details = e.toString()
             )
