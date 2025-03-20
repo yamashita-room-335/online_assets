@@ -94,16 +94,21 @@ class PlayVideoPage extends StatefulWidget {
 
 class _PlayVideoPageState extends State<PlayVideoPage> {
   late VideoPlayerController _controller;
+  late Future<void> _initializeVideoPlayerFuture;
 
   @override
   void initState() {
-    _controller = VideoPlayerController.file(widget.file)
-      ..initialize().then((_) {
-        setState(() {});
-      });
-
-    _controller.play();
     super.initState();
+    _controller = VideoPlayerController.file(widget.file);
+    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
+      _controller.play();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -111,25 +116,32 @@ class _PlayVideoPageState extends State<PlayVideoPage> {
     return Column(
       children: [
         Center(
-          child:
-              _controller.value.isInitialized
-                  ? AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
-                  )
-                  : Container(),
-        ),
-        FloatingActionButton(
-          onPressed: () {
-            setState(() {
-              _controller.value.isPlaying
-                  ? _controller.pause()
-                  : _controller.play();
-            });
-          },
-          child: Icon(
-            _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+          child: FutureBuilder(
+            future: _initializeVideoPlayerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                );
+              } else {
+                return const Center(child: CircularProgressIndicator());
+              }
+            },
           ),
+        ),
+        ValueListenableBuilder(
+          valueListenable: _controller,
+          builder: (context, value, child) {
+            return FloatingActionButton(
+              onPressed: () {
+                setState(() {
+                  value.isPlaying ? _controller.pause() : _controller.play();
+                });
+              },
+              child: Icon(value.isPlaying ? Icons.pause : Icons.play_arrow),
+            );
+          },
         ),
       ],
     );
