@@ -129,6 +129,7 @@ class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
     private lateinit var assetPackManager: AssetPackManager
     private var eventSink: PigeonEventSink<AndroidAssetPackStatePigeon>? = null
     private val assetPackStateUpdateListener = AssetPackStateUpdateListener { state ->
+        Log.d(TAG, "[assetPackStateUpdateListener(state: $state)]")
         eventSink?.success(state.convertPigeon())
     }
 
