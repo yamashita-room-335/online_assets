@@ -39,42 +39,44 @@ class StreamAssetWidget extends StatelessWidget {
           relativePath: relativePath,
         ),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final (file, onlinePack) = snapshot.data!;
-            if (file != null) {
+          if (snapshot.hasError) {
+            return Text("snapshot.error: ${snapshot.error}");
+          } else if (!snapshot.hasData) {
+            return Text("snapshot.hasNotData");
+          }
 
-              if (isImage) {
-                return Image.file(file, width: width, height: height);
-              } else {
-                return PlayVideoPage(file: file);
-              }
+          final (file, onlinePack) = snapshot.data!;
+          if (file != null) {
+            if (isImage) {
+              return Image.file(file, width: width, height: height);
+            } else {
+              return PlayVideoPage(file: file);
             }
+          }
 
-            if (onlinePack.hasError) {
-              return switch (onlinePack) {
-                AndroidPack() => Text(onlinePack.androidErrorCode.name),
-                IOSPack() => Text(
-                  '[${onlinePack.iOSError?.domain}] ${onlinePack.iOSError?.localizedDescription}',
-                ),
-              };
-            }
-
-            return switch (onlinePack.status) {
-              OnlineAssetStatus.pending => const SizedBox(),
-              //Todo 押下時に確認ダイアログの表示を実装
-              OnlineAssetStatus.requiresUserConfirmation =>
-                const CircularProgressIndicator(),
-              OnlineAssetStatus.downloading => CircularProgressIndicator(
-                value: onlinePack.progress,
+          if (onlinePack.hasError) {
+            return switch (onlinePack) {
+              AndroidPack() => Text(onlinePack.androidErrorCode.name),
+              IOSPack() => Text(
+                '[${onlinePack.iOSError?.domain}] ${onlinePack.iOSError?.localizedDescription}',
               ),
-              // Usually does not go through here.
-              OnlineAssetStatus.completed => const CircularProgressIndicator(),
-              OnlineAssetStatus.failed => const Text('Failed to download'),
-              OnlineAssetStatus.canceled => const Text('Canceled to download'),
-              OnlineAssetStatus.unknown => const Text('Unknown Status'),
             };
           }
-          return const SizedBox();
+
+          return switch (onlinePack.status) {
+            OnlineAssetStatus.pending => const Text('Pending'),
+            //Todo 押下時に確認ダイアログの表示を実装
+            OnlineAssetStatus.requiresUserConfirmation =>
+              const CircularProgressIndicator(),
+            OnlineAssetStatus.downloading => CircularProgressIndicator(
+              value: onlinePack.progress,
+            ),
+            // Usually does not go through here.
+            OnlineAssetStatus.completed => const CircularProgressIndicator(),
+            OnlineAssetStatus.failed => const Text('Failed to download'),
+            OnlineAssetStatus.canceled => const Text('Canceled to download'),
+            OnlineAssetStatus.unknown => const Text('Unknown Status'),
+          };
         },
       ),
     );
