@@ -19,75 +19,30 @@ import com.google.android.play.core.assetpacks.model.AssetPackStatus
 import com.google.android.play.core.ktx.requestFetch
 import com.google.android.play.core.ktx.requestPackStates
 import io.flutter.Log
-import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.FlutterEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
-class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethods,
-    StreamAssetPackStateStreamHandler() {
-    private val assetPackManager: AssetPackManager = AssetPackManagerFactory.getInstance(context)
-    private val scope = CoroutineScope(Dispatchers.Main)
-    private var eventSink: PigeonEventSink<AndroidAssetPackStatePigeon>? = null
-    private val assetPackStateUpdateListener = AssetPackStateUpdateListener { state ->
-        eventSink?.success(state.convertPigeon())
-    }
-
+class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     companion object {
-        private const val TAG = "AssetDelivery"
-
-        fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-            Log.d(TAG, "[onAttachedToEngine(binding: $binding)]")
-            val plugin = PlayAssetDeliveryPigeon(binding.applicationContext)
-
-            // Register EventListener
-            register(
-                binding.binaryMessenger,
-                plugin
-            )
-
-            // Setup HostAPI
-            PlayAssetDeliveryHostApiMethods.setUp(
-                binding.binaryMessenger,
-                plugin
-            )
-        }
-
-        fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-            Log.d(TAG, "[onDetachedFromEngine(binding: $binding)]")
-            // Remove HostAPI
-            PlayAssetDeliveryHostApiMethods.setUp(
-                binding.binaryMessenger,
-                null
-            )
-        }
+        private const val TAG = "PlayAssetDeliveryApi"
     }
 
-    init {
-        Log.d(TAG, "[init]")
-        assetPackManager.registerListener(assetPackStateUpdateListener)
+    private lateinit var assetPackManager: AssetPackManager
+    private val scope = CoroutineScope(Dispatchers.Main)
+
+    fun setup(flutterEngine: FlutterEngine, context: Context) {
+        Log.d(TAG, "[setup(flutterEngine: $flutterEngine, context: $context)]")
+        assetPackManager = AssetPackManagerFactory.getInstance(context)
+
+        // Setup HostAPI
+        PlayAssetDeliveryHostApiMethods.setUp(
+            flutterEngine.dartExecutor.binaryMessenger,
+            this
+        )
     }
-
-    protected fun finalize() {
-        Log.d(TAG, "[finalize()]")
-        assetPackManager.unregisterListener(assetPackStateUpdateListener)
-        eventSink = null
-    }
-
-    // EventChannel
-
-    override fun onListen(p0: Any?, sink: PigeonEventSink<AndroidAssetPackStatePigeon>) {
-        Log.d(TAG, "[onListen(p0: $p0, sink: $sink)]")
-        eventSink = sink
-    }
-
-    override fun onCancel(p0: Any?) {
-        Log.d(TAG, "[onCancel(p0: $p0)]")
-        eventSink = null
-    }
-
-    // HostAPI
 
     override fun requestPackStates(
         packNames: List<String>,
@@ -167,6 +122,41 @@ class PlayAssetDeliveryPigeon(context: Context) : PlayAssetDeliveryHostApiMethod
                 details = e.toString()
             )
         }
+    }
+}
+
+class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
+    private lateinit var assetPackManager: AssetPackManager
+    private var eventSink: PigeonEventSink<AndroidAssetPackStatePigeon>? = null
+    private val assetPackStateUpdateListener = AssetPackStateUpdateListener { state ->
+        eventSink?.success(state.convertPigeon())
+    }
+
+    companion object {
+        private const val TAG = "PlayAssetDeliveryStreamHandler"
+    }
+
+    fun register(flutterEngine: FlutterEngine, context: Context) {
+        Log.d(TAG, "[register(flutterEngine: $flutterEngine, context: $context)]")
+        assetPackManager = AssetPackManagerFactory.getInstance(context)
+
+        // Register EventListener
+        register(
+            flutterEngine.dartExecutor.binaryMessenger,
+            this
+        )
+
+        assetPackManager.registerListener(assetPackStateUpdateListener)
+    }
+
+    override fun onListen(p0: Any?, sink: PigeonEventSink<AndroidAssetPackStatePigeon>) {
+        Log.d(TAG, "[onListen(p0: $p0, sink: $sink)]")
+        eventSink = sink
+    }
+
+    override fun onCancel(p0: Any?) {
+        Log.d(TAG, "[onCancel(p0: $p0)]")
+        eventSink = null
     }
 }
 
