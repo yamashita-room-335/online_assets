@@ -25,3 +25,5 @@ plugins {
 include(":app")
 // https://developer.android.com/guide/playcore/asset-delivery/integrate-java#kts
 include(":install_time_sample_pack")
+include(":fast_follow_sample_pack")
+include(":on_demand_sample_pack")

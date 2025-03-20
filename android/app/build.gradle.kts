@@ -10,7 +10,7 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
     // https://developer.android.com/guide/playcore/asset-delivery/integrate-java#build_for_kotlin_and_java
-    assetPacks += listOf(":install_time_sample_pack")
+    assetPacks += listOf(":install_time_sample_pack", ":fast_follow_sample_pack", ":on_demand_sample_pack")
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

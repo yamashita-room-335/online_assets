@@ -7,7 +7,11 @@ import 'online_assets_widget.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  OnlineAssets.instance.init(['install_time_sample_pack']);
+  OnlineAssets.instance.init([
+    'install_time_sample_pack',
+    'fast_follow_sample_pack',
+    'on_demand_sample_pack',
+  ]);
 
   runApp(const MyApp());
 }
@@ -28,34 +32,101 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Sample Usage')),
-      body: Column(
-        children: [
-          ElevatedButton(
-            child: Text('Stream Image'),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => StreamImagePage()),
-              );
-            },
-          ),
-          ElevatedButton(
-            child: Text('Stream Video'),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => StreamVideoPage()),
-              );
-            },
-          ),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Column(
+              children: [
+                ListTile(title: Text('Install Time (on Android) Sample Pack')),
+                ElevatedButton(
+                  child: Text('Stream Image'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => InstallTimeStreamImagePage(),
+                      ),
+                    );
+                  },
+                ),
+                ElevatedButton(
+                  child: Text('Stream Video'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => InstallTimeStreamVideoPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            Divider(),
+            Column(
+              children: [
+                ListTile(title: Text('Fast Follow (on Android) Sample Pack')),
+                ElevatedButton(
+                  child: Text('Stream Image'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FastFollowStreamImagePage(),
+                      ),
+                    );
+                  },
+                ),
+                ElevatedButton(
+                  child: Text('Stream Video'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FastFollowStreamVideoPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            Divider(),
+            Column(
+              children: [
+                ListTile(title: Text('On Demand (on Android) Sample Pack')),
+                ElevatedButton(
+                  child: Text('Stream Image'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OnDemandStreamImagePage(),
+                      ),
+                    );
+                  },
+                ),
+                ElevatedButton(
+                  child: Text('Stream Video'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OnDemandStreamVideoPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class StreamImagePage extends StatelessWidget {
-  const StreamImagePage({super.key});
+class InstallTimeStreamImagePage extends StatelessWidget {
+  const InstallTimeStreamImagePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -85,9 +156,8 @@ class StreamImagePage extends StatelessWidget {
   }
 }
 
-
-class StreamVideoPage extends StatelessWidget {
-  const StreamVideoPage({super.key});
+class InstallTimeStreamVideoPage extends StatelessWidget {
+  const InstallTimeStreamVideoPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -95,8 +165,99 @@ class StreamVideoPage extends StatelessWidget {
       appBar: AppBar(title: Text('Stream Image Page')),
       body: StreamAssetWidget.video(
         assetName: 'install_time_sample_pack',
-        relativePath:
-        'dog${Platform.pathSeparator}run_moive.mp4',
+        relativePath: 'dog${Platform.pathSeparator}run_moive.mp4',
+      ),
+    );
+  }
+}
+
+class FastFollowStreamImagePage extends StatelessWidget {
+  const FastFollowStreamImagePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Stream Image Page')),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            StreamAssetWidget.image(
+              assetName: 'fast_follow_sample_pack',
+              relativePath:
+                  'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
+            ),
+            StreamAssetWidget.image(
+              assetName: 'fast_follow_sample_pack',
+              relativePath:
+                  'dog${Platform.pathSeparator}dog_great_pyrenees.png',
+            ),
+            StreamAssetWidget.image(
+              assetName: 'fast_follow_sample_pack',
+              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FastFollowStreamVideoPage extends StatelessWidget {
+  const FastFollowStreamVideoPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Stream Image Page')),
+      body: StreamAssetWidget.video(
+        assetName: 'fast_follow_sample_pack',
+        relativePath: 'dog${Platform.pathSeparator}run_moive.mp4',
+      ),
+    );
+  }
+}
+
+class OnDemandStreamImagePage extends StatelessWidget {
+  const OnDemandStreamImagePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Stream Image Page')),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            StreamAssetWidget.image(
+              assetName: 'on_demand_sample_pack',
+              relativePath:
+                  'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
+            ),
+            StreamAssetWidget.image(
+              assetName: 'on_demand_sample_pack',
+              relativePath:
+                  'dog${Platform.pathSeparator}dog_great_pyrenees.png',
+            ),
+            StreamAssetWidget.image(
+              assetName: 'on_demand_sample_pack',
+              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class OnDemandStreamVideoPage extends StatelessWidget {
+  const OnDemandStreamVideoPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Stream Image Page')),
+      body: StreamAssetWidget.video(
+        assetName: 'on_demand_sample_pack',
+        relativePath: 'dog${Platform.pathSeparator}run_moive.mp4',
       ),
     );
   }
