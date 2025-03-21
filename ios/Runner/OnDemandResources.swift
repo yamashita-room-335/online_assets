@@ -171,23 +171,26 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
     }
 
     /// Get the absolute path of the asset
-    func getAbsoluteAssetPath(tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64) throws -> String?
-    {
-        print("getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))")
+    func getAbsoluteAssetPath(
+        tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64
+    ) throws -> String? {
+        print(
+            "getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))"
+        )
         guard let (request, _) = resourceRequests[tag] else {
             return nil
         }
-        
+
         guard request.progress.isFinished else {
             return nil
         }
-        
+
         let fileManager = FileManager.default
         var targetFolderURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let relativePathComponents = relativeAssetPathWithTagNamespace.components(separatedBy: "/")
         let nestFolders = relativePathComponents.dropLast()
         let fileName = relativePathComponents.last!
-        
+
         for folderName in nestFolders {
             targetFolderURL = targetFolderURL.appendingPathComponent(folderName)
         }
@@ -200,35 +203,61 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
             print("fileManager.createDirectory error: \(error)")
             return nil
         }
-        
+
         var fileNameWithoutExtension = fileName
         var fileExtension = ""
+
         let fileNameComponents = fileName.components(separatedBy: ".")
         if fileNameComponents.count > extensionLevel {
-            fileNameWithoutExtension = fileNameComponents.dropLast(Int(truncatingIfNeeded: extensionLevel))
-                .joined(separator: ".")
-            fileExtension = fileName.replacingOccurrences(of: "\(fileNameWithoutExtension).", with: "")
+            fileNameWithoutExtension = fileNameComponents.dropLast(
+                Int(truncatingIfNeeded: extensionLevel)
+            )
+            .joined(separator: ".")
+            fileExtension = fileName.replacingOccurrences(
+                of: "\(fileNameWithoutExtension).", with: "")
         }
-        
+
+        // iOS support image format
+        let isImageFile =
+            switch fileExtension.lowercased() {
+            case "tiff", "tif": true
+            case "jpg", "jpeg": true
+            case "gif": true
+            case "png": true
+            case "bmp", "bmpf": true
+            case "ico": true
+            case "cur": true
+            case "xbm": true
+            default: false
+            }
+
         let targetURL: URL
-        if (fileExtension.isEmpty) {
+        if fileExtension.isEmpty {
             targetURL = targetFolderURL.appendingPathComponent("\(fileNameWithoutExtension)")
+        } else if isImageFile {
+            // To output images as pngData
+            targetURL = targetFolderURL.appendingPathComponent(
+                "\(fileNameWithoutExtension).png")
         } else {
-            targetURL = targetFolderURL.appendingPathComponent("\(fileNameWithoutExtension).\(fileExtension)")
+            targetURL = targetFolderURL.appendingPathComponent(
+                "\(fileNameWithoutExtension).\(fileExtension)")
         }
-        
+
         let name: String
-        if (nestFolders.isEmpty) {
+        if nestFolders.isEmpty {
             name = fileNameWithoutExtension
         } else {
             name = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
         }
         print("targetURL: \(targetURL), named: \(name)")
-        if let image = UIImage(named: name) {
+        if isImageFile, let image = UIImage(named: name) {
             if let imageData = image.pngData() {
                 do {
                     print("image: \(image), targetURL: \(targetURL)")
-                    try imageData.write(to: targetURL)
+                    if !fileManager.fileExists(atPath: targetURL.path) {
+                        print("imageData.write(to: \(targetURL))")
+                        try imageData.write(to: targetURL)
+                    }
                     return targetURL.path
                 } catch {
                     print("imageData.write error: \(error)")
@@ -238,7 +267,10 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
         } else if let asset = NSDataAsset(name: name) {
             do {
                 print("asset: \(asset), targetURL: \(targetURL)")
-                try asset.data.write(to: targetURL)
+                if !fileManager.fileExists(atPath: targetURL.path) {
+                    print("asset.data.write(to: \(targetURL))")
+                    try asset.data.write(to: targetURL)
+                }
                 return targetURL.path
             } catch {
                 print("asset.data.write error: \(error)")
