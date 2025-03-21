@@ -61,7 +61,7 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
 
     /// Obtains NSBundleResourceRequest information for the specified tag.
     func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon {
-        print("requestNSBundleResourceRequests(tags: \(tags))")
+        print("[requestNSBundleResourceRequests(tags: \(tags))]")
         var resourceMap: [String: IOSOnDemandResourcePigeon] = [:]
         for tag in tags {
             if resourceRequests[tag] == nil {
@@ -78,6 +78,7 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
         }
 
         let response = IOSOnDemandResourcesPigeon(resourceMap: resourceMap)
+        print("[requestNSBundleResourceRequests(tags: \(tags))] response: \(response)")
         return response
     }
 
@@ -123,6 +124,9 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
                 print("beginAccessingResources tag: \(tag), condition: \(condition)")
                 if condition {
                     print("existing resource, tag: \(tag)")
+                    // The already downloaded Progress is not updated and notified, so it is necessary to set the progress as completed from the code.
+                    request.progress.becomeCurrent(withPendingUnitCount: 100)
+                    request.progress.resignCurrent()
                     let resource = IOSOnDemandResourcePigeon.fromIOS(
                         tag: tag, request: request, condition: condition)
 
