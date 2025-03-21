@@ -26,7 +26,12 @@ abstract class PlayAssetDeliveryHostApiMethods {
   @async
   AndroidAssetPackStatesPigeon requestFetch({required List<String> packNames});
 
-  String? getAbsoluteAssetPath({
+  String? getAbsoluteAssetPathOnInstallTimeAsset({
+    required String assetPackName,
+    required String relativeAssetPath,
+  });
+
+  String? getAbsoluteAssetPathOnDownloadAsset({
     required String assetPackName,
     required String relativeAssetPath,
   });

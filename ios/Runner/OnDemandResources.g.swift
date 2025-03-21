@@ -315,6 +315,7 @@ class StreamOnDemandResourceStreamHandler: PigeonEventChannelWrapper<IOSOnDemand
 protocol OnDemandResourcesHostApiMethods {
   func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon
   func beginAccessingResources(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
+  /// The reason for including the tag namespace in the path is so that there is no problem if the filename is same with other asset packs.
   func getAbsoluteAssetPath(tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64) throws -> String?
 }
 
@@ -356,6 +357,7 @@ class OnDemandResourcesHostApiMethodsSetup {
     } else {
       beginAccessingResourcesChannel.setMessageHandler(nil)
     }
+    /// The reason for including the tag namespace in the path is so that there is no problem if the filename is same with other asset packs.
     let getAbsoluteAssetPathChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.getAbsoluteAssetPath\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       getAbsoluteAssetPathChannel.setMessageHandler { message, reply in

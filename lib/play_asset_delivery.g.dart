@@ -249,8 +249,31 @@ class PlayAssetDeliveryHostApiMethods {
     }
   }
 
-  Future<String?> getAbsoluteAssetPath({required String assetPackName, required String relativeAssetPath}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAbsoluteAssetPath$pigeonVar_messageChannelSuffix';
+  Future<String?> getAbsoluteAssetPathOnInstallTimeAsset({required String assetPackName, required String relativeAssetPath}) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAbsoluteAssetPathOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[assetPackName, relativeAssetPath]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return (pigeonVar_replyList[0] as String?);
+    }
+  }
+
+  Future<String?> getAbsoluteAssetPathOnDownloadAsset({required String assetPackName, required String relativeAssetPath}) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAbsoluteAssetPathOnDownloadAsset$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

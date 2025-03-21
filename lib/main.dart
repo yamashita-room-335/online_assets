@@ -7,11 +7,22 @@ import 'online_assets_widget.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  OnlineAssets.instance.init([
-    'install_time_sample_pack',
-    'fast_follow_sample_pack',
-    'on_demand_sample_pack',
-  ]);
+  OnlineAssets.instance.init(
+    assetPackSettingsList: [
+      OnlineAssetPackSettings(
+        packName: 'install_time_sample_pack',
+        isInstallTimeAssetPackOnAndroid: true,
+      ),
+      OnlineAssetPackSettings(
+        packName: 'fast_follow_sample_pack',
+        isInstallTimeAssetPackOnAndroid: false,
+      ),
+      OnlineAssetPackSettings(
+        packName: 'on_demand_sample_pack',
+        isInstallTimeAssetPackOnAndroid: false,
+      ),
+    ],
+  );
 
   runApp(const MyApp());
 }

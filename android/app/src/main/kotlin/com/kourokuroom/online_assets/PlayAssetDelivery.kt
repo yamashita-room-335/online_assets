@@ -9,6 +9,7 @@ import PigeonEventSink
 import PlayAssetDeliveryHostApiMethods
 import StreamAssetPackStateStreamHandler
 import android.content.Context
+import android.content.res.AssetManager
 import com.google.android.play.core.assetpacks.AssetPackManager
 import com.google.android.play.core.assetpacks.AssetPackManagerFactory
 import com.google.android.play.core.assetpacks.AssetPackState
@@ -31,11 +32,13 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     }
 
     private lateinit var assetPackManager: AssetPackManager
+    private lateinit var assetManager: AssetManager
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun setup(flutterEngine: FlutterEngine, context: Context) {
         Log.d(TAG, "[setup(flutterEngine: $flutterEngine, context: $context)]")
         assetPackManager = AssetPackManagerFactory.getInstance(context)
+        assetManager = context.assets
 
         // Setup HostAPI
         PlayAssetDeliveryHostApiMethods.setUp(
@@ -98,9 +101,9 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         }
     }
 
-    override fun getAbsoluteAssetPath(
+    override fun getAbsoluteAssetPathOnDownloadAsset(
         assetPackName: String,
-        relativeAssetPath: String,
+        relativeAssetPath: String
     ): String? {
         Log.d(
             TAG,
@@ -114,6 +117,27 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
                 TAG,
                 "[getAbsoluteAssetPath(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)] file: $file"
             )
+            return file.absolutePath
+        } catch (e: Exception) {
+            throw FlutterError(
+                code = TAG,
+                message = e.message,
+                details = e.toString()
+            )
+        }
+    }
+
+    override fun getAbsoluteAssetPathOnInstallTimeAsset(
+        assetPackName: String,
+        relativeAssetPath: String
+    ): String {
+        Log.d(
+            TAG,
+            "[getAbsoluteAssetPathOnInstallTimeAsset(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
+        )
+        try {
+            val file = createTempFile()
+            file.writeBytes(assetManager.open(relativeAssetPath).readBytes())
             return file.absolutePath
         } catch (e: Exception) {
             throw FlutterError(

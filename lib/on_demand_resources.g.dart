@@ -278,6 +278,7 @@ class OnDemandResourcesHostApiMethods {
     }
   }
 
+  /// The reason for including the tag namespace in the path is so that there is no problem if the filename is same with other asset packs.
   Future<String?> getAbsoluteAssetPath({required String tag, required String relativeAssetPathWithTagNamespace, int extensionLevel = 1, }) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.getAbsoluteAssetPath$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(

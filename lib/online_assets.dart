@@ -175,6 +175,15 @@ abstract class IOSProgress with _$IOSProgress {
   }
 }
 
+/// Pack-related settings
+@freezed
+abstract class OnlineAssetPackSettings with _$OnlineAssetPackSettings {
+  const factory OnlineAssetPackSettings({
+    required String packName,
+    required bool isInstallTimeAssetPackOnAndroid,
+  }) = _OnlineAssetPackSettings;
+}
+
 /// Class for unified handling of Play Asset Delivery (Android) and On-Demand Resources (iOS)
 ///
 /// Lazy generation singleton prevents unused Streams from being created.
@@ -241,6 +250,11 @@ class OnlineAssets {
   final OnDemandResourcesHostApiMethods iosApi =
       OnDemandResourcesHostApiMethods();
 
+  /// Settings for each Pack
+  ///
+  /// The settings are used to determine whether the pack is install-time or download on Android.
+  final Map<String, OnlineAssetPackSettings> packSettingsMap = {};
+
   /// Subject that receives Android's EventChannelApi
   ///
   /// Since each AssetPack is notified through the same Subject, it is sorted by packSubjectMap.
@@ -251,9 +265,16 @@ class OnlineAssets {
   ///
   /// Holds the Subject with the AssetName registered by registerStream() as the key.
   /// BehaviorSubject is used to enable the last state to be retrieved.
+  /// Since the install-time asset pack cannot obtain the pack status in Android.
   final Map<String, BehaviorSubject<OnlinePack>> packSubjectMap = {};
 
-  Future<void> init(List<String> assetNames) async {
+  /// Initialize
+  ///
+  /// [assetPackSettingsList] are the asset pack settings.
+  /// The settings are used to determine whether the pack is install-time or download on Android.
+  Future<void> init({
+    required List<OnlineAssetPackSettings> assetPackSettingsList,
+  }) async {
     if (_isInitialized) {
       throw Exception("Already initialized.");
     }
@@ -262,10 +283,31 @@ class OnlineAssets {
     }
 
     try {
-      // Generate only the Subject of the target tag
-      for (final assetName in assetNames) {
-        final packSubject = BehaviorSubject<OnlinePack>();
-        packSubjectMap[assetName] = packSubject;
+      final requestPackNames = <String>[];
+      for (final settings in assetPackSettingsList) {
+        packSettingsMap[settings.packName] = settings;
+
+        // Generate only the Subject of the target tag.
+        if (Platform.isAndroid && settings.isInstallTimeAssetPackOnAndroid) {
+          // Create completed asset subject because install-time asset status cannot be obtained on Android.
+          packSubjectMap[settings.packName] =
+              BehaviorSubject<OnlinePack>()..add(
+                OnlinePack.android(
+                  name: settings.packName,
+                  status: OnlineAssetStatus.completed,
+                  hasError: false,
+                  progress: 1,
+                  androidBytesDownloaded: 0,
+                  androidErrorCode: AndroidAssetPackErrorCode.noError,
+                  androidStatus: AndroidAssetPackStatus.completed,
+                  androidTotalBytesToDownload: 0,
+                  androidTransferProgressPercentage: 100,
+                ),
+              );
+        } else {
+          requestPackNames.add(settings.packName);
+          packSubjectMap[settings.packName] = BehaviorSubject<OnlinePack>();
+        }
       }
 
       platformSubject.listen((pack) {
@@ -280,11 +322,11 @@ class OnlineAssets {
       final OnlinePackHolder packHolder;
       if (Platform.isAndroid) {
         packHolder = OnlinePackHolder.fromAndroid(
-          await androidApi.requestPackStates(packNames: assetNames),
+          await androidApi.requestPackStates(packNames: requestPackNames),
         );
       } else {
         packHolder = OnlinePackHolder.fromIOS(
-          await iosApi.requestNSBundleResourceRequests(tags: assetNames),
+          await iosApi.requestNSBundleResourceRequests(tags: requestPackNames),
         );
       }
 
@@ -313,6 +355,13 @@ class OnlineAssets {
   /// Start fetch assets
   Future<void> fetch(List<String> assetNames) async {
     try {
+      if (Platform.isAndroid) {
+        assetNames.removeWhere(
+          (assetName) =>
+              packSettingsMap[assetName]!.isInstallTimeAssetPackOnAndroid,
+        );
+      }
+
       final OnlinePackHolder packHolder;
       if (Platform.isAndroid) {
         packHolder = OnlinePackHolder.fromAndroid(
@@ -352,10 +401,17 @@ class OnlineAssets {
     try {
       final String? path;
       if (Platform.isAndroid) {
-        path = await androidApi.getAbsoluteAssetPath(
-          assetPackName: assetName,
-          relativeAssetPath: relativePath,
-        );
+        if (packSettingsMap[assetName]!.isInstallTimeAssetPackOnAndroid) {
+          path = await androidApi.getAbsoluteAssetPathOnInstallTimeAsset(
+            assetPackName: assetName,
+            relativeAssetPath: relativePath,
+          );
+        } else {
+          path = await androidApi.getAbsoluteAssetPathOnDownloadAsset(
+            assetPackName: assetName,
+            relativeAssetPath: relativePath,
+          );
+        }
       } else {
         path = await iosApi.getAbsoluteAssetPath(
           tag: assetName,
@@ -386,6 +442,17 @@ class OnlineAssets {
     required String relativePath,
   }) async* {
     try {
+      if (Platform.isAndroid &&
+          packSettingsMap[assetName]?.isInstallTimeAssetPackOnAndroid == true) {
+        // If the asset is an install-time asset, it is already downloaded.
+        final file = await getFile(
+          assetName: assetName,
+          relativePath: relativePath,
+        );
+        yield (file, packSubjectMap[assetName]!.value);
+        return;
+      }
+
       // Called once without await to prevent download from not starting
       fetch([assetName]);
 

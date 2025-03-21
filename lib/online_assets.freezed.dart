@@ -797,4 +797,146 @@ as bool,
 
 }
 
+/// @nodoc
+mixin _$OnlineAssetPackSettings implements DiagnosticableTreeMixin {
+
+ String get packName; bool get isInstallTimeAssetPackOnAndroid;
+/// Create a copy of OnlineAssetPackSettings
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OnlineAssetPackSettingsCopyWith<OnlineAssetPackSettings> get copyWith => _$OnlineAssetPackSettingsCopyWithImpl<OnlineAssetPackSettings>(this as OnlineAssetPackSettings, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'OnlineAssetPackSettings'))
+    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('isInstallTimeAssetPackOnAndroid', isInstallTimeAssetPackOnAndroid));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.isInstallTimeAssetPackOnAndroid, isInstallTimeAssetPackOnAndroid) || other.isInstallTimeAssetPackOnAndroid == isInstallTimeAssetPackOnAndroid));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,packName,isInstallTimeAssetPackOnAndroid);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'OnlineAssetPackSettings(packName: $packName, isInstallTimeAssetPackOnAndroid: $isInstallTimeAssetPackOnAndroid)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OnlineAssetPackSettingsCopyWith<$Res>  {
+  factory $OnlineAssetPackSettingsCopyWith(OnlineAssetPackSettings value, $Res Function(OnlineAssetPackSettings) _then) = _$OnlineAssetPackSettingsCopyWithImpl;
+@useResult
+$Res call({
+ String packName, bool isInstallTimeAssetPackOnAndroid
+});
+
+
+
+
+}
+/// @nodoc
+class _$OnlineAssetPackSettingsCopyWithImpl<$Res>
+    implements $OnlineAssetPackSettingsCopyWith<$Res> {
+  _$OnlineAssetPackSettingsCopyWithImpl(this._self, this._then);
+
+  final OnlineAssetPackSettings _self;
+  final $Res Function(OnlineAssetPackSettings) _then;
+
+/// Create a copy of OnlineAssetPackSettings
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? packName = null,Object? isInstallTimeAssetPackOnAndroid = null,}) {
+  return _then(_self.copyWith(
+packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
+as String,isInstallTimeAssetPackOnAndroid: null == isInstallTimeAssetPackOnAndroid ? _self.isInstallTimeAssetPackOnAndroid : isInstallTimeAssetPackOnAndroid // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// @nodoc
+
+
+class _OnlineAssetPackSettings with DiagnosticableTreeMixin implements OnlineAssetPackSettings {
+  const _OnlineAssetPackSettings({required this.packName, required this.isInstallTimeAssetPackOnAndroid});
+  
+
+@override final  String packName;
+@override final  bool isInstallTimeAssetPackOnAndroid;
+
+/// Create a copy of OnlineAssetPackSettings
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OnlineAssetPackSettingsCopyWith<_OnlineAssetPackSettings> get copyWith => __$OnlineAssetPackSettingsCopyWithImpl<_OnlineAssetPackSettings>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'OnlineAssetPackSettings'))
+    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('isInstallTimeAssetPackOnAndroid', isInstallTimeAssetPackOnAndroid));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.isInstallTimeAssetPackOnAndroid, isInstallTimeAssetPackOnAndroid) || other.isInstallTimeAssetPackOnAndroid == isInstallTimeAssetPackOnAndroid));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,packName,isInstallTimeAssetPackOnAndroid);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'OnlineAssetPackSettings(packName: $packName, isInstallTimeAssetPackOnAndroid: $isInstallTimeAssetPackOnAndroid)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OnlineAssetPackSettingsCopyWith<$Res> implements $OnlineAssetPackSettingsCopyWith<$Res> {
+  factory _$OnlineAssetPackSettingsCopyWith(_OnlineAssetPackSettings value, $Res Function(_OnlineAssetPackSettings) _then) = __$OnlineAssetPackSettingsCopyWithImpl;
+@override @useResult
+$Res call({
+ String packName, bool isInstallTimeAssetPackOnAndroid
+});
+
+
+
+
+}
+/// @nodoc
+class __$OnlineAssetPackSettingsCopyWithImpl<$Res>
+    implements _$OnlineAssetPackSettingsCopyWith<$Res> {
+  __$OnlineAssetPackSettingsCopyWithImpl(this._self, this._then);
+
+  final _OnlineAssetPackSettings _self;
+  final $Res Function(_OnlineAssetPackSettings) _then;
+
+/// Create a copy of OnlineAssetPackSettings
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? packName = null,Object? isInstallTimeAssetPackOnAndroid = null,}) {
+  return _then(_OnlineAssetPackSettings(
+packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
+as String,isInstallTimeAssetPackOnAndroid: null == isInstallTimeAssetPackOnAndroid ? _self.isInstallTimeAssetPackOnAndroid : isInstallTimeAssetPackOnAndroid // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
 // dart format on
