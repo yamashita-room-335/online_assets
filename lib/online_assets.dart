@@ -462,9 +462,13 @@ class OnlineAssets {
   /// Stream files and information on target assets
   ///
   /// Starts the download and returns a Stream including the file after the download is complete.
+  ///
+  /// If [fetchOnNotDownloading] is [true], [fetch] is called when the status is "Pending", "Canceled", "Failed".
+  /// If you want to use a different logic to manage whether fetch is performed or not, set it to [false].
   Stream<(File?, OnlinePack)> streamFile({
     required String assetName,
     required String relativePath,
+    bool fetchOnNotDownloading = true,
   }) async* {
     try {
       if (Platform.isAndroid &&
@@ -478,12 +482,21 @@ class OnlineAssets {
         return;
       }
 
-      // Called once without await to prevent download from not starting
-      fetch([assetName]);
-
       final packSubject = packSubjectMap[assetName];
       if (packSubject == null) {
         throw Exception("Please register [$assetName] stream.");
+      }
+
+      if (fetchOnNotDownloading) {
+        switch (packSubject.valueOrNull?.status) {
+          case OnlineAssetStatus.pending ||
+              OnlineAssetStatus.canceled ||
+              OnlineAssetStatus.failed:
+            fetch([assetName]);
+            break;
+          default:
+            break;
+        }
       }
 
       // Return null until the download is complete, and return the file if the download is complete.
