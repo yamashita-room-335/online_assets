@@ -442,7 +442,7 @@ class OnlineAssets {
   /// If only [assetPackName] is specified, the target pack folder is deleted.
   /// Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
   Future<bool?> deleteCopiedAssetFileOnAndroidInstallTimeAsset({
-    String?  assetPackName,
+    String? assetPackName,
     String? relativeAssetPath,
   }) async {
     if (Platform.isAndroid) {
