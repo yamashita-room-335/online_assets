@@ -266,7 +266,7 @@ interface PlayAssetDeliveryHostApiMethods {
    *
    * If you are replacing asset files when updating your app and the file size is the same as the file before the replacement, you will need to call [getAssetFilePathOnDownloadAsset] function.
    */
-  fun getCopiedAssetFilePathOnInstallTimeAsset(assetPackName: String, relativeAssetPath: String): String?
+  fun getCopiedAssetFilePathOnInstallTimeAsset(assetPackName: String, relativeAssetPath: String, callback: (Result<String?>) -> Unit)
   /**
    * Delete the copied asset file.
    *
@@ -278,8 +278,8 @@ interface PlayAssetDeliveryHostApiMethods {
    *
    * Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
    */
-  fun deleteCopiedAssetFileOnInstallTimeAsset(assetPackName: String?, relativeAssetPath: String?): Boolean
-  fun getAssetFilePathOnDownloadAsset(assetPackName: String, relativeAssetPath: String): String?
+  fun deleteCopiedAssetFileOnInstallTimeAsset(assetPackName: String?, relativeAssetPath: String?, callback: (Result<Boolean>) -> Unit)
+  fun getAssetFilePathOnDownloadAsset(assetPackName: String, relativeAssetPath: String, callback: (Result<String?>) -> Unit)
 
   companion object {
     /** The codec used by PlayAssetDeliveryHostApiMethods. */
@@ -337,12 +337,15 @@ interface PlayAssetDeliveryHostApiMethods {
             val args = message as List<Any?>
             val assetPackNameArg = args[0] as String
             val relativeAssetPathArg = args[1] as String
-            val wrapped: List<Any?> = try {
-              listOf(api.getCopiedAssetFilePathOnInstallTimeAsset(assetPackNameArg, relativeAssetPathArg))
-            } catch (exception: Throwable) {
-              wrapError(exception)
+            api.getCopiedAssetFilePathOnInstallTimeAsset(assetPackNameArg, relativeAssetPathArg) { result: Result<String?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -355,12 +358,15 @@ interface PlayAssetDeliveryHostApiMethods {
             val args = message as List<Any?>
             val assetPackNameArg = args[0] as String?
             val relativeAssetPathArg = args[1] as String?
-            val wrapped: List<Any?> = try {
-              listOf(api.deleteCopiedAssetFileOnInstallTimeAsset(assetPackNameArg, relativeAssetPathArg))
-            } catch (exception: Throwable) {
-              wrapError(exception)
+            api.deleteCopiedAssetFileOnInstallTimeAsset(assetPackNameArg, relativeAssetPathArg) { result: Result<Boolean> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -373,12 +379,15 @@ interface PlayAssetDeliveryHostApiMethods {
             val args = message as List<Any?>
             val assetPackNameArg = args[0] as String
             val relativeAssetPathArg = args[1] as String
-            val wrapped: List<Any?> = try {
-              listOf(api.getAssetFilePathOnDownloadAsset(assetPackNameArg, relativeAssetPathArg))
-            } catch (exception: Throwable) {
-              wrapError(exception)
+            api.getAssetFilePathOnDownloadAsset(assetPackNameArg, relativeAssetPathArg) { result: Result<String?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)

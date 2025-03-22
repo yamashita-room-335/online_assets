@@ -33,6 +33,7 @@ abstract class PlayAssetDeliveryHostApiMethods {
   /// If this function is called and the file has already been copied and the file size is the same, the overwrite copy process is not performed.
   ///
   /// If you are replacing asset files when updating your app and the file size is the same as the file before the replacement, you will need to call [getAssetFilePathOnDownloadAsset] function.
+  @async
   String? getCopiedAssetFilePathOnInstallTimeAsset({
     required String assetPackName,
     required String relativeAssetPath,
@@ -47,11 +48,13 @@ abstract class PlayAssetDeliveryHostApiMethods {
   /// If [relativeAssetPath] = null, [assetPackName]'s install-time pack folder is deleted.
   ///
   /// Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
+  @async
   bool deleteCopiedAssetFileOnInstallTimeAsset({
     String? assetPackName,
     String? relativeAssetPath,
   });
 
+  @async
   String? getAssetFilePathOnDownloadAsset({
     required String assetPackName,
     required String relativeAssetPath,

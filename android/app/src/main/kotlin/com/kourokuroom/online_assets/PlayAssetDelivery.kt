@@ -23,9 +23,13 @@ import io.flutter.Log
 import io.flutter.embedding.engine.FlutterEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.InputStream
+
+// Pigeon Example
+// https://github.com/flutter/packages/blob/71a2e703a9de3afc450b4ffcf54064ba21cc0f4d/packages/pigeon/example/app/android/app/src/main/kotlin/dev/flutter/pigeon_example_app/MainActivity.kt
 
 class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     companion object {
@@ -35,7 +39,8 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     private lateinit var assetPackManager: AssetPackManager
     private lateinit var assetManager: AssetManager
     private lateinit var cacheDir: File
-    private val scope = CoroutineScope(Dispatchers.Main)
+    private val mainScope = CoroutineScope(Dispatchers.Main)
+    private val ioScope = CoroutineScope(Dispatchers.IO)
 
     fun setup(flutterEngine: FlutterEngine, context: Context) {
         val methodInfo = "[setup(flutterEngine: $flutterEngine, context: $context)]"
@@ -43,9 +48,11 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
 
         assetPackManager = AssetPackManagerFactory.getInstance(context)
         assetManager = context.assets
-        cacheDir = File(context.cacheDir, "pad_cache").apply {
-            if (!exists()) {
-                mkdirs()
+        ioScope.launch {
+            cacheDir = File(context.cacheDir, "pad_cache").apply {
+                if (!exists()) {
+                    mkdirs()
+                }
             }
         }
 
@@ -63,24 +70,28 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         val methodInfo = "[requestPackStates(packNames: $packNames)]"
         Log.d(TAG, "$methodInfo start")
 
-        scope.launch {
+        ioScope.launch {
             try {
                 val assetPackStates = assetPackManager.requestPackStates(packNames)
                 Log.d(
                     TAG,
                     "$methodInfo assetPackStates: $assetPackStates"
                 )
-                callback(Result.success(assetPackStates.convertPigeon()))
+                mainScope.launch {
+                    callback(Result.success(assetPackStates.convertPigeon()))
+                }
             } catch (e: Exception) {
-                callback(
-                    Result.failure(
-                        FlutterError(
-                            code = TAG,
-                            message = methodInfo + e.message,
-                            details = e.toString()
+                mainScope.launch {
+                    callback(
+                        Result.failure(
+                            FlutterError(
+                                code = TAG,
+                                message = methodInfo + e.message,
+                                details = e.toString()
+                            )
                         )
                     )
-                )
+                }
             }
         }
     }
@@ -92,113 +103,170 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         val methodInfo = "[requestFetch(packNames: $packNames)]"
         Log.d(TAG, "$methodInfo start")
 
-        scope.launch {
+        ioScope.launch {
             try {
                 val assetPackStates = assetPackManager.requestFetch(packNames)
                 Log.d(
                     TAG,
                     "$methodInfo assetPackStates: $assetPackStates"
                 )
-                callback(Result.success(assetPackStates.convertPigeon()))
+                mainScope.launch {
+                    callback(Result.success(assetPackStates.convertPigeon()))
+                }
             } catch (e: Exception) {
-                callback(
-                    Result.failure(
-                        FlutterError(
-                            code = TAG,
-                            message = methodInfo + e.message,
-                            details = e.toString()
+                mainScope.launch {
+                    callback(
+                        Result.failure(
+                            FlutterError(
+                                code = TAG,
+                                message = methodInfo + e.message,
+                                details = e.toString()
+                            )
                         )
                     )
-                )
+                }
             }
         }
     }
 
     override fun getCopiedAssetFilePathOnInstallTimeAsset(
         assetPackName: String,
-        relativeAssetPath: String
-    ): String {
+        relativeAssetPath: String,
+        callback: (Result<String?>) -> Unit
+    ) {
         val methodInfo =
             "[getCopiedAssetFilePathOnInstallTimeAsset(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
         Log.d(TAG, "$methodInfo start")
 
-        try {
-            val assetFileDescriptor = assetManager.openFd(relativeAssetPath)
-            val targetFile = File(cacheDir, (assetPackName + File.separator + relativeAssetPath))
-            if (targetFile.exists()) {
-                if (targetFile.length() == assetFileDescriptor.length) {
-                    // Because of the time required, this function do not check file hash.
-                    Log.d(TAG, "$methodInfo skip saving, same file size")
-                    return targetFile.absolutePath
+        ioScope.launch {
+            try {
+                val assetFileDescriptor = assetManager.openFd(relativeAssetPath)
+                val targetFile =
+                    File(cacheDir, (assetPackName + File.separator + relativeAssetPath))
+                if (targetFile.exists()) {
+                    if (targetFile.length() == assetFileDescriptor.length) {
+                        // Because of the time required, this function do not check file hash.
+                        Log.d(TAG, "$methodInfo skip saving, same file size")
+                        mainScope.launch {
+                            callback(Result.success(targetFile.absolutePath))
+                        }
+                        return@launch
+                    }
+                    Log.d(TAG, "$methodInfo Remove pre saved file")
+                    targetFile.delete()
+                } else if (targetFile.parentFile?.exists() == false) {
+                    targetFile.parentFile?.mkdirs()
                 }
-                Log.d(TAG, "$methodInfo Remove pre saved file")
-                targetFile.delete()
-            } else if (targetFile.parentFile?.exists() == false) {
-                targetFile.parentFile?.mkdirs()
-            }
 
-            assetManager.open(relativeAssetPath).use { assetInputStream ->
-                targetFile.copyInputStreamToFile(assetInputStream)
+                assetManager.open(relativeAssetPath).use { assetInputStream ->
+                    targetFile.copyInputStreamToFile(assetInputStream)
+                }
+                mainScope.launch {
+                    callback(Result.success(targetFile.absolutePath))
+                }
+            } catch (e: Exception) {
+                mainScope.launch {
+                    callback(
+                        Result.failure(
+                            FlutterError(
+                                code = TAG,
+                                message = methodInfo + e.message,
+                                details = e.toString()
+                            )
+                        )
+                    )
+                }
             }
-            return targetFile.absolutePath
-        } catch (e: Exception) {
-            throw FlutterError(
-                code = TAG,
-                message = methodInfo + e.message,
-                details = e.toString()
-            )
         }
     }
 
     override fun deleteCopiedAssetFileOnInstallTimeAsset(
         assetPackName: String?,
-        relativeAssetPath: String?
-    ): Boolean {
+        relativeAssetPath: String?,
+        callback: (Result<Boolean>) -> Unit
+    ) {
         val methodInfo =
             "[deleteCopiedAssetFileOnInstallTimeAsset(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
         Log.d(TAG, "$methodInfo start")
 
-        try {
-            val targetFile = if (assetPackName == null) {
-                cacheDir
-            } else if (relativeAssetPath == null) {
-                File(cacheDir, assetPackName)
-            } else {
-                File(cacheDir, (assetPackName + File.separator + relativeAssetPath))
+        ioScope.launch {
+            try {
+                val targetFile = if (assetPackName == null) {
+                    cacheDir
+                } else if (relativeAssetPath == null) {
+                    File(cacheDir, assetPackName)
+                } else {
+                    File(cacheDir, (assetPackName + File.separator + relativeAssetPath))
+                }
+                if (targetFile.exists()) {
+                    mainScope.launch {
+                        callback(Result.success(targetFile.delete()))
+                    }
+                }
+                mainScope.launch {
+                    callback(Result.success(true))
+                }
+            } catch (e: Exception) {
+                mainScope.launch {
+                    callback(
+                        Result.failure(
+                            FlutterError(
+                                code = TAG,
+                                message = methodInfo + e.message,
+                                details = e.toString()
+                            )
+                        )
+                    )
+                }
             }
-            if (targetFile.exists()) {
-                return targetFile.delete()
-            }
-            return true
-        } catch (e: Exception) {
-            throw FlutterError(
-                code = TAG,
-                message = methodInfo + e.message,
-                details = e.toString()
-            )
         }
     }
 
     override fun getAssetFilePathOnDownloadAsset(
         assetPackName: String,
-        relativeAssetPath: String
-    ): String? {
+        relativeAssetPath: String,
+        callback: (Result<String?>) -> Unit
+    ) {
         val methodInfo =
             "[getAbsoluteAssetPath(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
         Log.d(TAG, "$methodInfo start")
 
-        try {
-            val assetPackLocation = assetPackManager.getPackLocation(assetPackName) ?: return null
-            val assetsPath = assetPackLocation.assetsPath() ?: return null
-            val file = File(assetsPath, relativeAssetPath)
-            Log.d(TAG, "$methodInfo file: $file")
-            return file.absolutePath
-        } catch (e: Exception) {
-            throw FlutterError(
-                code = TAG,
-                message = methodInfo + e.message,
-                details = e.toString()
-            )
+        ioScope.launch {
+            try {
+                val assetPackLocation = assetPackManager.getPackLocation(assetPackName)
+                if (assetPackLocation == null) {
+                    Log.d(TAG, "$methodInfo assetPackLocation is null")
+                    mainScope.launch {
+                        callback(Result.success(null))
+                    }
+                    return@launch
+                }
+                val assetsPath = assetPackLocation.assetsPath()
+                if (assetsPath == null) {
+                    Log.d(TAG, "$methodInfo assetsPath is null")
+                    mainScope.launch {
+                        callback(Result.success(null))
+                    }
+                    return@launch
+                }
+                val file = File(assetsPath, relativeAssetPath)
+                Log.d(TAG, "$methodInfo file: $file")
+                mainScope.launch {
+                    callback(Result.success(file.absolutePath))
+                }
+            } catch (e: Exception) {
+                mainScope.launch {
+                    callback(
+                        Result.failure(
+                            FlutterError(
+                                code = TAG,
+                                message = methodInfo + e.message,
+                                details = e.toString()
+                            )
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -211,12 +279,15 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
 
 class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
     private lateinit var assetPackManager: AssetPackManager
+    private val mainScope = CoroutineScope(Dispatchers.Main)
     private var eventSink: PigeonEventSink<AndroidAssetPackStatePigeon>? = null
     private val assetPackStateUpdateListener = AssetPackStateUpdateListener { state ->
         val methodInfo = "[assetPackStateUpdateListener(state: $state)]"
         Log.d(TAG, "$methodInfo call")
 
-        eventSink?.success(state.convertPigeon())
+        mainScope.launch {
+            eventSink?.success(state.convertPigeon())
+        }
     }
 
     companion object {
@@ -250,6 +321,7 @@ class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
         Log.d(TAG, "$methodInfo start")
 
         eventSink = null
+        mainScope.cancel()
     }
 }
 
