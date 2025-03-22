@@ -1,3 +1,4 @@
+import CryptoKit
 import Flutter
 import Foundation
 
@@ -209,7 +210,7 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
     }
 
     /// Get the absolute path of the asset
-    func getAbsoluteAssetPath(
+    func getCopiedAssetFilePath(
         tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64
     ) throws -> String? {
         let methodInfo =
@@ -288,38 +289,81 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         } else {
             name = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
         }
+
         log("\(methodInfo) targetURL: \(targetURL), named: \(name)")
+
         if isImageFile, let image = UIImage(named: name) {
-            if let imageData = image.pngData() {
-                do {
-                    log("\(methodInfo) image: \(image), targetURL: \(targetURL)")
-                    if !fileManager.fileExists(atPath: targetURL.path) {
-                        log("\(methodInfo) imageData.write(to: \(targetURL))")
-                        try imageData.write(to: targetURL)
+            // Check hash already saved file
+            if fileManager.fileExists(atPath: targetURL.path) {
+                if #available(iOS 13.0, *) {
+                    let preSavedData = try Data(contentsOf: targetURL)
+                    let preSavedImage = UIImage(data: preSavedData)
+                    if let preImageData = preSavedImage?.cgImage?.dataProvider?.data as? Data,
+                        let currentImageData = image.cgImage?.dataProvider?.data as? Data
+                    {
+                        let preSavedHash = SHA256.hash(data: preImageData)
+                        let currentHash = SHA256.hash(data: currentImageData)
+                        if preSavedHash == currentHash {
+                            log("\(methodInfo) skip saving, same hash: \(preSavedHash)")
+                            return targetURL.path
+                        }
+                        log("\(methodInfo) different hash: \(preSavedHash), \(currentHash)")
                     }
+                }
+
+                log("\(methodInfo) Remove pre saved file. \(targetURL)")
+                do {
+                    try fileManager.removeItem(at: targetURL)
+                } catch {
+                    log("\(methodInfo) fileManager.removeItem error: \(error)")
+                }
+            }
+
+            if let imagePngData = image.pngData() {
+                log("\(methodInfo) Write pngData to file: \(targetURL)")
+                do {
+                    try imagePngData.write(to: targetURL)
                     return targetURL.path
                 } catch {
-                    log("\(methodInfo) imageData.write error: \(error)")
+                    log("\(methodInfo) imagePngData.write error: \(error)")
                     return nil
                 }
             }
-        } else if let asset = NSDataAsset(name: name) {
-            do {
-                log("\(methodInfo) asset: \(asset), targetURL: \(targetURL)")
-                if !fileManager.fileExists(atPath: targetURL.path) {
-                    log("\(methodInfo) asset.data.write(to: \(targetURL))")
-                    try asset.data.write(to: targetURL)
+        }
+
+        if let asset = NSDataAsset(name: name) {
+            // Check hash already saved file
+            if fileManager.fileExists(atPath: targetURL.path) {
+                if #available(iOS 13.0, *) {
+                    let preSavedData = try Data(contentsOf: targetURL)
+                    let preSavedHash = SHA256.hash(data: preSavedData)
+                    let currentHash = SHA256.hash(data: asset.data)
+                    if preSavedHash == currentHash {
+                        log("\(methodInfo) skip saving, same hash: \(preSavedHash)")
+                        return targetURL.path
+                    }
+                    log("\(methodInfo) different hash: \(preSavedHash), \(currentHash)")
                 }
+
+                log("\(methodInfo) Remove pre saved file. \(targetURL)")
+                do {
+                    try fileManager.removeItem(at: targetURL)
+                } catch {
+                    log("\(methodInfo) fileManager.removeItem error: \(error)")
+                }
+            }
+
+            log("\(methodInfo) Write NSDataAsset to file: \(targetURL)")
+            do {
+                try asset.data.write(to: targetURL)
                 return targetURL.path
             } catch {
                 log("\(methodInfo) asset.data.write error: \(error)")
                 return nil
             }
-        } else {
-            log("\(methodInfo) Can not load asset.")
-            return nil
         }
 
+        log("\(methodInfo) Can not load asset.")
         return nil
     }
 }

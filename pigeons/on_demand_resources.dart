@@ -26,8 +26,11 @@ abstract class OnDemandResourcesHostApiMethods {
     required List<String> tags,
   });
 
+  /// It is not possible to obtain the file path of the asset file itself.
+  /// Therefore, the path of the copied file as a temporary file is obtained.
+  ///
   /// The reason for including the tag namespace in the path is so that there is no problem if the filename is same with other asset packs.
-  String? getAbsoluteAssetPath({
+  String? getCopiedAssetFilePath({
     required String tag,
     required String relativeAssetPathWithTagNamespace,
     int extensionLevel = 1,

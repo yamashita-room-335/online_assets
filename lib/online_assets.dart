@@ -413,7 +413,7 @@ class OnlineAssets {
           );
         }
       } else {
-        path = await iosApi.getAbsoluteAssetPath(
+        path = await iosApi.getCopiedAssetFilePath(
           tag: assetName,
           relativeAssetPathWithTagNamespace:
               '$assetName${Platform.pathSeparator}$relativePath',

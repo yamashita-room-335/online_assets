@@ -57,7 +57,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
   # Used to make the Platform easier to operate.
-  pigeon: ^25.0.0
+  pigeon: ^25.1.0
 
   # To simplify the definition of Model
   freezed: ^3.0.4
