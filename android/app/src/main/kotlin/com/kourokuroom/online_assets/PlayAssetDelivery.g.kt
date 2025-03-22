@@ -257,8 +257,13 @@ abstract class StreamAssetPackStateStreamHandler : PlayAssetDeliveryPigeonEventC
 interface PlayAssetDeliveryHostApiMethods {
   fun requestPackStates(packNames: List<String>, callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit)
   fun requestFetch(packNames: List<String>, callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit)
-  fun getAbsoluteAssetPathOnInstallTimeAsset(assetPackName: String, relativeAssetPath: String): String?
-  fun getAbsoluteAssetPathOnDownloadAsset(assetPackName: String, relativeAssetPath: String): String?
+  /**
+   * It is not possible to obtain the file path of the asset file itself.
+   * Therefore, the path of the copied file as a temporary file is obtained.
+   * Note that using this function uses twice as much device storage due to the asset and the copied files.
+   */
+  fun getCopiedAssetFilePathOnInstallTimeAsset(assetPackName: String, relativeAssetPath: String): String?
+  fun getAssetFilePathOnDownloadAsset(assetPackName: String, relativeAssetPath: String): String?
 
   companion object {
     /** The codec used by PlayAssetDeliveryHostApiMethods. */
@@ -310,14 +315,14 @@ interface PlayAssetDeliveryHostApiMethods {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAbsoluteAssetPathOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getCopiedAssetFilePathOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val assetPackNameArg = args[0] as String
             val relativeAssetPathArg = args[1] as String
             val wrapped: List<Any?> = try {
-              listOf(api.getAbsoluteAssetPathOnInstallTimeAsset(assetPackNameArg, relativeAssetPathArg))
+              listOf(api.getCopiedAssetFilePathOnInstallTimeAsset(assetPackNameArg, relativeAssetPathArg))
             } catch (exception: Throwable) {
               wrapError(exception)
             }
@@ -328,14 +333,14 @@ interface PlayAssetDeliveryHostApiMethods {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAbsoluteAssetPathOnDownloadAsset$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAssetFilePathOnDownloadAsset$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val assetPackNameArg = args[0] as String
             val relativeAssetPathArg = args[1] as String
             val wrapped: List<Any?> = try {
-              listOf(api.getAbsoluteAssetPathOnDownloadAsset(assetPackNameArg, relativeAssetPathArg))
+              listOf(api.getAssetFilePathOnDownloadAsset(assetPackNameArg, relativeAssetPathArg))
             } catch (exception: Throwable) {
               wrapError(exception)
             }

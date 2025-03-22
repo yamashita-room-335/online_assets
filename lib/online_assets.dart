@@ -402,12 +402,12 @@ class OnlineAssets {
       final String? path;
       if (Platform.isAndroid) {
         if (packSettingsMap[assetName]!.isInstallTimeAssetPackOnAndroid) {
-          path = await androidApi.getAbsoluteAssetPathOnInstallTimeAsset(
+          path = await androidApi.getCopiedAssetFilePathOnInstallTimeAsset(
             assetPackName: assetName,
             relativeAssetPath: relativePath,
           );
         } else {
-          path = await androidApi.getAbsoluteAssetPathOnDownloadAsset(
+          path = await androidApi.getAssetFilePathOnDownloadAsset(
             assetPackName: assetName,
             relativeAssetPath: relativePath,
           );

@@ -312,8 +312,11 @@ class PlayAssetDeliveryHostApiMethods {
     }
   }
 
-  Future<String?> getAbsoluteAssetPathOnInstallTimeAsset({required String assetPackName, required String relativeAssetPath}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAbsoluteAssetPathOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
+  /// It is not possible to obtain the file path of the asset file itself.
+  /// Therefore, the path of the copied file as a temporary file is obtained.
+  /// Note that using this function uses twice as much device storage due to the asset and the copied files.
+  Future<String?> getCopiedAssetFilePathOnInstallTimeAsset({required String assetPackName, required String relativeAssetPath}) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getCopiedAssetFilePathOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -335,8 +338,8 @@ class PlayAssetDeliveryHostApiMethods {
     }
   }
 
-  Future<String?> getAbsoluteAssetPathOnDownloadAsset({required String assetPackName, required String relativeAssetPath}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAbsoluteAssetPathOnDownloadAsset$pigeonVar_messageChannelSuffix';
+  Future<String?> getAssetFilePathOnDownloadAsset({required String assetPackName, required String relativeAssetPath}) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAssetFilePathOnDownloadAsset$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

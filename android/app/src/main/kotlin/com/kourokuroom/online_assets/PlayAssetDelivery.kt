@@ -36,7 +36,9 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun setup(flutterEngine: FlutterEngine, context: Context) {
-        Log.d(TAG, "[setup(flutterEngine: $flutterEngine, context: $context)]")
+        val methodInfo = "[setup(flutterEngine: $flutterEngine, context: $context)]"
+        Log.d(TAG, "$methodInfo start")
+
         assetPackManager = AssetPackManagerFactory.getInstance(context)
         assetManager = context.assets
 
@@ -51,13 +53,15 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         packNames: List<String>,
         callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit
     ) {
-        Log.d(TAG, "[requestPackStates(packNames: $packNames)]")
+        val methodInfo = "[requestPackStates(packNames: $packNames)]"
+        Log.d(TAG, "$methodInfo start")
+
         scope.launch {
             try {
                 val assetPackStates = assetPackManager.requestPackStates(packNames)
                 Log.d(
                     TAG,
-                    "[requestPackStates(packNames: $packNames)] assetPackStates: $assetPackStates"
+                    "$methodInfo assetPackStates: $assetPackStates"
                 )
                 callback(Result.success(assetPackStates.convertPigeon()))
             } catch (e: Exception) {
@@ -65,7 +69,7 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
                     Result.failure(
                         FlutterError(
                             code = TAG,
-                            message = e.message,
+                            message = methodInfo + e.message,
                             details = e.toString()
                         )
                     )
@@ -78,13 +82,15 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         packNames: List<String>,
         callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit
     ) {
-        Log.d(TAG, "[requestFetch(packNames: $packNames)]")
+        val methodInfo = "[requestFetch(packNames: $packNames)]"
+        Log.d(TAG, "$methodInfo start")
+
         scope.launch {
             try {
                 val assetPackStates = assetPackManager.requestFetch(packNames)
                 Log.d(
                     TAG,
-                    "[requestFetch(packNames: $packNames)] assetPackStates: $assetPackStates"
+                    "$methodInfo assetPackStates: $assetPackStates"
                 )
                 callback(Result.success(assetPackStates.convertPigeon()))
             } catch (e: Exception) {
@@ -92,7 +98,7 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
                     Result.failure(
                         FlutterError(
                             code = TAG,
-                            message = e.message,
+                            message = methodInfo + e.message,
                             details = e.toString()
                         )
                     )
@@ -101,40 +107,14 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         }
     }
 
-    override fun getAbsoluteAssetPathOnDownloadAsset(
-        assetPackName: String,
-        relativeAssetPath: String
-    ): String? {
-        Log.d(
-            TAG,
-            "[getAbsoluteAssetPath(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
-        )
-        try {
-            val assetPackLocation = assetPackManager.getPackLocation(assetPackName) ?: return null
-            val assetsPath = assetPackLocation.assetsPath() ?: return null
-            val file = File(assetsPath, relativeAssetPath)
-            Log.d(
-                TAG,
-                "[getAbsoluteAssetPath(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)] file: $file"
-            )
-            return file.absolutePath
-        } catch (e: Exception) {
-            throw FlutterError(
-                code = TAG,
-                message = e.message,
-                details = e.toString()
-            )
-        }
-    }
-
-    override fun getAbsoluteAssetPathOnInstallTimeAsset(
+    override fun getCopiedAssetFilePathOnInstallTimeAsset(
         assetPackName: String,
         relativeAssetPath: String
     ): String {
-        Log.d(
-            TAG,
-            "[getAbsoluteAssetPathOnInstallTimeAsset(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
-        )
+        val methodInfo =
+            "[getCopiedAssetFilePathOnInstallTimeAsset(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
+        Log.d(TAG, "$methodInfo start")
+
         try {
             val file = createTempFile()
             file.writeBytes(assetManager.open(relativeAssetPath).readBytes())
@@ -142,7 +122,30 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         } catch (e: Exception) {
             throw FlutterError(
                 code = TAG,
-                message = e.message,
+                message = methodInfo + e.message,
+                details = e.toString()
+            )
+        }
+    }
+
+    override fun getAssetFilePathOnDownloadAsset(
+        assetPackName: String,
+        relativeAssetPath: String
+    ): String? {
+        val methodInfo =
+            "[getAbsoluteAssetPath(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
+        Log.d(TAG, "$methodInfo start")
+
+        try {
+            val assetPackLocation = assetPackManager.getPackLocation(assetPackName) ?: return null
+            val assetsPath = assetPackLocation.assetsPath() ?: return null
+            val file = File(assetsPath, relativeAssetPath)
+            Log.d(TAG, "$methodInfo file: $file")
+            return file.absolutePath
+        } catch (e: Exception) {
+            throw FlutterError(
+                code = TAG,
+                message = methodInfo + e.message,
                 details = e.toString()
             )
         }
@@ -153,7 +156,9 @@ class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
     private lateinit var assetPackManager: AssetPackManager
     private var eventSink: PigeonEventSink<AndroidAssetPackStatePigeon>? = null
     private val assetPackStateUpdateListener = AssetPackStateUpdateListener { state ->
-        Log.d(TAG, "[assetPackStateUpdateListener(state: $state)]")
+        val methodInfo = "[assetPackStateUpdateListener(state: $state)]"
+        Log.d(TAG, "$methodInfo call")
+
         eventSink?.success(state.convertPigeon())
     }
 
@@ -162,7 +167,9 @@ class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
     }
 
     fun register(flutterEngine: FlutterEngine, context: Context) {
-        Log.d(TAG, "[register(flutterEngine: $flutterEngine, context: $context)]")
+        val methodInfo = "[register(flutterEngine: $flutterEngine, context: $context)]"
+        Log.d(TAG, "$methodInfo start")
+
         assetPackManager = AssetPackManagerFactory.getInstance(context)
 
         // Register EventListener
@@ -175,12 +182,16 @@ class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
     }
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<AndroidAssetPackStatePigeon>) {
-        Log.d(TAG, "[onListen(p0: $p0, sink: $sink)]")
+        val methodInfo = "[onListen(p0: $p0, sink: $sink)]"
+        Log.d(TAG, "$methodInfo start")
+
         eventSink = sink
     }
 
     override fun onCancel(p0: Any?) {
-        Log.d(TAG, "[onCancel(p0: $p0)]")
+        val methodInfo = "[onCancel(p0: $p0)]"
+        Log.d(TAG, "$methodInfo start")
+
         eventSink = null
     }
 }
