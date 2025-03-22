@@ -31,6 +31,54 @@ import java.io.InputStream
 // Pigeon Example
 // https://github.com/flutter/packages/blob/71a2e703a9de3afc450b4ffcf54064ba21cc0f4d/packages/pigeon/example/app/android/app/src/main/kotlin/dev/flutter/pigeon_example_app/MainActivity.kt
 
+class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
+    private lateinit var assetPackManager: AssetPackManager
+    private val mainScope = CoroutineScope(Dispatchers.Main)
+    private var eventSink: PigeonEventSink<AndroidAssetPackStatePigeon>? = null
+    private val assetPackStateUpdateListener = AssetPackStateUpdateListener { state ->
+        val methodInfo = "[assetPackStateUpdateListener(state: $state)]"
+        Log.d(TAG, "$methodInfo call")
+
+        mainScope.launch {
+            eventSink?.success(state.convertPigeon())
+        }
+    }
+
+    companion object {
+        private const val TAG = "PlayAssetDeliveryStreamHandler"
+    }
+
+    fun register(flutterEngine: FlutterEngine, context: Context) {
+        val methodInfo = "[register(flutterEngine: $flutterEngine, context: $context)]"
+        Log.d(TAG, "$methodInfo start")
+
+        assetPackManager = AssetPackManagerFactory.getInstance(context)
+
+        // Register EventListener
+        register(
+            flutterEngine.dartExecutor.binaryMessenger,
+            this
+        )
+
+        assetPackManager.registerListener(assetPackStateUpdateListener)
+    }
+
+    override fun onListen(p0: Any?, sink: PigeonEventSink<AndroidAssetPackStatePigeon>) {
+        val methodInfo = "[onListen(p0: $p0, sink: $sink)]"
+        Log.d(TAG, "$methodInfo start")
+
+        eventSink = sink
+    }
+
+    override fun onCancel(p0: Any?) {
+        val methodInfo = "[onCancel(p0: $p0)]"
+        Log.d(TAG, "$methodInfo start")
+
+        eventSink = null
+        mainScope.cancel()
+    }
+}
+
 class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     companion object {
         private const val TAG = "PlayAssetDeliveryApi"
@@ -274,54 +322,6 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         this.outputStream().use { fileOut ->
             inputStream.copyTo(fileOut)
         }
-    }
-}
-
-class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
-    private lateinit var assetPackManager: AssetPackManager
-    private val mainScope = CoroutineScope(Dispatchers.Main)
-    private var eventSink: PigeonEventSink<AndroidAssetPackStatePigeon>? = null
-    private val assetPackStateUpdateListener = AssetPackStateUpdateListener { state ->
-        val methodInfo = "[assetPackStateUpdateListener(state: $state)]"
-        Log.d(TAG, "$methodInfo call")
-
-        mainScope.launch {
-            eventSink?.success(state.convertPigeon())
-        }
-    }
-
-    companion object {
-        private const val TAG = "PlayAssetDeliveryStreamHandler"
-    }
-
-    fun register(flutterEngine: FlutterEngine, context: Context) {
-        val methodInfo = "[register(flutterEngine: $flutterEngine, context: $context)]"
-        Log.d(TAG, "$methodInfo start")
-
-        assetPackManager = AssetPackManagerFactory.getInstance(context)
-
-        // Register EventListener
-        register(
-            flutterEngine.dartExecutor.binaryMessenger,
-            this
-        )
-
-        assetPackManager.registerListener(assetPackStateUpdateListener)
-    }
-
-    override fun onListen(p0: Any?, sink: PigeonEventSink<AndroidAssetPackStatePigeon>) {
-        val methodInfo = "[onListen(p0: $p0, sink: $sink)]"
-        Log.d(TAG, "$methodInfo start")
-
-        eventSink = sink
-    }
-
-    override fun onCancel(p0: Any?) {
-        val methodInfo = "[onCancel(p0: $p0)]"
-        Log.d(TAG, "$methodInfo start")
-
-        eventSink = null
-        mainScope.cancel()
     }
 }
 

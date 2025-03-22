@@ -7,10 +7,10 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        val playAssetDeliveryApi = PlayAssetDeliveryApiImplementation()
-        playAssetDeliveryApi.setup(flutterEngine, context)
-
         val playAssetDeliveryStreamHandler = PlayAssetDeliveryStreamHandler()
         playAssetDeliveryStreamHandler.register(flutterEngine, context)
+
+        val playAssetDeliveryApi = PlayAssetDeliveryApiImplementation()
+        playAssetDeliveryApi.setup(flutterEngine, context)
     }
 }
