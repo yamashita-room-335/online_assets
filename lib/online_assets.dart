@@ -434,6 +434,31 @@ class OnlineAssets {
     }
   }
 
+  /// Delete the copied asset file on Android Install-Time asset.
+  ///
+  /// Returns true if the target file or folder was successfully deleted.
+  /// Also returns true if the target file or folder does not yet exist.
+  ///
+  /// If only [assetPackName] is specified, the target pack folder is deleted.
+  /// Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
+  Future<bool?> deleteCopiedAssetFileOnAndroidInstallTimeAsset({
+    String?  assetPackName,
+    String? relativeAssetPath,
+  }) async {
+    if (Platform.isAndroid) {
+      try {
+        return await androidApi.deleteCopiedAssetFileOnInstallTimeAsset(
+          assetPackName: assetPackName,
+          relativeAssetPath: relativeAssetPath,
+        );
+      } catch (e) {
+        log(e.toString());
+        return null;
+      }
+    }
+    return null;
+  }
+
   /// Stream files and information on target assets
   ///
   /// Starts the download and returns a Stream including the file after the download is complete.

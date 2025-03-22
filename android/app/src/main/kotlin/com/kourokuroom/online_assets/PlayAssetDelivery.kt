@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.InputStream
 
 class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     companion object {
@@ -33,6 +34,7 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
 
     private lateinit var assetPackManager: AssetPackManager
     private lateinit var assetManager: AssetManager
+    private lateinit var cacheDir: File
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun setup(flutterEngine: FlutterEngine, context: Context) {
@@ -41,6 +43,11 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
 
         assetPackManager = AssetPackManagerFactory.getInstance(context)
         assetManager = context.assets
+        cacheDir = File(context.cacheDir, "pad_cache").apply {
+            if (!exists()) {
+                mkdirs()
+            }
+        }
 
         // Setup HostAPI
         PlayAssetDeliveryHostApiMethods.setUp(
@@ -116,9 +123,53 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         Log.d(TAG, "$methodInfo start")
 
         try {
-            val file = createTempFile()
-            file.writeBytes(assetManager.open(relativeAssetPath).readBytes())
-            return file.absolutePath
+            val assetFileDescriptor = assetManager.openFd(relativeAssetPath)
+            val targetFile = File(cacheDir, (assetPackName + File.separator + relativeAssetPath))
+            if (targetFile.exists()) {
+                if (targetFile.length() == assetFileDescriptor.length) {
+                    // Because of the time required, this function do not check file hash.
+                    Log.d(TAG, "$methodInfo skip saving, same file size")
+                    return targetFile.absolutePath
+                }
+                Log.d(TAG, "$methodInfo Remove pre saved file")
+                targetFile.delete()
+            } else if (targetFile.parentFile?.exists() == false) {
+                targetFile.parentFile?.mkdirs()
+            }
+
+            assetManager.open(relativeAssetPath).use { assetInputStream ->
+                targetFile.copyInputStreamToFile(assetInputStream)
+            }
+            return targetFile.absolutePath
+        } catch (e: Exception) {
+            throw FlutterError(
+                code = TAG,
+                message = methodInfo + e.message,
+                details = e.toString()
+            )
+        }
+    }
+
+    override fun deleteCopiedAssetFileOnInstallTimeAsset(
+        assetPackName: String?,
+        relativeAssetPath: String?
+    ): Boolean {
+        val methodInfo =
+            "[deleteCopiedAssetFileOnInstallTimeAsset(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
+        Log.d(TAG, "$methodInfo start")
+
+        try {
+            val targetFile = if (assetPackName == null) {
+                cacheDir
+            } else if (relativeAssetPath == null) {
+                File(cacheDir, assetPackName)
+            } else {
+                File(cacheDir, (assetPackName + File.separator + relativeAssetPath))
+            }
+            if (targetFile.exists()) {
+                return targetFile.delete()
+            }
+            return true
         } catch (e: Exception) {
             throw FlutterError(
                 code = TAG,
@@ -148,6 +199,12 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
                 message = methodInfo + e.message,
                 details = e.toString()
             )
+        }
+    }
+
+    private fun File.copyInputStreamToFile(inputStream: InputStream) {
+        this.outputStream().use { fileOut ->
+            inputStream.copyTo(fileOut)
         }
     }
 }

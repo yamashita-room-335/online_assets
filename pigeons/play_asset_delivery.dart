@@ -29,9 +29,27 @@ abstract class PlayAssetDeliveryHostApiMethods {
   /// It is not possible to obtain the file path of the asset file itself.
   /// Therefore, the path of the copied file as a temporary file is obtained.
   /// Note that using this function uses twice as much device storage due to the asset and the copied files.
+  ///
+  /// If this function is called and the file has already been copied and the file size is the same, the overwrite copy process is not performed.
+  ///
+  /// If you are replacing asset files when updating your app and the file size is the same as the file before the replacement, you will need to call [getAssetFilePathOnDownloadAsset] function.
   String? getCopiedAssetFilePathOnInstallTimeAsset({
     required String assetPackName,
     required String relativeAssetPath,
+  });
+
+  /// Delete the copied asset file.
+  ///
+  /// Returns true if the target file or folder was successfully deleted.
+  /// Also returns true if the target file or folder does not yet exist.
+  ///
+  /// If [assetPackName] = null, all install-time pack folder is deleted.
+  /// If [relativeAssetPath] = null, [assetPackName]'s install-time pack folder is deleted.
+  ///
+  /// Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
+  bool deleteCopiedAssetFileOnInstallTimeAsset({
+    String? assetPackName,
+    String? relativeAssetPath,
   });
 
   String? getAssetFilePathOnDownloadAsset({
