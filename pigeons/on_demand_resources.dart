@@ -28,8 +28,10 @@ abstract class OnDemandResourcesHostApiMethods {
 
   /// It is not possible to obtain the file path of the asset file itself.
   /// Therefore, the path of the copied file as a temporary file is obtained.
+  /// Note that using this function uses twice as much device storage due to the on-demand resources of the system and the copied files.
+  /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
   ///
-  /// The reason for including the tag namespace in the path is so that there is no problem if the filename is same with other asset packs.
+  /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
   String? getCopiedAssetFilePath({
     required String tag,
     required String relativeAssetPathWithTagNamespace,
