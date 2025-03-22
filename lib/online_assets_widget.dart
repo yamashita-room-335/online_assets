@@ -64,16 +64,20 @@ class StreamAssetWidget extends StatelessWidget {
           }
 
           return switch (onlinePack.status) {
-            OnlineAssetStatus.pending => const Text('Pending'),
+            OnlineAssetStatus.notInstalled => const SizedBox.shrink(),
+            OnlineAssetStatus.pending => const CircularProgressIndicator(),
             //Todo 押下時に確認ダイアログの表示を実装
             OnlineAssetStatus.requiresUserConfirmation =>
               const CircularProgressIndicator(),
             OnlineAssetStatus.downloading => CircularProgressIndicator(
               value: onlinePack.progress,
             ),
-            // Usually does not go through here.
-            OnlineAssetStatus.completed => const CircularProgressIndicator(),
-            OnlineAssetStatus.failed => const Text('Failed to download'),
+            OnlineAssetStatus.completed => const Text(
+              'Completed. But failed to get file',
+            ),
+            OnlineAssetStatus.failed => const Text(
+              'Failed to download. But failed to get Error',
+            ),
             OnlineAssetStatus.canceled => const Text('Canceled to download'),
             OnlineAssetStatus.unknown => const Text('Unknown Status'),
           };

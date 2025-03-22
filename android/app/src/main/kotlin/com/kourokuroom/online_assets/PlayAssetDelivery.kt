@@ -75,7 +75,6 @@ class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
         Log.d(TAG, "$methodInfo start")
 
         eventSink = null
-        mainScope.cancel()
     }
 }
 

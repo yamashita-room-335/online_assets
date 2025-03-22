@@ -77,13 +77,13 @@ sealed class OnlinePack with _$OnlinePack {
         AndroidAssetPackStatus.completed => OnlineAssetStatus.completed,
         AndroidAssetPackStatus.downloading => OnlineAssetStatus.downloading,
         AndroidAssetPackStatus.failed => OnlineAssetStatus.failed,
-        AndroidAssetPackStatus.notInstalled => OnlineAssetStatus.unknown,
+        AndroidAssetPackStatus.notInstalled => OnlineAssetStatus.notInstalled,
         AndroidAssetPackStatus.pending => OnlineAssetStatus.pending,
         AndroidAssetPackStatus.requiresUserConfirmation =>
           OnlineAssetStatus.requiresUserConfirmation,
-        AndroidAssetPackStatus.transferring => OnlineAssetStatus.unknown,
+        AndroidAssetPackStatus.transferring => OnlineAssetStatus.downloading,
         AndroidAssetPackStatus.unknown => OnlineAssetStatus.unknown,
-        AndroidAssetPackStatus.waitingForWifi => OnlineAssetStatus.unknown,
+        AndroidAssetPackStatus.waitingForWifi => OnlineAssetStatus.pending,
       },
       hasError: pigeon.errorCode != AndroidAssetPackErrorCode.noError,
       progress: pigeon.transferProgressPercentage / 100,
@@ -108,7 +108,7 @@ sealed class OnlinePack with _$OnlinePack {
     } else if (pigeon.progress.fractionCompleted > 0) {
       status = OnlineAssetStatus.downloading;
     } else {
-      status = OnlineAssetStatus.pending;
+      status = OnlineAssetStatus.notInstalled;
     }
 
     return IOSPack(
@@ -127,6 +127,7 @@ sealed class OnlinePack with _$OnlinePack {
 
 /// Pack Status
 enum OnlineAssetStatus {
+  notInstalled,
   pending,
   //Todo Display of a confirmation dialog box when pressed.
   requiresUserConfirmation,
