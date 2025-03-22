@@ -1,10 +1,49 @@
 import Flutter
 import Foundation
 
-/// Class that implements On-Demand Resource for iOS
-class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
+/// Class that implements On-Demand Resource Stream for iOS
+class OnDemandResourcesStreamHandler: StreamOnDemandResourceStreamHandler {
 
-    private let logTag = "OnDemandResources"
+    private static let LOG_TAG = "OnDemandResourcesStreamHandler"
+
+    // Singleton
+    static let shared = OnDemandResourcesStreamHandler()
+
+    private override init() {
+        super.init()
+    }
+
+    var eventSink: PigeonEventSink<IOSOnDemandResourcePigeon>? = nil
+
+    override func onListen(
+        withArguments arguments: Any?, sink: PigeonEventSink<IOSOnDemandResourcePigeon>
+    ) {
+        print(
+            "\(OnDemandResourcesStreamHandler.LOG_TAG) [onListen(arguments: \(String(describing: arguments)), sink: \(sink))]"
+        )
+        eventSink = sink
+    }
+
+    func sendEvent(event: IOSOnDemandResourcePigeon) {
+        DispatchQueue.main.async {
+            if let eventSink = self.eventSink {
+                eventSink.success(event)
+            }
+        }
+    }
+
+    override func onCancel(withArguments arguments: Any?) {
+        print(
+            "\(OnDemandResourcesStreamHandler.LOG_TAG) [onCancel(arguments: \(String(describing: arguments)))]"
+        )
+        eventSink = nil
+    }
+}
+
+/// Class that implements On-Demand Resource API for iOS
+class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMethods {
+
+    private static let LOG_TAG = "OnDemandResourcesApiImplementation"
 
     private let progressKeyPath = "fractionCompleted"
 
@@ -13,31 +52,13 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
     // Therefore, calls to beginAccessingResources() should be held as true.
     private var resourceRequests: [String: (NSBundleResourceRequest, Bool)] = [:]
 
-    // Sink for stream
-    private var eventSink: PigeonEventSink<IOSOnDemandResourcePigeon>? = nil
-
-    // Singleton
-    static let shared = OnDemandResources()
-
-    private override init() {
-        super.init()
-    }
-
-    func onListen(withArguments arguments: Any?, sink: PigeonEventSink<IOSOnDemandResourcePigeon>) {
-        eventSink = sink
-    }
-
-    func onCancel(withArguments arguments: Any?) {
-        eventSink = nil
-    }
-
     // KVO Callback
     override func observeValue(
         forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?,
         context: UnsafeMutableRawPointer?
     ) {
         print(
-            "observeValue(keyPath: \(String(describing: keyPath)), of: \(String(describing: object)), change: \(String(describing: change)), context: \(String(describing: context)))"
+            "\(OnDemandResourcesApiImplementation.LOG_TAG) [observeValue(keyPath: \(String(describing: keyPath)), of: \(String(describing: object)), change: \(String(describing: change)), context: \(String(describing: context)))] start"
         )
         switch keyPath {
         case progressKeyPath:
@@ -51,7 +72,7 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
                 let resource = IOSOnDemandResourcePigeon.fromIOS(
                     tag: tag, request: request, overrideProgress: progress)
                 // Send progress information
-                eventSink?.success(resource)
+                OnDemandResourcesStreamHandler.shared.sendEvent(event: resource)
             }
             break
         default:
@@ -61,7 +82,9 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
 
     /// Obtains NSBundleResourceRequest information for the specified tag.
     func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon {
-        print("[requestNSBundleResourceRequests(tags: \(tags))]")
+        print(
+            "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] start"
+        )
         var resourceMap: [String: IOSOnDemandResourcePigeon] = [:]
         for tag in tags {
             if resourceRequests[tag] == nil {
@@ -78,7 +101,9 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
         }
 
         let response = IOSOnDemandResourcesPigeon(resourceMap: resourceMap)
-        print("[requestNSBundleResourceRequests(tags: \(tags))] response: \(response)")
+        print(
+            "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] response: \(response)"
+        )
         return response
     }
 
@@ -86,7 +111,9 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
     func beginAccessingResources(
         tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void
     ) {
-        print("beginAccessingResources(tags: \(tags)) start")
+        print(
+            "\(OnDemandResourcesApiImplementation.LOG_TAG) [beginAccessingResources(tags: \(tags))] start"
+        )
         // Returns an error if the value contained in tags does not exist in requestsToFetch
         guard tags.allSatisfy(resourceRequests.keys.contains) else {
             completion(
@@ -94,7 +121,7 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
                     PigeonError(
                         code: "-1",
                         message:
-                            "[\(logTag)] All tags must be called in requestNSBundleResourceRequests().",
+                            "\(OnDemandResourcesApiImplementation.LOG_TAG) [beginAccessingResources(tags: \(tags))] All tags must be called in requestNSBundleResourceRequests().",
                         details: "tags: \(tags), resourceRequests.keys: \(resourceRequests.keys)")))
             return
         }
@@ -119,11 +146,17 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
             group.enter()
 
             // Downloaded or not
-            print("request.conditionallyBeginAccessingResources")
+            print(
+                "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] conditionallyBeginAccessingResources"
+            )
             request.conditionallyBeginAccessingResources { (condition) in
-                print("beginAccessingResources tag: \(tag), condition: \(condition)")
+                print(
+                    "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] beginAccessingResources condition: \(condition)"
+                )
                 if condition {
-                    print("existing resource, tag: \(tag)")
+                    print(
+                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] existing resource"
+                    )
                     // The already downloaded Progress is not updated and notified, so it is necessary to set the progress as completed from the code.
                     request.progress.becomeCurrent(withPendingUnitCount: 100)
                     request.progress.resignCurrent()
@@ -135,18 +168,24 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
                     group.leave()
                 } else if !calledBeginAccessingResources {
                     // ダウンロード開始
-                    print("request.beginAccessingResources tag: \(tag) start")
+                    print(
+                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] request.beginAccessingResources start"
+                    )
                     request.beginAccessingResources { (error) in
                         defer { group.leave() }
 
                         if let error = error as? NSError {
-                            print("tag: \(tag) error: \(error)")
+                            print(
+                                "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] beginAccessingResources error: \(error)"
+                            )
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, error: error, condition: condition)
 
                             resourceMap[tag] = resource
                         } else {
-                            print("download finish tag: \(tag)")
+                            print(
+                                "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] download finish tag: \(tag)"
+                            )
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, condition: condition)
 
@@ -154,7 +193,9 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
                         }
                     }
                 } else {
-                    print("before call request.beginAccessingResources tag: \(tag). Nothing to do")
+                    print(
+                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] before call request.beginAccessingResources. Nothing to do"
+                    )
                     // Nothing to do here because the download is called elsewhere
                     let resource = IOSOnDemandResourcePigeon.fromIOS(
                         tag: tag, request: request, condition: condition)
@@ -168,7 +209,9 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
 
         // Call completion when all resource access processing is complete
         group.notify(queue: .main) {
-            print("beginAccessingResources(tags: \(tags)) notify")
+            print(
+                "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] notify"
+            )
             let response = IOSOnDemandResourcesPigeon(resourceMap: resourceMap)
             completion(.success(response))
         }
@@ -179,7 +222,7 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
         tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64
     ) throws -> String? {
         print(
-            "getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))"
+            "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] start"
         )
         guard let (request, _) = resourceRequests[tag] else {
             return nil
@@ -198,13 +241,17 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
         for folderName in nestFolders {
             targetFolderURL = targetFolderURL.appendingPathComponent(folderName)
         }
-        print("targetFolderURL: \(targetFolderURL), fileName: \(fileName)")
+        print(
+            "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] targetFolderURL: \(targetFolderURL), fileName: \(fileName)"
+        )
 
         do {
             try fileManager.createDirectory(
                 at: targetFolderURL, withIntermediateDirectories: true, attributes: nil)
         } catch {
-            print("fileManager.createDirectory error: \(error)")
+            print(
+                "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] fileManager.createDirectory error: \(error)"
+            )
             return nil
         }
 
@@ -253,52 +300,55 @@ class OnDemandResources: NSObject, OnDemandResourcesHostApiMethods {
         } else {
             name = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
         }
-        print("targetURL: \(targetURL), named: \(name)")
+        print(
+            "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] targetURL: \(targetURL), named: \(name)"
+        )
         if isImageFile, let image = UIImage(named: name) {
             if let imageData = image.pngData() {
                 do {
-                    print("image: \(image), targetURL: \(targetURL)")
+                    print(
+                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] image: \(image), targetURL: \(targetURL)"
+                    )
                     if !fileManager.fileExists(atPath: targetURL.path) {
-                        print("imageData.write(to: \(targetURL))")
+                        print(
+                            "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] imageData.write(to: \(targetURL))"
+                        )
                         try imageData.write(to: targetURL)
                     }
                     return targetURL.path
                 } catch {
-                    print("imageData.write error: \(error)")
+                    print(
+                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] imageData.write error: \(error)"
+                    )
                     return nil
                 }
             }
         } else if let asset = NSDataAsset(name: name) {
             do {
-                print("asset: \(asset), targetURL: \(targetURL)")
+                print(
+                    "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] asset: \(asset), targetURL: \(targetURL)"
+                )
                 if !fileManager.fileExists(atPath: targetURL.path) {
-                    print("asset.data.write(to: \(targetURL))")
+                    print(
+                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] asset.data.write(to: \(targetURL))"
+                    )
                     try asset.data.write(to: targetURL)
                 }
                 return targetURL.path
             } catch {
-                print("asset.data.write error: \(error)")
+                print(
+                    "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] asset.data.write error: \(error)"
+                )
                 return nil
             }
         } else {
-            print("Can not load asset \(relativeAssetPathWithTagNamespace) for tag: \(tag)")
+            print(
+                "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] Can not load asset."
+            )
             return nil
         }
 
         return nil
-    }
-}
-
-/// StreamHandler implementation
-class OnDemandResourcePigeonStreamHandler: StreamOnDemandResourceStreamHandler {
-    override func onListen(
-        withArguments arguments: Any?, sink: PigeonEventSink<IOSOnDemandResourcePigeon>
-    ) {
-        OnDemandResources.shared.onListen(withArguments: arguments, sink: sink)
-    }
-
-    override func onCancel(withArguments arguments: Any?) {
-        OnDemandResources.shared.onCancel(withArguments: arguments)
     }
 }
 

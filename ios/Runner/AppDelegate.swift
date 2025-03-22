@@ -7,18 +7,18 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Register EventListener
-    let eventListener = OnDemandResourcePigeonStreamHandler()
-    OnDemandResourcePigeonStreamHandler.register(
-        with: window?.rootViewController as! FlutterBinaryMessenger, streamHandler: eventListener)
-
-   // Setup HostAPI
-      OnDemandResourcesHostApiMethodsSetup.setUp(
-        binaryMessenger: window?.rootViewController as! FlutterBinaryMessenger,
-        api: OnDemandResources.shared
-    )
-
     GeneratedPluginRegistrant.register(with: self)
+
+    let controller = window?.rootViewController as! FlutterViewController
+
+    let api = OnDemandResourcesApiImplementation()
+    OnDemandResourcesHostApiMethodsSetup.setUp(
+      binaryMessenger: controller.binaryMessenger, api: api)
+
+    let eventListener = OnDemandResourcesStreamHandler.shared
+    OnDemandResourcesStreamHandler.register(
+      with: controller.binaryMessenger, streamHandler: eventListener)
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
