@@ -153,17 +153,11 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
             group.enter()
 
             // Downloaded or not
-            log(
-                "\(methodInfo) conditionallyBeginAccessingResources"
-            )
+            log("\(methodInfo) conditionallyBeginAccessingResources")
             request.conditionallyBeginAccessingResources { [weak self] (condition) in
-                self?.log(
-                    "\(methodInfo) beginAccessingResources condition: \(condition)"
-                )
+                self?.log("\(methodInfo) beginAccessingResources condition: \(condition)")
                 if condition {
-                    self?.log(
-                        "\(methodInfo) existing resource"
-                    )
+                    self?.log("\(methodInfo) existing resource")
                     // The already downloaded Progress is not updated and notified, so it is necessary to set the progress as completed from the code.
                     request.progress.becomeCurrent(withPendingUnitCount: 100)
                     request.progress.resignCurrent()
@@ -175,24 +169,18 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
                     group.leave()
                 } else if !calledBeginAccessingResources {
                     // ダウンロード開始
-                    self?.log(
-                        "\(methodInfo) request.beginAccessingResources start"
-                    )
+                    self?.log("\(methodInfo) request.beginAccessingResources start")
                     request.beginAccessingResources { [weak self] (error) in
                         defer { group.leave() }
 
                         if let error = error as? NSError {
-                            self?.log(
-                                "\(methodInfo) beginAccessingResources error: \(error)"
-                            )
+                            self?.log("\(methodInfo) beginAccessingResources error: \(error)")
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, error: error, condition: condition)
 
                             resourceMap[tag] = resource
                         } else {
-                            self?.log(
-                                "\(methodInfo) download finish tag: \(tag)"
-                            )
+                            self?.log("\(methodInfo) download finish tag: \(tag)")
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, condition: condition)
 
@@ -201,8 +189,7 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
                     }
                 } else {
                     self?.log(
-                        "\(methodInfo) before call request.beginAccessingResources. Nothing to do"
-                    )
+                        "\(methodInfo) before call request.beginAccessingResources. Nothing to do")
                     // Nothing to do here because the download is called elsewhere
                     let resource = IOSOnDemandResourcePigeon.fromIOS(
                         tag: tag, request: request, condition: condition)
@@ -246,17 +233,13 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         for folderName in nestFolders {
             targetFolderURL = targetFolderURL.appendingPathComponent(folderName)
         }
-        log(
-            "\(methodInfo) targetFolderURL: \(targetFolderURL), fileName: \(fileName)"
-        )
+        log("\(methodInfo) targetFolderURL: \(targetFolderURL), fileName: \(fileName)")
 
         do {
             try fileManager.createDirectory(
                 at: targetFolderURL, withIntermediateDirectories: true, attributes: nil)
         } catch {
-            log(
-                "\(methodInfo) fileManager.createDirectory error: \(error)"
-            )
+            log("\(methodInfo) fileManager.createDirectory error: \(error)")
             return nil
         }
 
@@ -305,51 +288,35 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         } else {
             name = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
         }
-        log(
-            "\(methodInfo) targetURL: \(targetURL), named: \(name)"
-        )
+        log("\(methodInfo) targetURL: \(targetURL), named: \(name)")
         if isImageFile, let image = UIImage(named: name) {
             if let imageData = image.pngData() {
                 do {
-                    log(
-                        "\(methodInfo) image: \(image), targetURL: \(targetURL)"
-                    )
+                    log("\(methodInfo) image: \(image), targetURL: \(targetURL)")
                     if !fileManager.fileExists(atPath: targetURL.path) {
-                        log(
-                            "\(methodInfo) imageData.write(to: \(targetURL))"
-                        )
+                        log("\(methodInfo) imageData.write(to: \(targetURL))")
                         try imageData.write(to: targetURL)
                     }
                     return targetURL.path
                 } catch {
-                    log(
-                        "\(methodInfo) imageData.write error: \(error)"
-                    )
+                    log("\(methodInfo) imageData.write error: \(error)")
                     return nil
                 }
             }
         } else if let asset = NSDataAsset(name: name) {
             do {
-                log(
-                    "\(methodInfo) asset: \(asset), targetURL: \(targetURL)"
-                )
+                log("\(methodInfo) asset: \(asset), targetURL: \(targetURL)")
                 if !fileManager.fileExists(atPath: targetURL.path) {
-                    log(
-                        "\(methodInfo) asset.data.write(to: \(targetURL))"
-                    )
+                    log("\(methodInfo) asset.data.write(to: \(targetURL))")
                     try asset.data.write(to: targetURL)
                 }
                 return targetURL.path
             } catch {
-                log(
-                    "\(methodInfo) asset.data.write error: \(error)"
-                )
+                log("\(methodInfo) asset.data.write error: \(error)")
                 return nil
             }
         } else {
-            log(
-                "\(methodInfo) Can not load asset."
-            )
+            log("\(methodInfo) Can not load asset.")
             return nil
         }
 
