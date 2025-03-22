@@ -6,6 +6,10 @@ class OnDemandResourcesStreamHandler: StreamOnDemandResourceStreamHandler {
 
     private static let LOG_TAG = "OnDemandResourcesStreamHandler"
 
+    private func log(_ message: String) {
+        print("\(OnDemandResourcesStreamHandler.LOG_TAG) \(message)", terminator: "\n\n")
+    }
+
     // Singleton
     static let shared = OnDemandResourcesStreamHandler()
 
@@ -18,9 +22,9 @@ class OnDemandResourcesStreamHandler: StreamOnDemandResourceStreamHandler {
     override func onListen(
         withArguments arguments: Any?, sink: PigeonEventSink<IOSOnDemandResourcePigeon>
     ) {
-        print(
-            "\(OnDemandResourcesStreamHandler.LOG_TAG) [onListen(arguments: \(String(describing: arguments)), sink: \(sink))]"
-        )
+        let methodInfo = "[onListen(arguments: \(String(describing: arguments)), sink: \(sink))]"
+        log("\(methodInfo) start")
+
         eventSink = sink
     }
 
@@ -33,9 +37,9 @@ class OnDemandResourcesStreamHandler: StreamOnDemandResourceStreamHandler {
     }
 
     override func onCancel(withArguments arguments: Any?) {
-        print(
-            "\(OnDemandResourcesStreamHandler.LOG_TAG) [onCancel(arguments: \(String(describing: arguments)))]"
-        )
+        let methodInfo = "[onCancel(arguments: \(String(describing: arguments)))]"
+        log("\(methodInfo) start")
+
         eventSink = nil
     }
 }
@@ -44,6 +48,10 @@ class OnDemandResourcesStreamHandler: StreamOnDemandResourceStreamHandler {
 class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMethods {
 
     private static let LOG_TAG = "OnDemandResourcesApiImplementation"
+
+    private func log(_ message: String) {
+        print("\(OnDemandResourcesApiImplementation.LOG_TAG) \(message)", terminator: "\n\n")
+    }
 
     private let progressKeyPath = "fractionCompleted"
 
@@ -57,9 +65,10 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?,
         context: UnsafeMutableRawPointer?
     ) {
-        print(
-            "\(OnDemandResourcesApiImplementation.LOG_TAG) [observeValue(keyPath: \(String(describing: keyPath)), of: \(String(describing: object)), change: \(String(describing: change)), context: \(String(describing: context)))] start"
-        )
+        let methodInfo =
+            "[observeValue(keyPath: \(String(describing: keyPath)), of: \(String(describing: object)), change: \(String(describing: change)), context: \(String(describing: context)))]"
+        log("\(methodInfo) start")
+
         switch keyPath {
         case progressKeyPath:
             guard let progress = object as? Progress else {
@@ -82,9 +91,9 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
 
     /// Obtains NSBundleResourceRequest information for the specified tag.
     func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon {
-        print(
-            "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] start"
-        )
+        let methodInfo = "[requestNSBundleResourceRequests(tags: \(tags))]"
+        log("\(methodInfo) start")
+
         var resourceMap: [String: IOSOnDemandResourcePigeon] = [:]
         for tag in tags {
             if resourceRequests[tag] == nil {
@@ -101,9 +110,7 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         }
 
         let response = IOSOnDemandResourcesPigeon(resourceMap: resourceMap)
-        print(
-            "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] response: \(response)"
-        )
+        log("\(methodInfo)  response: \(response)")
         return response
     }
 
@@ -111,9 +118,9 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
     func beginAccessingResources(
         tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void
     ) {
-        print(
-            "\(OnDemandResourcesApiImplementation.LOG_TAG) [beginAccessingResources(tags: \(tags))] start"
-        )
+        let methodInfo = "[beginAccessingResources(tags: \(tags))]"
+        log("\(methodInfo) start")
+
         // Returns an error if the value contained in tags does not exist in requestsToFetch
         guard tags.allSatisfy(resourceRequests.keys.contains) else {
             completion(
@@ -121,8 +128,8 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
                     PigeonError(
                         code: "-1",
                         message:
-                            "\(OnDemandResourcesApiImplementation.LOG_TAG) [beginAccessingResources(tags: \(tags))] All tags must be called in requestNSBundleResourceRequests().",
-                        details: "tags: \(tags), resourceRequests.keys: \(resourceRequests.keys)")))
+                            "\(methodInfo) All tags must be called in requestNSBundleResourceRequests().",
+                        details: "")))
             return
         }
 
@@ -146,16 +153,16 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
             group.enter()
 
             // Downloaded or not
-            print(
-                "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] conditionallyBeginAccessingResources"
+            log(
+                "\(methodInfo) conditionallyBeginAccessingResources"
             )
-            request.conditionallyBeginAccessingResources { (condition) in
-                print(
-                    "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] beginAccessingResources condition: \(condition)"
+            request.conditionallyBeginAccessingResources { [weak self] (condition) in
+                self?.log(
+                    "\(methodInfo) beginAccessingResources condition: \(condition)"
                 )
                 if condition {
-                    print(
-                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] existing resource"
+                    self?.log(
+                        "\(methodInfo) existing resource"
                     )
                     // The already downloaded Progress is not updated and notified, so it is necessary to set the progress as completed from the code.
                     request.progress.becomeCurrent(withPendingUnitCount: 100)
@@ -168,23 +175,23 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
                     group.leave()
                 } else if !calledBeginAccessingResources {
                     // ダウンロード開始
-                    print(
-                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] request.beginAccessingResources start"
+                    self?.log(
+                        "\(methodInfo) request.beginAccessingResources start"
                     )
-                    request.beginAccessingResources { (error) in
+                    request.beginAccessingResources { [weak self] (error) in
                         defer { group.leave() }
 
                         if let error = error as? NSError {
-                            print(
-                                "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] beginAccessingResources error: \(error)"
+                            self?.log(
+                                "\(methodInfo) beginAccessingResources error: \(error)"
                             )
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, error: error, condition: condition)
 
                             resourceMap[tag] = resource
                         } else {
-                            print(
-                                "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] download finish tag: \(tag)"
+                            self?.log(
+                                "\(methodInfo) download finish tag: \(tag)"
                             )
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, condition: condition)
@@ -193,8 +200,8 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
                         }
                     }
                 } else {
-                    print(
-                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] before call request.beginAccessingResources. Nothing to do"
+                    self?.log(
+                        "\(methodInfo) before call request.beginAccessingResources. Nothing to do"
                     )
                     // Nothing to do here because the download is called elsewhere
                     let resource = IOSOnDemandResourcePigeon.fromIOS(
@@ -209,9 +216,6 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
 
         // Call completion when all resource access processing is complete
         group.notify(queue: .main) {
-            print(
-                "\(OnDemandResourcesApiImplementation.LOG_TAG) [requestNSBundleResourceRequests(tags: \(tags))] notify"
-            )
             let response = IOSOnDemandResourcesPigeon(resourceMap: resourceMap)
             completion(.success(response))
         }
@@ -221,9 +225,10 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
     func getAbsoluteAssetPath(
         tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64
     ) throws -> String? {
-        print(
-            "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] start"
-        )
+        let methodInfo =
+            "[getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))]"
+        log("\(methodInfo) start")
+
         guard let (request, _) = resourceRequests[tag] else {
             return nil
         }
@@ -241,16 +246,16 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         for folderName in nestFolders {
             targetFolderURL = targetFolderURL.appendingPathComponent(folderName)
         }
-        print(
-            "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] targetFolderURL: \(targetFolderURL), fileName: \(fileName)"
+        log(
+            "\(methodInfo) targetFolderURL: \(targetFolderURL), fileName: \(fileName)"
         )
 
         do {
             try fileManager.createDirectory(
                 at: targetFolderURL, withIntermediateDirectories: true, attributes: nil)
         } catch {
-            print(
-                "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] fileManager.createDirectory error: \(error)"
+            log(
+                "\(methodInfo) fileManager.createDirectory error: \(error)"
             )
             return nil
         }
@@ -300,50 +305,50 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         } else {
             name = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
         }
-        print(
-            "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] targetURL: \(targetURL), named: \(name)"
+        log(
+            "\(methodInfo) targetURL: \(targetURL), named: \(name)"
         )
         if isImageFile, let image = UIImage(named: name) {
             if let imageData = image.pngData() {
                 do {
-                    print(
-                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] image: \(image), targetURL: \(targetURL)"
+                    log(
+                        "\(methodInfo) image: \(image), targetURL: \(targetURL)"
                     )
                     if !fileManager.fileExists(atPath: targetURL.path) {
-                        print(
-                            "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] imageData.write(to: \(targetURL))"
+                        log(
+                            "\(methodInfo) imageData.write(to: \(targetURL))"
                         )
                         try imageData.write(to: targetURL)
                     }
                     return targetURL.path
                 } catch {
-                    print(
-                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] imageData.write error: \(error)"
+                    log(
+                        "\(methodInfo) imageData.write error: \(error)"
                     )
                     return nil
                 }
             }
         } else if let asset = NSDataAsset(name: name) {
             do {
-                print(
-                    "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] asset: \(asset), targetURL: \(targetURL)"
+                log(
+                    "\(methodInfo) asset: \(asset), targetURL: \(targetURL)"
                 )
                 if !fileManager.fileExists(atPath: targetURL.path) {
-                    print(
-                        "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] asset.data.write(to: \(targetURL))"
+                    log(
+                        "\(methodInfo) asset.data.write(to: \(targetURL))"
                     )
                     try asset.data.write(to: targetURL)
                 }
                 return targetURL.path
             } catch {
-                print(
-                    "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] asset.data.write error: \(error)"
+                log(
+                    "\(methodInfo) asset.data.write error: \(error)"
                 )
                 return nil
             }
         } else {
-            print(
-                "\(OnDemandResourcesApiImplementation.LOG_TAG) [getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))] Can not load asset."
+            log(
+                "\(methodInfo) Can not load asset."
             )
             return nil
         }
