@@ -80,10 +80,11 @@ sealed class OnlinePack with _$OnlinePack {
         AndroidAssetPackStatus.notInstalled => OnlineAssetStatus.notInstalled,
         AndroidAssetPackStatus.pending => OnlineAssetStatus.pending,
         AndroidAssetPackStatus.requiresUserConfirmation =>
-          OnlineAssetStatus.requiresUserConfirmation,
+          OnlineAssetStatus.requiresUserConfirmationOnAndroid,
         AndroidAssetPackStatus.transferring => OnlineAssetStatus.downloading,
         AndroidAssetPackStatus.unknown => OnlineAssetStatus.unknown,
-        AndroidAssetPackStatus.waitingForWifi => OnlineAssetStatus.pending,
+        AndroidAssetPackStatus.waitingForWifi =>
+          OnlineAssetStatus.waitingForWifiOnAndroid,
       },
       hasError: pigeon.errorCode != AndroidAssetPackErrorCode.noError,
       progress: pigeon.transferProgressPercentage / 100,
@@ -129,13 +130,14 @@ sealed class OnlinePack with _$OnlinePack {
 enum OnlineAssetStatus {
   notInstalled,
   pending,
-  //Todo Display of a confirmation dialog box when pressed.
-  requiresUserConfirmation,
   downloading,
   completed,
   failed,
   canceled,
   unknown,
+  // Android Only
+  requiresUserConfirmationOnAndroid,
+  waitingForWifiOnAndroid,
 }
 
 /// [IOSNSErrorPigeon]
@@ -244,6 +246,9 @@ class OnlineAssets {
   }
 
   bool _isInitialized = false;
+
+  // https://developer.android.com/guide/playcore/asset-delivery/integrate-java#required-confirmations
+  bool confirmationDialogShownOnAndroid = false;
 
   final PlayAssetDeliveryHostApiMethods androidApi =
       PlayAssetDeliveryHostApiMethods();
@@ -392,6 +397,17 @@ class OnlineAssets {
     }
   }
 
+  Future<bool> showConfirmationDialog() async {
+    if (Platform.isAndroid) {
+      if (confirmationDialogShownOnAndroid) {
+        return false;
+      }
+      confirmationDialogShownOnAndroid = true;
+      return await androidApi.showConfirmationDialog();
+    }
+    return false;
+  }
+
   /// Obtain the file of the target asset
   ///
   /// If it is not obtained, null is returned, so the caller must wait for the download to complete in the Stream.
@@ -464,7 +480,7 @@ class OnlineAssets {
   ///
   /// Starts the download and returns a Stream including the file after the download is complete.
   ///
-  /// If [fetchOnNotDownloading] is [true], [fetch] is called when the status is "Pending", "Canceled", "Failed".
+  /// If [fetchOnNotDownloading] is [true], [fetch] is called when the status is "Not Installed", "Canceled", "Failed".
   /// If you want to use a different logic to manage whether fetch is performed or not, set it to [false].
   Stream<(File?, OnlinePack)> streamFile({
     required String assetName,
@@ -490,7 +506,7 @@ class OnlineAssets {
 
       if (fetchOnNotDownloading) {
         switch (packSubject.valueOrNull?.status) {
-          case OnlineAssetStatus.pending ||
+          case OnlineAssetStatus.notInstalled ||
               OnlineAssetStatus.canceled ||
               OnlineAssetStatus.failed:
             fetch([assetName]);

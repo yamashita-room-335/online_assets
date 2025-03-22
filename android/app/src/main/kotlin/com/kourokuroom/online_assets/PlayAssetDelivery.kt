@@ -10,6 +10,9 @@ import PlayAssetDeliveryHostApiMethods
 import StreamAssetPackStateStreamHandler
 import android.content.Context
 import android.content.res.AssetManager
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.play.core.assetpacks.AssetPackManager
 import com.google.android.play.core.assetpacks.AssetPackManagerFactory
 import com.google.android.play.core.assetpacks.AssetPackState
@@ -20,10 +23,11 @@ import com.google.android.play.core.assetpacks.model.AssetPackStatus
 import com.google.android.play.core.ktx.requestFetch
 import com.google.android.play.core.ktx.requestPackStates
 import io.flutter.Log
+import io.flutter.embedding.android.FlutterFragmentActivity.RESULT_CANCELED
+import io.flutter.embedding.android.FlutterFragmentActivity.RESULT_OK
 import io.flutter.embedding.engine.FlutterEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.InputStream
@@ -86,10 +90,11 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     private lateinit var assetPackManager: AssetPackManager
     private lateinit var assetManager: AssetManager
     private lateinit var cacheDir: File
+    private lateinit var activityResultLauncher: ActivityResultLauncher<IntentSenderRequest>
     private val mainScope = CoroutineScope(Dispatchers.Main)
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    fun setup(flutterEngine: FlutterEngine, context: Context) {
+    fun setup(flutterEngine: FlutterEngine, context: Context, mainActivity: MainActivity) {
         val methodInfo = "[setup(flutterEngine: $flutterEngine, context: $context)]"
         Log.d(TAG, "$methodInfo start")
 
@@ -100,6 +105,17 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
                 if (!exists()) {
                     mkdirs()
                 }
+            }
+        }
+        activityResultLauncher = mainActivity.registerForActivityResult(
+            ActivityResultContracts.StartIntentSenderForResult()
+        ) { result ->
+            val callbackInfo = "[showConfirmationDialog callback(result: $result)]"
+            Log.d(TAG, "$callbackInfo start")
+            if (result.resultCode == RESULT_OK) {
+                Log.d(TAG, "$callbackInfo Confirmation dialog has been accepted.")
+            } else if (result.resultCode == RESULT_CANCELED) {
+                Log.d(TAG, "$callbackInfo Confirmation dialog has been denied by the user.")
             }
         }
 
@@ -174,6 +190,10 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
                 }
             }
         }
+    }
+
+    override fun showConfirmationDialog(): Boolean {
+        return assetPackManager.showConfirmationDialog(activityResultLauncher)
     }
 
     override fun getCopiedAssetFilePathOnInstallTimeAsset(

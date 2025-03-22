@@ -312,6 +312,34 @@ class PlayAssetDeliveryHostApiMethods {
     }
   }
 
+  Future<bool> showConfirmationDialog() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.showConfirmationDialog$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as bool?)!;
+    }
+  }
+
   /// It is not possible to obtain the file path of the asset file itself.
   /// Therefore, the path of the copied file as a temporary file is obtained.
   /// Note that using this function uses twice as much device storage due to the asset and the copied files.

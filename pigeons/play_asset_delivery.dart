@@ -26,6 +26,8 @@ abstract class PlayAssetDeliveryHostApiMethods {
   @async
   AndroidAssetPackStatesPigeon requestFetch({required List<String> packNames});
 
+  bool showConfirmationDialog();
+
   /// It is not possible to obtain the file path of the asset file itself.
   /// Therefore, the path of the copied file as a temporary file is obtained.
   /// Note that using this function uses twice as much device storage due to the asset and the copied files.

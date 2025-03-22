@@ -257,6 +257,7 @@ abstract class StreamAssetPackStateStreamHandler : PlayAssetDeliveryPigeonEventC
 interface PlayAssetDeliveryHostApiMethods {
   fun requestPackStates(packNames: List<String>, callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit)
   fun requestFetch(packNames: List<String>, callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit)
+  fun showConfirmationDialog(): Boolean
   /**
    * It is not possible to obtain the file path of the asset file itself.
    * Therefore, the path of the copied file as a temporary file is obtained.
@@ -325,6 +326,21 @@ interface PlayAssetDeliveryHostApiMethods {
                 reply.reply(wrapResult(data))
               }
             }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.showConfirmationDialog$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.showConfirmationDialog())
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)

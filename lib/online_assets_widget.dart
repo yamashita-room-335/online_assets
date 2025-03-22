@@ -12,12 +12,14 @@ class StreamAssetWidget extends StatelessWidget {
     required this.relativePath,
     this.width,
     this.height,
+    this.isShowConfirmationDialogIcon = true,
   }) : isImage = true;
 
   const StreamAssetWidget.video({
     super.key,
     required this.assetName,
     required this.relativePath,
+    this.isShowConfirmationDialogIcon = true,
   }) : width = null,
        height = null,
        isImage = false;
@@ -27,6 +29,7 @@ class StreamAssetWidget extends StatelessWidget {
   final double? width;
   final double? height;
   final bool isImage;
+  final bool isShowConfirmationDialogIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -64,11 +67,11 @@ class StreamAssetWidget extends StatelessWidget {
           }
 
           return switch (onlinePack.status) {
-            OnlineAssetStatus.notInstalled => const SizedBox.shrink(),
+            OnlineAssetStatus.notInstalled => Visibility.maintain(
+              visible: false,
+              child: const CircularProgressIndicator(),
+            ),
             OnlineAssetStatus.pending => const CircularProgressIndicator(),
-            //Todo 押下時に確認ダイアログの表示を実装
-            OnlineAssetStatus.requiresUserConfirmation =>
-              const CircularProgressIndicator(),
             OnlineAssetStatus.downloading => CircularProgressIndicator(
               value: onlinePack.progress,
             ),
@@ -80,6 +83,26 @@ class StreamAssetWidget extends StatelessWidget {
             ),
             OnlineAssetStatus.canceled => const Text('Canceled to download'),
             OnlineAssetStatus.unknown => const Text('Unknown Status'),
+            OnlineAssetStatus.requiresUserConfirmationOnAndroid => IconButton(
+              icon: Icon(Icons.cloud_download),
+              onPressed: () => OnlineAssets.instance.showConfirmationDialog(),
+            ),
+            OnlineAssetStatus.waitingForWifiOnAndroid => Wrap(
+              runAlignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                const Text('Waiting for Wi-Fi.'),
+                Visibility(
+                  visible:
+                      !OnlineAssets.instance.confirmationDialogShownOnAndroid,
+                  child: IconButton(
+                    icon: Icon(Icons.cloud_download),
+                    onPressed:
+                        () => OnlineAssets.instance.showConfirmationDialog(),
+                  ),
+                ),
+              ],
+            ),
           };
         },
       ),

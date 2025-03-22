@@ -53,4 +53,7 @@ dependencies {
     // https://developer.android.com/guide/playcore/asset-delivery/integrate-java#kts
     implementation("com.google.android.play:asset-delivery:2.3.0")
     implementation("com.google.android.play:asset-delivery-ktx:2.3.0")
+    // For registerForActivityResult
+    implementation("androidx.activity:activity-ktx:1.10.1")
+    implementation("androidx.fragment:fragment-ktx:1.8.6")
 }
