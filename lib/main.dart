@@ -2,11 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:online_assets/online_assets.dart';
+import 'package:online_assets/play_asset_delivery.g.dart';
 
 import 'online_assets_widget.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  PlayAssetDeliveryFlutterApi.setUp(PlayAssetDeliveryFlutterApiWrapper());
+
   OnlineAssets.instance.init(
     assetPackSettingsList: [
       OnlineAssetPackSettings(
