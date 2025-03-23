@@ -301,7 +301,7 @@ class StreamOnDemandResourceStreamHandler: PigeonEventChannelWrapper<IOSOnDemand
   static func register(with messenger: FlutterBinaryMessenger,
                       instanceName: String = "",
                       streamHandler: StreamOnDemandResourceStreamHandler) {
-    var channelName = "dev.flutter.pigeon.online_assets.OnDemandResourcesEventChannelMethods.streamOnDemandResource"
+    var channelName = "dev.flutter.pigeon.online_assets.OnDemandResourcesEventChannelApi.streamOnDemandResource"
     if !instanceName.isEmpty {
       channelName += ".\(instanceName)"
     }
@@ -312,7 +312,7 @@ class StreamOnDemandResourceStreamHandler: PigeonEventChannelWrapper<IOSOnDemand
 }
       
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
-protocol OnDemandResourcesHostApiMethods {
+protocol OnDemandResourcesHostApi {
   func requestResourcesProgress(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
   func beginAccessingResources(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
   /// Get the path to the copy of the iOS Asset file.
@@ -330,12 +330,12 @@ protocol OnDemandResourcesHostApiMethods {
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
-class OnDemandResourcesHostApiMethodsSetup {
+class OnDemandResourcesHostApiSetup {
   static var codec: FlutterStandardMessageCodec { OnDemandResourcesPigeonCodec.shared }
-  /// Sets up an instance of `OnDemandResourcesHostApiMethods` to handle messages through the `binaryMessenger`.
-  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: OnDemandResourcesHostApiMethods?, messageChannelSuffix: String = "") {
+  /// Sets up an instance of `OnDemandResourcesHostApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: OnDemandResourcesHostApi?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
-    let requestResourcesProgressChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.requestResourcesProgress\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let requestResourcesProgressChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.requestResourcesProgress\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       requestResourcesProgressChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
@@ -352,7 +352,7 @@ class OnDemandResourcesHostApiMethodsSetup {
     } else {
       requestResourcesProgressChannel.setMessageHandler(nil)
     }
-    let beginAccessingResourcesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.beginAccessingResources\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let beginAccessingResourcesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.beginAccessingResources\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       beginAccessingResourcesChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
@@ -380,7 +380,7 @@ class OnDemandResourcesHostApiMethodsSetup {
     /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
     ///
     /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
-    let getCopiedAssetFilePathChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.getCopiedAssetFilePath\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let getCopiedAssetFilePathChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.getCopiedAssetFilePath\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       getCopiedAssetFilePathChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]

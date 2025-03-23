@@ -11,12 +11,12 @@ import 'package:pigeon/pigeon.dart';
   ),
 )
 @EventChannelApi()
-abstract class OnDemandResourcesEventChannelMethods {
+abstract class OnDemandResourcesEventChannelApi {
   IOSOnDemandResourcePigeon streamOnDemandResource();
 }
 
 @HostApi()
-abstract class OnDemandResourcesHostApiMethods {
+abstract class OnDemandResourcesHostApi {
   @async
   IOSOnDemandResourcesPigeon requestResourcesProgress({
     required List<String> tags,

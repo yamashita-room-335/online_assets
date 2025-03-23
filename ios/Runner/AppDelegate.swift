@@ -12,7 +12,7 @@ import UIKit
     let controller = window?.rootViewController as! FlutterViewController
 
     let api = OnDemandResourcesApiImplementation()
-    OnDemandResourcesHostApiMethodsSetup.setUp(
+    OnDemandResourcesHostApiSetup.setUp(
       binaryMessenger: controller.binaryMessenger, api: api)
 
     let eventListener = OnDemandResourcesStreamHandler.shared

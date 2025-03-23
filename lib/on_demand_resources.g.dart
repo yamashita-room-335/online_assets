@@ -310,18 +310,18 @@ Stream<IOSOnDemandResourcePigeon> streamOnDemandResource( {String instanceName =
     instanceName = '.$instanceName';
   }
   final EventChannel streamOnDemandResourceChannel =
-      EventChannel('dev.flutter.pigeon.online_assets.OnDemandResourcesEventChannelMethods.streamOnDemandResource$instanceName', pigeonMethodCodec);
+      EventChannel('dev.flutter.pigeon.online_assets.OnDemandResourcesEventChannelApi.streamOnDemandResource$instanceName', pigeonMethodCodec);
   return streamOnDemandResourceChannel.receiveBroadcastStream().map((dynamic event) {
     return event as IOSOnDemandResourcePigeon;
   });
 }
     
 
-class OnDemandResourcesHostApiMethods {
-  /// Constructor for [OnDemandResourcesHostApiMethods].  The [binaryMessenger] named argument is
+class OnDemandResourcesHostApi {
+  /// Constructor for [OnDemandResourcesHostApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  OnDemandResourcesHostApiMethods({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+  OnDemandResourcesHostApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
       : pigeonVar_binaryMessenger = binaryMessenger,
         pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
@@ -331,7 +331,7 @@ class OnDemandResourcesHostApiMethods {
   final String pigeonVar_messageChannelSuffix;
 
   Future<IOSOnDemandResourcesPigeon> requestResourcesProgress({required List<String> tags}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.requestResourcesProgress$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.requestResourcesProgress$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -359,7 +359,7 @@ class OnDemandResourcesHostApiMethods {
   }
 
   Future<IOSOnDemandResourcesPigeon> beginAccessingResources({required List<String> tags}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.beginAccessingResources$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.beginAccessingResources$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -398,7 +398,7 @@ class OnDemandResourcesHostApiMethods {
   ///
   /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
   Future<String?> getCopiedAssetFilePath({required String? tag, required String relativeAssetPathWithTagNamespace, int extensionLevel = 1, }) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.getCopiedAssetFilePath$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.getCopiedAssetFilePath$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

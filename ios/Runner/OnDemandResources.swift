@@ -48,7 +48,7 @@ class OnDemandResourcesStreamHandler: StreamOnDemandResourceStreamHandler {
 }
 
 /// Class that implements On-Demand Resource API for iOS
-class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMethods {
+class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
 
     private static let LOG_TAG = "OnDemandResourcesApiImplementation"
 
