@@ -2,6 +2,9 @@ import CryptoKit
 import Flutter
 import Foundation
 
+// Pigeon Example
+// https://github.com/flutter/packages/blob/pigeon-v25.1.0/packages/pigeon/example/app/ios/Runner/AppDelegate.swift
+
 /// Class that implements On-Demand Resource Stream for iOS
 class OnDemandResourcesStreamHandler: StreamOnDemandResourceStreamHandler {
 
