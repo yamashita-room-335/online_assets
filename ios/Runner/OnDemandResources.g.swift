@@ -313,7 +313,7 @@ class StreamOnDemandResourceStreamHandler: PigeonEventChannelWrapper<IOSOnDemand
       
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol OnDemandResourcesHostApiMethods {
-  func requestNSBundleResourceRequests(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
+  func requestResourcesProgress(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
   func beginAccessingResources(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
   /// Get the path to the copy of the iOS Asset file.
   ///
@@ -335,12 +335,12 @@ class OnDemandResourcesHostApiMethodsSetup {
   /// Sets up an instance of `OnDemandResourcesHostApiMethods` to handle messages through the `binaryMessenger`.
   static func setUp(binaryMessenger: FlutterBinaryMessenger, api: OnDemandResourcesHostApiMethods?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
-    let requestNSBundleResourceRequestsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.requestNSBundleResourceRequests\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let requestResourcesProgressChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.requestResourcesProgress\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      requestNSBundleResourceRequestsChannel.setMessageHandler { message, reply in
+      requestResourcesProgressChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let tagsArg = args[0] as! [String]
-        api.requestNSBundleResourceRequests(tags: tagsArg) { result in
+        api.requestResourcesProgress(tags: tagsArg) { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))
@@ -350,7 +350,7 @@ class OnDemandResourcesHostApiMethodsSetup {
         }
       }
     } else {
-      requestNSBundleResourceRequestsChannel.setMessageHandler(nil)
+      requestResourcesProgressChannel.setMessageHandler(nil)
     }
     let beginAccessingResourcesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.beginAccessingResources\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {

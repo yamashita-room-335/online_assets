@@ -18,7 +18,7 @@ abstract class OnDemandResourcesEventChannelMethods {
 @HostApi()
 abstract class OnDemandResourcesHostApiMethods {
   @async
-  IOSOnDemandResourcesPigeon requestNSBundleResourceRequests({
+  IOSOnDemandResourcesPigeon requestResourcesProgress({
     required List<String> tags,
   });
 

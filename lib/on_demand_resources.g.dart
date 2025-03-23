@@ -330,8 +330,8 @@ class OnDemandResourcesHostApiMethods {
 
   final String pigeonVar_messageChannelSuffix;
 
-  Future<IOSOnDemandResourcesPigeon> requestNSBundleResourceRequests({required List<String> tags}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.requestNSBundleResourceRequests$pigeonVar_messageChannelSuffix';
+  Future<IOSOnDemandResourcesPigeon> requestResourcesProgress({required List<String> tags}) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApiMethods.requestResourcesProgress$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

@@ -342,7 +342,7 @@ class OnlineAssets {
         );
       } else {
         packHolder = OnlinePackHolder.fromIOS(
-          await iosApi.requestNSBundleResourceRequests(
+          await iosApi.requestResourcesProgress(
             tags: onlinePackSubjectMap.keys.toList(),
           ),
         );

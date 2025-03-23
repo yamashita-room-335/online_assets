@@ -92,7 +92,7 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         }
     }
 
-    func requestNSBundleResourceRequests(
+    func requestResourcesProgress(
         tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void
     ) {
         let methodInfo = "[requestNSBundleResourceRequests(tags: \(tags))]"
