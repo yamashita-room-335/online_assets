@@ -6,7 +6,8 @@ import AndroidAssetPackStatesPigeon
 import AndroidAssetPackStatus
 import FlutterError
 import PigeonEventSink
-import PlayAssetDeliveryHostApiMethods
+import PlayAssetDeliveryFlutterApi
+import PlayAssetDeliveryHostApi
 import StreamAssetPackStateStreamHandler
 import android.content.Context
 import android.content.res.AssetManager
@@ -26,6 +27,7 @@ import io.flutter.Log
 import io.flutter.embedding.android.FlutterFragmentActivity.RESULT_CANCELED
 import io.flutter.embedding.android.FlutterFragmentActivity.RESULT_OK
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.dart.DartExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -82,7 +84,7 @@ class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
     }
 }
 
-class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
+class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
     companion object {
         private const val TAG = "PlayAssetDeliveryApi"
     }
@@ -94,7 +96,12 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
     private val mainScope = CoroutineScope(Dispatchers.Main)
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    fun setup(flutterEngine: FlutterEngine, context: Context, mainActivity: MainActivity) {
+    fun setup(
+        flutterEngine: FlutterEngine,
+        context: Context,
+        mainActivity: MainActivity,
+        pigeonFlutterApi: PigeonFlutterApi,
+    ) {
         val methodInfo = "[setup(flutterEngine: $flutterEngine, context: $context)]"
         Log.d(TAG, "$methodInfo start")
 
@@ -112,15 +119,28 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         ) { result ->
             val callbackInfo = "[showConfirmationDialog callback(result: $result)]"
             Log.d(TAG, "$callbackInfo start")
-            if (result.resultCode == RESULT_OK) {
-                Log.d(TAG, "$callbackInfo Confirmation dialog has been accepted.")
-            } else if (result.resultCode == RESULT_CANCELED) {
-                Log.d(TAG, "$callbackInfo Confirmation dialog has been denied by the user.")
+            when (result.resultCode) {
+                RESULT_OK -> {
+                    pigeonFlutterApi.callbackConfirmationDialogResult(okArg = true, callback = {})
+                    Log.d(TAG, "$callbackInfo Confirmation dialog has been accepted.")
+                }
+
+                RESULT_CANCELED -> {
+                    pigeonFlutterApi.callbackConfirmationDialogResult(okArg = false, callback = {})
+                    Log.d(TAG, "$callbackInfo Confirmation dialog has been denied by the user.")
+                }
+
+                else -> {
+                    Log.d(
+                        TAG,
+                        "$callbackInfo Confirmation dialog unknown result code: ${result.resultCode}"
+                    )
+                }
             }
         }
 
         // Setup HostAPI
-        PlayAssetDeliveryHostApiMethods.setUp(
+        PlayAssetDeliveryHostApi.setUp(
             flutterEngine.dartExecutor.binaryMessenger,
             this
         )
@@ -341,6 +361,15 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApiMethods {
         this.outputStream().use { fileOut ->
             inputStream.copyTo(fileOut)
         }
+    }
+}
+
+class PigeonFlutterApi(dartExecutor: DartExecutor) {
+    private var flutterApi: PlayAssetDeliveryFlutterApi =
+        PlayAssetDeliveryFlutterApi(dartExecutor.binaryMessenger)
+
+    fun callbackConfirmationDialogResult(okArg: Boolean, callback: (Result<Unit>) -> Unit) {
+        flutterApi.callbackConfirmationDialogResult(okArg) { echo -> callback(echo) }
     }
 }
 

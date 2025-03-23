@@ -10,7 +10,9 @@ class MainActivity : FlutterFragmentActivity() {
         val playAssetDeliveryStreamHandler = PlayAssetDeliveryStreamHandler()
         playAssetDeliveryStreamHandler.register(flutterEngine, applicationContext)
 
+        val pigeonFlutterApi = PigeonFlutterApi(dartExecutor = flutterEngine.dartExecutor)
+
         val playAssetDeliveryApi = PlayAssetDeliveryApiImplementation()
-        playAssetDeliveryApi.setup(flutterEngine, applicationContext, this)
+        playAssetDeliveryApi.setup(flutterEngine, applicationContext, this, pigeonFlutterApi)
     }
 }

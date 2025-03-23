@@ -12,20 +12,23 @@ import 'package:pigeon/pigeon.dart';
   ),
 )
 @EventChannelApi()
-abstract class PlayAssetDeliveryEventChannelMethods {
+abstract class PlayAssetDeliveryEventChannelApi {
   AndroidAssetPackStatePigeon streamAssetPackState();
 }
 
 @HostApi()
-abstract class PlayAssetDeliveryHostApiMethods {
+abstract class PlayAssetDeliveryHostApi {
+  /// https://developer.android.com/reference/com/google/android/play/core/ktx/package-summary#requestpackstates
   @async
   AndroidAssetPackStatesPigeon requestPackStates({
     required List<String> packNames,
   });
 
+  /// https://developer.android.com/reference/com/google/android/play/core/ktx/package-summary#requestfetch
   @async
   AndroidAssetPackStatesPigeon requestFetch({required List<String> packNames});
 
+  /// https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackManager#showCellularDataConfirmation(android.app.Activity)
   bool showConfirmationDialog();
 
   /// It is not possible to obtain the file path of the asset file itself.
@@ -61,6 +64,12 @@ abstract class PlayAssetDeliveryHostApiMethods {
     required String assetPackName,
     required String relativeAssetPath,
   });
+}
+
+@FlutterApi()
+abstract class PlayAssetDeliveryFlutterApi {
+  /// https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackManager#showCellularDataConfirmation(android.app.Activity)
+  void callbackConfirmationDialogResult(bool ok);
 }
 
 /// https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackStates

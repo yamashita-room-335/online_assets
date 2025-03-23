@@ -33,6 +33,9 @@ private fun wrapError(exception: Throwable): List<Any?> {
   }
 }
 
+private fun createConnectionError(channelName: String): FlutterError {
+  return FlutterError("channel-error",  "Unable to establish connection on channel: '$channelName'.", "")}
+
 /**
  * Error class for passing custom error details to Flutter via a thrown PlatformException.
  * @property code The error code.
@@ -243,7 +246,7 @@ class PigeonEventSink<T>(private val sink: EventChannel.EventSink) {
 abstract class StreamAssetPackStateStreamHandler : PlayAssetDeliveryPigeonEventChannelWrapper<AndroidAssetPackStatePigeon> {
   companion object {
     fun register(messenger: BinaryMessenger, streamHandler: StreamAssetPackStateStreamHandler, instanceName: String = "") {
-      var channelName: String = "dev.flutter.pigeon.online_assets.PlayAssetDeliveryEventChannelMethods.streamAssetPackState"
+      var channelName: String = "dev.flutter.pigeon.online_assets.PlayAssetDeliveryEventChannelApi.streamAssetPackState"
       if (instanceName.isNotEmpty()) {
         channelName += ".$instanceName"
       }
@@ -254,9 +257,12 @@ abstract class StreamAssetPackStateStreamHandler : PlayAssetDeliveryPigeonEventC
 }
       
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
-interface PlayAssetDeliveryHostApiMethods {
+interface PlayAssetDeliveryHostApi {
+  /** https://developer.android.com/reference/com/google/android/play/core/ktx/package-summary#requestpackstates */
   fun requestPackStates(packNames: List<String>, callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit)
+  /** https://developer.android.com/reference/com/google/android/play/core/ktx/package-summary#requestfetch */
   fun requestFetch(packNames: List<String>, callback: (Result<AndroidAssetPackStatesPigeon>) -> Unit)
+  /** https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackManager#showCellularDataConfirmation(android.app.Activity) */
   fun showConfirmationDialog(): Boolean
   /**
    * It is not possible to obtain the file path of the asset file itself.
@@ -283,16 +289,16 @@ interface PlayAssetDeliveryHostApiMethods {
   fun getAssetFilePathOnDownloadAsset(assetPackName: String, relativeAssetPath: String, callback: (Result<String?>) -> Unit)
 
   companion object {
-    /** The codec used by PlayAssetDeliveryHostApiMethods. */
+    /** The codec used by PlayAssetDeliveryHostApi. */
     val codec: MessageCodec<Any?> by lazy {
       PlayAssetDeliveryPigeonCodec()
     }
-    /** Sets up an instance of `PlayAssetDeliveryHostApiMethods` to handle messages through the `binaryMessenger`. */
+    /** Sets up an instance of `PlayAssetDeliveryHostApi` to handle messages through the `binaryMessenger`. */
     @JvmOverloads
-    fun setUp(binaryMessenger: BinaryMessenger, api: PlayAssetDeliveryHostApiMethods?, messageChannelSuffix: String = "") {
+    fun setUp(binaryMessenger: BinaryMessenger, api: PlayAssetDeliveryHostApi?, messageChannelSuffix: String = "") {
       val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.requestPackStates$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.requestPackStates$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -312,7 +318,7 @@ interface PlayAssetDeliveryHostApiMethods {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.requestFetch$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.requestFetch$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -332,7 +338,7 @@ interface PlayAssetDeliveryHostApiMethods {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.showConfirmationDialog$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.showConfirmationDialog$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
@@ -347,7 +353,7 @@ interface PlayAssetDeliveryHostApiMethods {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getCopiedAssetFilePathOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.getCopiedAssetFilePathOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -368,7 +374,7 @@ interface PlayAssetDeliveryHostApiMethods {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.deleteCopiedAssetFileOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteCopiedAssetFileOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -389,7 +395,7 @@ interface PlayAssetDeliveryHostApiMethods {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAssetFilePathOnDownloadAsset$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.getAssetFilePathOnDownloadAsset$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -409,6 +415,33 @@ interface PlayAssetDeliveryHostApiMethods {
           channel.setMessageHandler(null)
         }
       }
+    }
+  }
+}
+/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
+class PlayAssetDeliveryFlutterApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by PlayAssetDeliveryFlutterApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      PlayAssetDeliveryPigeonCodec()
+    }
+  }
+  /** https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackManager#showCellularDataConfirmation(android.app.Activity) */
+  fun callbackConfirmationDialogResult(okArg: Boolean, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.online_assets.PlayAssetDeliveryFlutterApi.callbackConfirmationDialogResult$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(okArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(createConnectionError(channelName)))
+      } 
     }
   }
 }

@@ -266,8 +266,8 @@ class OnlineAssets {
   /// https://developer.android.com/guide/playcore/asset-delivery/integrate-java#required-confirmations
   ValueNotifier<bool> confirmationDialogShownOnAndroid = ValueNotifier(false);
 
-  final PlayAssetDeliveryHostApiMethods androidApi =
-      PlayAssetDeliveryHostApiMethods();
+  final PlayAssetDeliveryHostApi androidApi =
+      PlayAssetDeliveryHostApi();
 
   final OnDemandResourcesHostApiMethods iosApi =
       OnDemandResourcesHostApiMethods();

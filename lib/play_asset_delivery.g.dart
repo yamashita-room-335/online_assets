@@ -14,6 +14,16 @@ PlatformException _createConnectionError(String channelName) {
     message: 'Unable to establish connection on channel: "$channelName".',
   );
 }
+
+List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty = false}) {
+  if (empty) {
+    return <Object?>[];
+  }
+  if (error == null) {
+    return <Object?>[result];
+  }
+  return <Object?>[error.code, error.message, error.details];
+}
 bool _deepEquals(Object? a, Object? b) {
   if (a is List && b is List) {
     return a.length == b.length &&
@@ -236,18 +246,18 @@ Stream<AndroidAssetPackStatePigeon> streamAssetPackState( {String instanceName =
     instanceName = '.$instanceName';
   }
   final EventChannel streamAssetPackStateChannel =
-      EventChannel('dev.flutter.pigeon.online_assets.PlayAssetDeliveryEventChannelMethods.streamAssetPackState$instanceName', pigeonMethodCodec);
+      EventChannel('dev.flutter.pigeon.online_assets.PlayAssetDeliveryEventChannelApi.streamAssetPackState$instanceName', pigeonMethodCodec);
   return streamAssetPackStateChannel.receiveBroadcastStream().map((dynamic event) {
     return event as AndroidAssetPackStatePigeon;
   });
 }
     
 
-class PlayAssetDeliveryHostApiMethods {
-  /// Constructor for [PlayAssetDeliveryHostApiMethods].  The [binaryMessenger] named argument is
+class PlayAssetDeliveryHostApi {
+  /// Constructor for [PlayAssetDeliveryHostApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  PlayAssetDeliveryHostApiMethods({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+  PlayAssetDeliveryHostApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
       : pigeonVar_binaryMessenger = binaryMessenger,
         pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
@@ -256,8 +266,9 @@ class PlayAssetDeliveryHostApiMethods {
 
   final String pigeonVar_messageChannelSuffix;
 
+  /// https://developer.android.com/reference/com/google/android/play/core/ktx/package-summary#requestpackstates
   Future<AndroidAssetPackStatesPigeon> requestPackStates({required List<String> packNames}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.requestPackStates$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.requestPackStates$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -284,8 +295,9 @@ class PlayAssetDeliveryHostApiMethods {
     }
   }
 
+  /// https://developer.android.com/reference/com/google/android/play/core/ktx/package-summary#requestfetch
   Future<AndroidAssetPackStatesPigeon> requestFetch({required List<String> packNames}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.requestFetch$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.requestFetch$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -312,8 +324,9 @@ class PlayAssetDeliveryHostApiMethods {
     }
   }
 
+  /// https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackManager#showCellularDataConfirmation(android.app.Activity)
   Future<bool> showConfirmationDialog() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.showConfirmationDialog$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.showConfirmationDialog$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -348,7 +361,7 @@ class PlayAssetDeliveryHostApiMethods {
   ///
   /// If you are replacing asset files when updating your app and the file size is the same as the file before the replacement, you will need to call [getAssetFilePathOnDownloadAsset] function.
   Future<String?> getCopiedAssetFilePathOnInstallTimeAsset({required String assetPackName, required String relativeAssetPath}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getCopiedAssetFilePathOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.getCopiedAssetFilePathOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -380,7 +393,7 @@ class PlayAssetDeliveryHostApiMethods {
   ///
   /// Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
   Future<bool> deleteCopiedAssetFileOnInstallTimeAsset({String? assetPackName, String? relativeAssetPath}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.deleteCopiedAssetFileOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteCopiedAssetFileOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -408,7 +421,7 @@ class PlayAssetDeliveryHostApiMethods {
   }
 
   Future<String?> getAssetFilePathOnDownloadAsset({required String assetPackName, required String relativeAssetPath}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApiMethods.getAssetFilePathOnDownloadAsset$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.getAssetFilePathOnDownloadAsset$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -427,6 +440,42 @@ class PlayAssetDeliveryHostApiMethods {
       );
     } else {
       return (pigeonVar_replyList[0] as String?);
+    }
+  }
+}
+
+abstract class PlayAssetDeliveryFlutterApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  /// https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackManager#showCellularDataConfirmation(android.app.Activity)
+  void callbackConfirmationDialogResult(bool ok);
+
+  static void setUp(PlayAssetDeliveryFlutterApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.online_assets.PlayAssetDeliveryFlutterApi.callbackConfirmationDialogResult$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.online_assets.PlayAssetDeliveryFlutterApi.callbackConfirmationDialogResult was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final bool? arg_ok = (args[0] as bool?);
+          assert(arg_ok != null,
+              'Argument for dev.flutter.pigeon.online_assets.PlayAssetDeliveryFlutterApi.callbackConfirmationDialogResult was null, expected non-null bool.');
+          try {
+            api.callbackConfirmationDialogResult(arg_ok!);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
     }
   }
 }
