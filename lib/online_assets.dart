@@ -426,9 +426,6 @@ class OnlineAssets {
 
   Future<bool> showConfirmationDialog() async {
     if (Platform.isAndroid) {
-      if (confirmationDialogShownOnAndroid.value) {
-        return false;
-      }
       confirmationDialogShownOnAndroid.value = true;
       return await _androidApi.showConfirmationDialog();
     }

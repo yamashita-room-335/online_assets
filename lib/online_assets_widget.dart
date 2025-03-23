@@ -136,10 +136,20 @@ class StreamAssetWidget extends StatelessWidget {
             ),
             OnlineAssetStatus.canceled => const Text('Canceled to download'),
             OnlineAssetStatus.unknown => const Text('Unknown Status'),
-            OnlineAssetStatus.requiresUserConfirmationOnAndroid => IconButton(
-              icon: Icon(Icons.cloud_download),
-              onPressed: () => OnlineAssets.instance.showConfirmationDialog(),
-            ),
+            OnlineAssetStatus.requiresUserConfirmationOnAndroid =>
+              ValueListenableBuilder(
+                valueListenable: OnlineAssets.instance.confirmationDialogResult,
+                builder: (context, result, child) {
+                  return switch (result) {
+                    null || false => InkWell(
+                      child: Icon(Icons.cloud_download),
+                      onTap:
+                          () => OnlineAssets.instance.showConfirmationDialog(),
+                    ),
+                    true => const CircularProgressIndicator(),
+                  };
+                },
+              ),
             OnlineAssetStatus.waitingForWifiOnAndroid => Wrap(
               runAlignment: WrapAlignment.center,
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -148,8 +158,8 @@ class StreamAssetWidget extends StatelessWidget {
                 ValueListenableBuilder(
                   valueListenable:
                       OnlineAssets.instance.confirmationDialogShownOnAndroid,
-                  builder: (context, value, child) {
-                    return Visibility(visible: !value, child: child!);
+                  builder: (context, dialogShown, child) {
+                    return Visibility(visible: !dialogShown, child: child!);
                   },
                   child: IconButton(
                     icon: Icon(Icons.cloud_download),
