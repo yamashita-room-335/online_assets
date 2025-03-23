@@ -33,7 +33,7 @@ import java.io.File
 import java.io.InputStream
 
 // Pigeon Example
-// https://github.com/flutter/packages/blob/71a2e703a9de3afc450b4ffcf54064ba21cc0f4d/packages/pigeon/example/app/android/app/src/main/kotlin/dev/flutter/pigeon_example_app/MainActivity.kt
+// https://github.com/flutter/packages/blob/pigeon-v25.1.0/packages/pigeon/example/app/android/app/src/main/kotlin/dev/flutter/pigeon_example_app/MainActivity.kt
 
 class PlayAssetDeliveryStreamHandler : StreamAssetPackStateStreamHandler() {
     private lateinit var assetPackManager: AssetPackManager
