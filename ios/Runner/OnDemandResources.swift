@@ -92,7 +92,6 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         }
     }
 
-    /// Obtains NSBundleResourceRequest information for the specified tag.
     func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon {
         let methodInfo = "[requestNSBundleResourceRequests(tags: \(tags))]"
         log("\(methodInfo) start")
@@ -117,7 +116,6 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         return response
     }
 
-    /// Starts downloading the resource for the specified tag
     func beginAccessingResources(
         tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void
     ) {
@@ -199,20 +197,32 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         }
     }
 
-    /// Get the absolute path of the asset
     func getCopiedAssetFilePath(
-        tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64,
+        tag: String?, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64,
         completion: @escaping (Result<String?, Error>) -> Void
     ) {
         let methodInfo =
-            "[getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))]"
+            "[getAbsoluteAssetPath(tag: \(tag ?? "nil"), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))]"
         log("\(methodInfo) start")
 
-        if let (request, _) = resourceRequests[tag] {
-            // On-Demand Resources Asset
-            guard request.progress.isFinished else {
-                log("\(methodInfo) The subject tag's resource has not yet been fully downloaded.")
-                completion(.success(nil))
+        if tag != nil {
+            if let (request, _) = resourceRequests[tag!] {
+                // On-Demand Resources Asset
+                guard request.progress.isFinished else {
+                    log(
+                        "\(methodInfo) The subject tag's resource has not yet been fully downloaded."
+                    )
+                    completion(.success(nil))
+                    return
+                }
+            } else {
+                completion(
+                    .failure(
+                        PigeonError(
+                            code: "-1",
+                            message:
+                                "\(methodInfo) Unknown Tag. Please check whether the tag is correct.",
+                            details: "")))
                 return
             }
         } else {
@@ -295,22 +305,20 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         if isImageFile, let image = UIImage(named: name) {
             if fileManager.fileExists(atPath: targetURL.path) {
                 // Because of the time required, this function do not check file hash.
-                if #available(iOS 13.0, *) {
-                    do {
-                        let preSavedData = try Data(contentsOf: targetURL)
-                        let preSavedImage = UIImage(data: preSavedData)
-                        if let preImageData = preSavedImage?.cgImage?.dataProvider?.data as? Data,
-                            let currentImageData = image.cgImage?.dataProvider?.data as? Data
-                        {
-                            if preImageData.count == currentImageData.count {
-                                log("\(methodInfo) skip saving, same file size")
-                                completion(.success(targetURL.path))
-                                return
-                            }
+                do {
+                    let preSavedData = try Data(contentsOf: targetURL)
+                    let preSavedImage = UIImage(data: preSavedData)
+                    if let preImageData = preSavedImage?.cgImage?.dataProvider?.data as? Data,
+                        let currentImageData = image.cgImage?.dataProvider?.data as? Data
+                    {
+                        if preImageData.count == currentImageData.count {
+                            log("\(methodInfo) skip saving, same file size")
+                            completion(.success(targetURL.path))
+                            return
                         }
-                    } catch {
-                        log("\(methodInfo) try Data(contentsOf: \(targetURL)) error: \(error)")
                     }
+                } catch {
+                    log("\(methodInfo) try Data(contentsOf: \(targetURL)) error: \(error)")
                 }
 
                 do {
@@ -344,17 +352,15 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         if let asset = NSDataAsset(name: name) {
             if fileManager.fileExists(atPath: targetURL.path) {
                 // Because of the time required, this function do not check file hash.
-                if #available(iOS 13.0, *) {
-                    do {
-                        let preSavedData = try Data(contentsOf: targetURL)
-                        if preSavedData.count == asset.data.count {
-                            log("\(methodInfo) skip saving, same file size")
-                            completion(.success(targetURL.path))
-                            return
-                        }
-                    } catch {
-                        log("\(methodInfo) try Data(contentsOf: \(targetURL)) error: \(error)")
+                do {
+                    let preSavedData = try Data(contentsOf: targetURL)
+                    if preSavedData.count == asset.data.count {
+                        log("\(methodInfo) skip saving, same file size")
+                        completion(.success(targetURL.path))
+                        return
                     }
+                } catch {
+                    log("\(methodInfo) try Data(contentsOf: \(targetURL)) error: \(error)")
                 }
 
                 do {

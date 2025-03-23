@@ -5,6 +5,59 @@ import 'package:video_player/video_player.dart';
 
 import 'online_assets.dart';
 
+class FutureAssetWidget extends StatelessWidget {
+  const FutureAssetWidget.image({
+    super.key,
+    required this.assetName,
+    required this.relativePath,
+    this.width,
+    this.height,
+  }) : isImage = true;
+
+  const FutureAssetWidget.video({
+    super.key,
+    required this.assetName,
+    required this.relativePath,
+  }) : width = null,
+        height = null,
+        isImage = false;
+
+  final String assetName;
+  final String relativePath;
+  final double? width;
+  final double? height;
+  final bool isImage;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: FutureBuilder<File?>(
+        future: OnlineAssets.instance.getFile(
+          assetName: assetName,
+          relativePath: relativePath,
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text("snapshot.error: ${snapshot.error}");
+          } else if (!snapshot.hasData) {
+            return const CircularProgressIndicator();
+          }
+
+          final file = snapshot.data!;
+
+          if (isImage) {
+            return Image.file(file, width: width, height: height);
+          } else {
+            return PlayVideoPage(file: file);
+          }
+        },
+      ),
+    );
+  }
+}
+
 class StreamAssetWidget extends StatelessWidget {
   const StreamAssetWidget.image({
     super.key,
@@ -45,7 +98,7 @@ class StreamAssetWidget extends StatelessWidget {
           if (snapshot.hasError) {
             return Text("snapshot.error: ${snapshot.error}");
           } else if (!snapshot.hasData) {
-            return Text("snapshot.hasNotData");
+            return const CircularProgressIndicator();
           }
 
           final (file, onlinePack) = snapshot.data!;

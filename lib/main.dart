@@ -11,15 +11,15 @@ void main() {
     assetPackSettingsList: [
       OnlineAssetPackSettings(
         packName: 'install_time_sample_pack',
-        isInstallTimeAssetPackOnAndroid: true,
+        isInstallTimeAssetPack: true,
       ),
       OnlineAssetPackSettings(
         packName: 'fast_follow_sample_pack',
-        isInstallTimeAssetPackOnAndroid: false,
+        isInstallTimeAssetPack: false,
       ),
       OnlineAssetPackSettings(
         packName: 'on_demand_sample_pack',
-        isInstallTimeAssetPackOnAndroid: false,
+        isInstallTimeAssetPack: false,
       ),
     ],
   );
@@ -48,25 +48,25 @@ class MyHomePage extends StatelessWidget {
           children: [
             Column(
               children: [
-                ListTile(title: Text('Install Time (on Android) Sample Pack')),
+                ListTile(title: Text('Install Time Sample Pack')),
                 ElevatedButton(
-                  child: Text('Stream Image'),
+                  child: Text('Future Image'),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => InstallTimeStreamImagePage(),
+                        builder: (context) => InstallTimeFutureImagePage(),
                       ),
                     );
                   },
                 ),
                 ElevatedButton(
-                  child: Text('Stream Video'),
+                  child: Text('Future Video'),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => InstallTimeStreamVideoPage(),
+                        builder: (context) => InstallTimeFutureVideoPage(),
                       ),
                     );
                   },
@@ -136,27 +136,27 @@ class MyHomePage extends StatelessWidget {
   }
 }
 
-class InstallTimeStreamImagePage extends StatelessWidget {
-  const InstallTimeStreamImagePage({super.key});
+class InstallTimeFutureImagePage extends StatelessWidget {
+  const InstallTimeFutureImagePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Stream Image Page')),
+      appBar: AppBar(title: Text('Future Image Page')),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            StreamAssetWidget.image(
+            FutureAssetWidget.image(
               assetName: 'install_time_sample_pack',
               relativePath:
                   'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
             ),
-            StreamAssetWidget.image(
+            FutureAssetWidget.image(
               assetName: 'install_time_sample_pack',
               relativePath:
                   'dog${Platform.pathSeparator}dog_great_pyrenees.png',
             ),
-            StreamAssetWidget.image(
+            FutureAssetWidget.image(
               assetName: 'install_time_sample_pack',
               relativePath: 'dog_shetland_sheepdog_blue_merle.png',
             ),
@@ -167,14 +167,14 @@ class InstallTimeStreamImagePage extends StatelessWidget {
   }
 }
 
-class InstallTimeStreamVideoPage extends StatelessWidget {
-  const InstallTimeStreamVideoPage({super.key});
+class InstallTimeFutureVideoPage extends StatelessWidget {
+  const InstallTimeFutureVideoPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Stream Image Page')),
-      body: StreamAssetWidget.video(
+      appBar: AppBar(title: Text('Future Image Page')),
+      body: FutureAssetWidget.video(
         assetName: 'install_time_sample_pack',
         relativePath: 'dog${Platform.pathSeparator}run_moive.mp4',
       ),

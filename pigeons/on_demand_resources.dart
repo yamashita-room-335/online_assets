@@ -26,15 +26,20 @@ abstract class OnDemandResourcesHostApiMethods {
     required List<String> tags,
   });
 
+  /// Get the path to the copy of the iOS Asset file.
+  ///
+  /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
+  /// Standard iOS assets are used to perform the same behavior as Android's install-time asset pack.
+  ///
   /// It is not possible to obtain the file path of the asset file itself.
   /// Therefore, the path of the copied file as a temporary file is obtained.
-  /// Note that using this function uses twice as much device storage due to the on-demand resources of the system and the copied files.
+  /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
   /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
   ///
   /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
   @async
   String? getCopiedAssetFilePath({
-    required String tag,
+    required String? tag,
     required String relativeAssetPathWithTagNamespace,
     int extensionLevel = 1,
   });

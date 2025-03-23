@@ -315,13 +315,18 @@ class StreamOnDemandResourceStreamHandler: PigeonEventChannelWrapper<IOSOnDemand
 protocol OnDemandResourcesHostApiMethods {
   func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon
   func beginAccessingResources(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
+  /// Get the path to the copy of the iOS Asset file.
+  ///
+  /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
+  /// Standard iOS assets are used to perform the same behavior as Android's install-time asset pack.
+  ///
   /// It is not possible to obtain the file path of the asset file itself.
   /// Therefore, the path of the copied file as a temporary file is obtained.
-  /// Note that using this function uses twice as much device storage due to the on-demand resources of the system and the copied files.
+  /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
   /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
   ///
   /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
-  func getCopiedAssetFilePath(tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64, completion: @escaping (Result<String?, Error>) -> Void)
+  func getCopiedAssetFilePath(tag: String?, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64, completion: @escaping (Result<String?, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -362,9 +367,14 @@ class OnDemandResourcesHostApiMethodsSetup {
     } else {
       beginAccessingResourcesChannel.setMessageHandler(nil)
     }
+    /// Get the path to the copy of the iOS Asset file.
+    ///
+    /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
+    /// Standard iOS assets are used to perform the same behavior as Android's install-time asset pack.
+    ///
     /// It is not possible to obtain the file path of the asset file itself.
     /// Therefore, the path of the copied file as a temporary file is obtained.
-    /// Note that using this function uses twice as much device storage due to the on-demand resources of the system and the copied files.
+    /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
     /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
     ///
     /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
@@ -372,7 +382,7 @@ class OnDemandResourcesHostApiMethodsSetup {
     if let api = api {
       getCopiedAssetFilePathChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let tagArg = args[0] as! String
+        let tagArg: String? = nilOrValue(args[0])
         let relativeAssetPathWithTagNamespaceArg = args[1] as! String
         let extensionLevelArg = args[2] as! Int64
         api.getCopiedAssetFilePath(tag: tagArg, relativeAssetPathWithTagNamespace: relativeAssetPathWithTagNamespaceArg, extensionLevel: extensionLevelArg) { result in

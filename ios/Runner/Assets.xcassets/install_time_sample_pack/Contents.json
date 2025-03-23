@@ -4,9 +4,6 @@
     "version" : 1
   },
   "properties" : {
-    "on-demand-resource-tags" : [
-      "install_time_sample_pack"
-    ],
     "provides-namespace" : true
   }
 }
