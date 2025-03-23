@@ -145,9 +145,12 @@ class StreamAssetWidget extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Text('Waiting for Wi-Fi.'),
-                Visibility(
-                  visible:
-                      !OnlineAssets.instance.confirmationDialogShownOnAndroid,
+                ValueListenableBuilder(
+                  valueListenable:
+                      OnlineAssets.instance.confirmationDialogShownOnAndroid,
+                  builder: (context, value, child) {
+                    return Visibility(visible: !value, child: child!);
+                  },
                   child: IconButton(
                     icon: Icon(Icons.cloud_download),
                     onPressed:

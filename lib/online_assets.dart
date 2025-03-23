@@ -263,8 +263,8 @@ class OnlineAssets {
 
   bool _isInitialized = false;
 
-  // https://developer.android.com/guide/playcore/asset-delivery/integrate-java#required-confirmations
-  bool confirmationDialogShownOnAndroid = false;
+  /// https://developer.android.com/guide/playcore/asset-delivery/integrate-java#required-confirmations
+  ValueNotifier<bool> confirmationDialogShownOnAndroid = ValueNotifier(false);
 
   final PlayAssetDeliveryHostApiMethods androidApi =
       PlayAssetDeliveryHostApiMethods();
@@ -419,10 +419,10 @@ class OnlineAssets {
 
   Future<bool> showConfirmationDialog() async {
     if (Platform.isAndroid) {
-      if (confirmationDialogShownOnAndroid) {
+      if (confirmationDialogShownOnAndroid.value) {
         return false;
       }
-      confirmationDialogShownOnAndroid = true;
+      confirmationDialogShownOnAndroid.value = true;
       return await androidApi.showConfirmationDialog();
     }
     return false;
