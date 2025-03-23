@@ -321,7 +321,7 @@ protocol OnDemandResourcesHostApiMethods {
   /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
   ///
   /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
-  func getCopiedAssetFilePath(tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64) throws -> String?
+  func getCopiedAssetFilePath(tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64, completion: @escaping (Result<String?, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -375,11 +375,13 @@ class OnDemandResourcesHostApiMethodsSetup {
         let tagArg = args[0] as! String
         let relativeAssetPathWithTagNamespaceArg = args[1] as! String
         let extensionLevelArg = args[2] as! Int64
-        do {
-          let result = try api.getCopiedAssetFilePath(tag: tagArg, relativeAssetPathWithTagNamespace: relativeAssetPathWithTagNamespaceArg, extensionLevel: extensionLevelArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
+        api.getCopiedAssetFilePath(tag: tagArg, relativeAssetPathWithTagNamespace: relativeAssetPathWithTagNamespaceArg, extensionLevel: extensionLevelArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
         }
       }
     } else {

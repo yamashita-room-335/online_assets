@@ -32,6 +32,7 @@ abstract class OnDemandResourcesHostApiMethods {
   /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
   ///
   /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
+  @async
   String? getCopiedAssetFilePath({
     required String tag,
     required String relativeAssetPathWithTagNamespace,

@@ -1,4 +1,3 @@
-import CryptoKit
 import Flutter
 import Foundation
 
@@ -125,18 +124,6 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         let methodInfo = "[beginAccessingResources(tags: \(tags))]"
         log("\(methodInfo) start")
 
-        // Returns an error if the value contained in tags does not exist in requestsToFetch
-        guard tags.allSatisfy(resourceRequests.keys.contains) else {
-            completion(
-                .failure(
-                    PigeonError(
-                        code: "-1",
-                        message:
-                            "\(methodInfo) All tags must be called in requestNSBundleResourceRequests().",
-                        details: "")))
-            return
-        }
-
         // Filter down resources to fetch
         let requestsToFetch = resourceRequests.filter { tags.contains($0.key) }
 
@@ -214,25 +201,29 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
 
     /// Get the absolute path of the asset
     func getCopiedAssetFilePath(
-        tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64
-    ) throws -> String? {
+        tag: String, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64,
+        completion: @escaping (Result<String?, Error>) -> Void
+    ) {
         let methodInfo =
             "[getAbsoluteAssetPath(tag: \(tag), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))]"
         log("\(methodInfo) start")
 
-        guard let (request, _) = resourceRequests[tag] else {
-            return nil
-        }
-
-        guard request.progress.isFinished else {
-            return nil
+        if let (request, _) = resourceRequests[tag] {
+            // On-Demand Resources Asset
+            guard request.progress.isFinished else {
+                log("\(methodInfo) The subject tag's resource has not yet been fully downloaded.")
+                completion(.success(nil))
+                return
+            }
+        } else {
+            // Normal Asset (like Android install-time asset pack)
         }
 
         let fileManager = FileManager.default
         var targetFolderURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let relativePathComponents = relativeAssetPathWithTagNamespace.components(separatedBy: "/")
         let nestFolders = relativePathComponents.dropLast()
-        let fileName = relativePathComponents.last!
+        let fileName = relativePathComponents.last ?? relativeAssetPathWithTagNamespace
 
         for folderName in nestFolders {
             targetFolderURL = targetFolderURL.appendingPathComponent(folderName)
@@ -243,8 +234,14 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
             try fileManager.createDirectory(
                 at: targetFolderURL, withIntermediateDirectories: true, attributes: nil)
         } catch {
-            log("\(methodInfo) fileManager.createDirectory error: \(error)")
-            return nil
+            completion(
+                .failure(
+                    PigeonError(
+                        code: "-1",
+                        message:
+                            "\(methodInfo) fileManager.createDirectory error",
+                        details: "\(error)")))
+            return
         }
 
         var fileNameWithoutExtension = fileName
@@ -296,78 +293,97 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         log("\(methodInfo) targetURL: \(targetURL), named: \(name)")
 
         if isImageFile, let image = UIImage(named: name) {
-            // Check hash already saved file
             if fileManager.fileExists(atPath: targetURL.path) {
+                // Because of the time required, this function do not check file hash.
                 if #available(iOS 13.0, *) {
-                    let preSavedData = try Data(contentsOf: targetURL)
-                    let preSavedImage = UIImage(data: preSavedData)
-                    if let preImageData = preSavedImage?.cgImage?.dataProvider?.data as? Data,
-                        let currentImageData = image.cgImage?.dataProvider?.data as? Data
-                    {
-                        let preSavedHash = SHA256.hash(data: preImageData)
-                        let currentHash = SHA256.hash(data: currentImageData)
-                        if preSavedHash == currentHash {
-                            log("\(methodInfo) skip saving, same hash: \(preSavedHash)")
-                            return targetURL.path
+                    do {
+                        let preSavedData = try Data(contentsOf: targetURL)
+                        let preSavedImage = UIImage(data: preSavedData)
+                        if let preImageData = preSavedImage?.cgImage?.dataProvider?.data as? Data,
+                            let currentImageData = image.cgImage?.dataProvider?.data as? Data
+                        {
+                            if preImageData.count == currentImageData.count {
+                                log("\(methodInfo) skip saving, same file size")
+                                completion(.success(targetURL.path))
+                                return
+                            }
                         }
-                        log("\(methodInfo) different hash: \(preSavedHash), \(currentHash)")
+                    } catch {
+                        log("\(methodInfo) try Data(contentsOf: \(targetURL)) error: \(error)")
                     }
                 }
 
-                log("\(methodInfo) Remove pre saved file. \(targetURL)")
                 do {
+                    log("\(methodInfo) Remove pre saved file")
                     try fileManager.removeItem(at: targetURL)
                 } catch {
-                    log("\(methodInfo) fileManager.removeItem error: \(error)")
+                    log(
+                        "\(methodInfo) ttry fileManager.removeItem(at: \(targetURL)) error: \(error)"
+                    )
                 }
             }
 
             if let imagePngData = image.pngData() {
-                log("\(methodInfo) Write pngData to file: \(targetURL)")
                 do {
+                    log("\(methodInfo) Write pngData to file: \(targetURL)")
                     try imagePngData.write(to: targetURL)
-                    return targetURL.path
+                    completion(.success(targetURL.path))
                 } catch {
-                    log("\(methodInfo) imagePngData.write error: \(error)")
-                    return nil
+                    completion(
+                        .failure(
+                            PigeonError(
+                                code: "-1",
+                                message:
+                                    "\(methodInfo) error.",
+                                details: "\(error)")))
                 }
+                return
             }
         }
 
         if let asset = NSDataAsset(name: name) {
-            // Check hash already saved file
             if fileManager.fileExists(atPath: targetURL.path) {
+                // Because of the time required, this function do not check file hash.
                 if #available(iOS 13.0, *) {
-                    let preSavedData = try Data(contentsOf: targetURL)
-                    let preSavedHash = SHA256.hash(data: preSavedData)
-                    let currentHash = SHA256.hash(data: asset.data)
-                    if preSavedHash == currentHash {
-                        log("\(methodInfo) skip saving, same hash: \(preSavedHash)")
-                        return targetURL.path
+                    do {
+                        let preSavedData = try Data(contentsOf: targetURL)
+                        if preSavedData.count == asset.data.count {
+                            log("\(methodInfo) skip saving, same file size")
+                            completion(.success(targetURL.path))
+                            return
+                        }
+                    } catch {
+                        log("\(methodInfo) try Data(contentsOf: \(targetURL)) error: \(error)")
                     }
-                    log("\(methodInfo) different hash: \(preSavedHash), \(currentHash)")
                 }
 
-                log("\(methodInfo) Remove pre saved file. \(targetURL)")
                 do {
+                    log("\(methodInfo) Remove pre saved file")
                     try fileManager.removeItem(at: targetURL)
                 } catch {
-                    log("\(methodInfo) fileManager.removeItem error: \(error)")
+                    log(
+                        "\(methodInfo) ttry fileManager.removeItem(at: \(targetURL)) error: \(error)"
+                    )
                 }
             }
 
-            log("\(methodInfo) Write NSDataAsset to file: \(targetURL)")
             do {
+                log("\(methodInfo) Write NSDataAsset to file: \(targetURL)")
                 try asset.data.write(to: targetURL)
-                return targetURL.path
+                completion(.success(targetURL.path))
             } catch {
-                log("\(methodInfo) asset.data.write error: \(error)")
-                return nil
+                completion(
+                    .failure(
+                        PigeonError(
+                            code: "-1",
+                            message:
+                                "\(methodInfo) error.",
+                            details: "\(error)")))
             }
+            return
         }
 
-        log("\(methodInfo) Can not load asset.")
-        return nil
+        completion(.success(nil))
     }
 }
 
