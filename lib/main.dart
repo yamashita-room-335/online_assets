@@ -176,7 +176,7 @@ class InstallTimeFutureVideoPage extends StatelessWidget {
       appBar: AppBar(title: Text('Future Image Page')),
       body: FutureAssetWidget.video(
         assetName: 'install_time_sample_pack',
-        relativePath: 'dog${Platform.pathSeparator}run_moive.mp4',
+        relativePath: 'dog${Platform.pathSeparator}movie.mp4',
       ),
     );
   }
@@ -222,7 +222,7 @@ class FastFollowStreamVideoPage extends StatelessWidget {
       appBar: AppBar(title: Text('Stream Image Page')),
       body: StreamAssetWidget.video(
         assetName: 'fast_follow_sample_pack',
-        relativePath: 'dog${Platform.pathSeparator}run_moive.mp4',
+        relativePath: 'dog${Platform.pathSeparator}movie.mp4',
       ),
     );
   }
@@ -268,7 +268,7 @@ class OnDemandStreamVideoPage extends StatelessWidget {
       appBar: AppBar(title: Text('Stream Image Page')),
       body: StreamAssetWidget.video(
         assetName: 'on_demand_sample_pack',
-        relativePath: 'dog${Platform.pathSeparator}run_moive.mp4',
+        relativePath: 'dog${Platform.pathSeparator}movie.mp4',
       ),
     );
   }
