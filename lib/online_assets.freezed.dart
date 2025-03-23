@@ -800,7 +800,7 @@ as bool,
 /// @nodoc
 mixin _$OnlineAssetPackSettings implements DiagnosticableTreeMixin {
 
- String get packName; bool get isInstallTimeAssetPack;
+ String get packName; AndroidAssetPackDeliveryMode get androidAssetPackDeliveryMode; IOSOnDemandResourceType get iosOnDemandResourceType;
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -812,21 +812,21 @@ $OnlineAssetPackSettingsCopyWith<OnlineAssetPackSettings> get copyWith => _$Onli
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'OnlineAssetPackSettings'))
-    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('isInstallTimeAssetPack', isInstallTimeAssetPack));
+    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('androidAssetPackDeliveryMode', androidAssetPackDeliveryMode))..add(DiagnosticsProperty('iosOnDemandResourceType', iosOnDemandResourceType));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.isInstallTimeAssetPack, isInstallTimeAssetPack) || other.isInstallTimeAssetPack == isInstallTimeAssetPack));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.androidAssetPackDeliveryMode, androidAssetPackDeliveryMode) || other.androidAssetPackDeliveryMode == androidAssetPackDeliveryMode)&&(identical(other.iosOnDemandResourceType, iosOnDemandResourceType) || other.iosOnDemandResourceType == iosOnDemandResourceType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,packName,isInstallTimeAssetPack);
+int get hashCode => Object.hash(runtimeType,packName,androidAssetPackDeliveryMode,iosOnDemandResourceType);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'OnlineAssetPackSettings(packName: $packName, isInstallTimeAssetPack: $isInstallTimeAssetPack)';
+  return 'OnlineAssetPackSettings(packName: $packName, androidAssetPackDeliveryMode: $androidAssetPackDeliveryMode, iosOnDemandResourceType: $iosOnDemandResourceType)';
 }
 
 
@@ -837,7 +837,7 @@ abstract mixin class $OnlineAssetPackSettingsCopyWith<$Res>  {
   factory $OnlineAssetPackSettingsCopyWith(OnlineAssetPackSettings value, $Res Function(OnlineAssetPackSettings) _then) = _$OnlineAssetPackSettingsCopyWithImpl;
 @useResult
 $Res call({
- String packName, bool isInstallTimeAssetPack
+ String packName, AndroidAssetPackDeliveryMode androidAssetPackDeliveryMode, IOSOnDemandResourceType iosOnDemandResourceType
 });
 
 
@@ -854,11 +854,12 @@ class _$OnlineAssetPackSettingsCopyWithImpl<$Res>
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? packName = null,Object? isInstallTimeAssetPack = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? packName = null,Object? androidAssetPackDeliveryMode = null,Object? iosOnDemandResourceType = null,}) {
   return _then(_self.copyWith(
 packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
-as String,isInstallTimeAssetPack: null == isInstallTimeAssetPack ? _self.isInstallTimeAssetPack : isInstallTimeAssetPack // ignore: cast_nullable_to_non_nullable
-as bool,
+as String,androidAssetPackDeliveryMode: null == androidAssetPackDeliveryMode ? _self.androidAssetPackDeliveryMode : androidAssetPackDeliveryMode // ignore: cast_nullable_to_non_nullable
+as AndroidAssetPackDeliveryMode,iosOnDemandResourceType: null == iosOnDemandResourceType ? _self.iosOnDemandResourceType : iosOnDemandResourceType // ignore: cast_nullable_to_non_nullable
+as IOSOnDemandResourceType,
   ));
 }
 
@@ -869,11 +870,12 @@ as bool,
 
 
 class _OnlineAssetPackSettings with DiagnosticableTreeMixin implements OnlineAssetPackSettings {
-  const _OnlineAssetPackSettings({required this.packName, required this.isInstallTimeAssetPack});
+  const _OnlineAssetPackSettings({required this.packName, required this.androidAssetPackDeliveryMode, required this.iosOnDemandResourceType});
   
 
 @override final  String packName;
-@override final  bool isInstallTimeAssetPack;
+@override final  AndroidAssetPackDeliveryMode androidAssetPackDeliveryMode;
+@override final  IOSOnDemandResourceType iosOnDemandResourceType;
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -886,21 +888,21 @@ _$OnlineAssetPackSettingsCopyWith<_OnlineAssetPackSettings> get copyWith => __$O
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'OnlineAssetPackSettings'))
-    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('isInstallTimeAssetPack', isInstallTimeAssetPack));
+    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('androidAssetPackDeliveryMode', androidAssetPackDeliveryMode))..add(DiagnosticsProperty('iosOnDemandResourceType', iosOnDemandResourceType));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.isInstallTimeAssetPack, isInstallTimeAssetPack) || other.isInstallTimeAssetPack == isInstallTimeAssetPack));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.androidAssetPackDeliveryMode, androidAssetPackDeliveryMode) || other.androidAssetPackDeliveryMode == androidAssetPackDeliveryMode)&&(identical(other.iosOnDemandResourceType, iosOnDemandResourceType) || other.iosOnDemandResourceType == iosOnDemandResourceType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,packName,isInstallTimeAssetPack);
+int get hashCode => Object.hash(runtimeType,packName,androidAssetPackDeliveryMode,iosOnDemandResourceType);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'OnlineAssetPackSettings(packName: $packName, isInstallTimeAssetPack: $isInstallTimeAssetPack)';
+  return 'OnlineAssetPackSettings(packName: $packName, androidAssetPackDeliveryMode: $androidAssetPackDeliveryMode, iosOnDemandResourceType: $iosOnDemandResourceType)';
 }
 
 
@@ -911,7 +913,7 @@ abstract mixin class _$OnlineAssetPackSettingsCopyWith<$Res> implements $OnlineA
   factory _$OnlineAssetPackSettingsCopyWith(_OnlineAssetPackSettings value, $Res Function(_OnlineAssetPackSettings) _then) = __$OnlineAssetPackSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- String packName, bool isInstallTimeAssetPack
+ String packName, AndroidAssetPackDeliveryMode androidAssetPackDeliveryMode, IOSOnDemandResourceType iosOnDemandResourceType
 });
 
 
@@ -928,11 +930,12 @@ class __$OnlineAssetPackSettingsCopyWithImpl<$Res>
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? packName = null,Object? isInstallTimeAssetPack = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? packName = null,Object? androidAssetPackDeliveryMode = null,Object? iosOnDemandResourceType = null,}) {
   return _then(_OnlineAssetPackSettings(
 packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
-as String,isInstallTimeAssetPack: null == isInstallTimeAssetPack ? _self.isInstallTimeAssetPack : isInstallTimeAssetPack // ignore: cast_nullable_to_non_nullable
-as bool,
+as String,androidAssetPackDeliveryMode: null == androidAssetPackDeliveryMode ? _self.androidAssetPackDeliveryMode : androidAssetPackDeliveryMode // ignore: cast_nullable_to_non_nullable
+as AndroidAssetPackDeliveryMode,iosOnDemandResourceType: null == iosOnDemandResourceType ? _self.iosOnDemandResourceType : iosOnDemandResourceType // ignore: cast_nullable_to_non_nullable
+as IOSOnDemandResourceType,
   ));
 }
 

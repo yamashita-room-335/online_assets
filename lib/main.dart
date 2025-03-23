@@ -11,15 +11,18 @@ void main() {
     assetPackSettingsList: [
       OnlineAssetPackSettings(
         packName: 'install_time_sample_pack',
-        isInstallTimeAssetPack: true,
+        androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.installTime,
+        iosOnDemandResourceType: IOSOnDemandResourceType.assetsWithoutTag,
       ),
       OnlineAssetPackSettings(
         packName: 'fast_follow_sample_pack',
-        isInstallTimeAssetPack: false,
+        androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.fastFollow,
+        iosOnDemandResourceType: IOSOnDemandResourceType.prefetch,
       ),
       OnlineAssetPackSettings(
         packName: 'on_demand_sample_pack',
-        isInstallTimeAssetPack: false,
+        androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.onDemand,
+        iosOnDemandResourceType: IOSOnDemandResourceType.onDemand,
       ),
     ],
   );

@@ -313,7 +313,7 @@ class StreamOnDemandResourceStreamHandler: PigeonEventChannelWrapper<IOSOnDemand
       
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol OnDemandResourcesHostApiMethods {
-  func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon
+  func requestNSBundleResourceRequests(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
   func beginAccessingResources(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
   /// Get the path to the copy of the iOS Asset file.
   ///
@@ -340,11 +340,13 @@ class OnDemandResourcesHostApiMethodsSetup {
       requestNSBundleResourceRequestsChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let tagsArg = args[0] as! [String]
-        do {
-          let result = try api.requestNSBundleResourceRequests(tags: tagsArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
+        api.requestNSBundleResourceRequests(tags: tagsArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
         }
       }
     } else {

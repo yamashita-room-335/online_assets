@@ -183,8 +183,24 @@ abstract class IOSProgress with _$IOSProgress {
 abstract class OnlineAssetPackSettings with _$OnlineAssetPackSettings {
   const factory OnlineAssetPackSettings({
     required String packName,
-    required bool isInstallTimeAssetPack,
+    required AndroidAssetPackDeliveryMode androidAssetPackDeliveryMode,
+    required IOSOnDemandResourceType iosOnDemandResourceType,
   }) = _OnlineAssetPackSettings;
+}
+
+/// https://developer.android.com/guide/playcore/asset-delivery#delivery-modes
+enum AndroidAssetPackDeliveryMode { installTime, fastFollow, onDemand }
+
+/// https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/On_Demand_Resources_Guide/Tagging.html
+///
+/// See "Prefetching Tags"
+enum IOSOnDemandResourceType {
+  // Assets for which the "On-Demand Resources Tag" was not set
+  assetsWithoutTag,
+  // This asset can be deleted, so the asset status should be checked.
+  initialInstall,
+  prefetch,
+  onDemand,
 }
 
 /// Class for unified handling of Play Asset Delivery (Android) and On-Demand Resources (iOS)
@@ -292,10 +308,19 @@ class OnlineAssets {
       for (final settings in assetPackSettingsList) {
         packSettingsMap[settings.packName] = settings;
 
-        if (!settings.isInstallTimeAssetPack) {
-          // Generate only the Subject of the online assets.
-          onlinePackSubjectMap[settings.packName] =
-              BehaviorSubject<OnlinePack>();
+        // Generate only the Subject of the online assets.
+        if (Platform.isAndroid) {
+          if (settings.androidAssetPackDeliveryMode !=
+              AndroidAssetPackDeliveryMode.installTime) {
+            onlinePackSubjectMap[settings.packName] =
+                BehaviorSubject<OnlinePack>();
+          }
+        } else {
+          if (settings.iosOnDemandResourceType !=
+              IOSOnDemandResourceType.assetsWithoutTag) {
+            onlinePackSubjectMap[settings.packName] =
+                BehaviorSubject<OnlinePack>();
+          }
         }
       }
 
@@ -347,19 +372,22 @@ class OnlineAssets {
 
   /// Start fetch assets
   Future<void> fetch(List<String> packNames) async {
-    try {
-      for (final packName in packNames) {
-        if (!onlinePackSubjectMap.containsKey(packName)) {
-          if (packSettingsMap.containsKey(packName)) {
-            throw Exception(
-              '[$packName] pack set isInstallTimeAssetPack = true. There is no need to call fetch because it already exists in device.',
-            );
-          } else {
-            throw Exception('Unknown pack name: $packName');
-          }
+    for (final packName in packNames) {
+      if (!onlinePackSubjectMap.containsKey(packName)) {
+        if (packSettingsMap.containsKey(packName)) {
+          log(
+            '[$packName] pack set ${Platform.isAndroid ? 'androidAssetPackDeliveryMode: .installTime' : 'iosOnDemandResourceType: .assetsWithoutTag'}. There is no need to call fetch because it already exists in device.',
+          );
+          packNames.remove(packName);
+        } else {
+          throw Exception(
+            "Please register [$packName] settings in OnlineAssets.instance.init().",
+          );
         }
       }
+    }
 
+    try {
       final OnlinePackHolder packHolder;
       if (Platform.isAndroid) {
         packHolder = OnlinePackHolder.fromAndroid(
@@ -404,42 +432,51 @@ class OnlineAssets {
   ///
   /// If it is not obtained, null is returned, so the caller must wait for the download to complete in the Stream.
   Future<File?> getFile({
-    required String assetName,
+    required String packName,
     required String relativePath,
   }) async {
+    final packSettings = packSettingsMap[packName];
+    if (packSettings == null) {
+      throw Exception(
+        "Please register [$packName] settings in OnlineAssets.instance.init().",
+      );
+    }
+
     try {
       final String? path;
       if (Platform.isAndroid) {
-        if (packSettingsMap[assetName]!.isInstallTimeAssetPack) {
+        if (packSettings.androidAssetPackDeliveryMode ==
+            AndroidAssetPackDeliveryMode.installTime) {
           path = await androidApi.getCopiedAssetFilePathOnInstallTimeAsset(
-            assetPackName: assetName,
+            assetPackName: packName,
             relativeAssetPath: relativePath,
           );
         } else {
           path = await androidApi.getAssetFilePathOnDownloadAsset(
-            assetPackName: assetName,
+            assetPackName: packName,
             relativeAssetPath: relativePath,
           );
         }
       } else {
-        if (packSettingsMap[assetName]!.isInstallTimeAssetPack) {
+        if (packSettings.iosOnDemandResourceType ==
+            IOSOnDemandResourceType.assetsWithoutTag) {
           path = await iosApi.getCopiedAssetFilePath(
             tag: null,
             relativeAssetPathWithTagNamespace:
-                '$assetName${Platform.pathSeparator}$relativePath',
+                '$packName${Platform.pathSeparator}$relativePath',
           );
         } else {
           path = await iosApi.getCopiedAssetFilePath(
-            tag: assetName,
+            tag: packName,
             relativeAssetPathWithTagNamespace:
-                '$assetName${Platform.pathSeparator}$relativePath',
+                '$packName${Platform.pathSeparator}$relativePath',
           );
         }
       }
 
       if (path == null) {
         log(
-          "Failed to get file path. assetName: $assetName, relativePath: $relativePath",
+          "Failed to get file path. assetName: $packName, relativePath: $relativePath",
         );
         return null;
       }
@@ -456,16 +493,16 @@ class OnlineAssets {
   /// Returns true if the target file or folder was successfully deleted.
   /// Also returns true if the target file or folder does not yet exist.
   ///
-  /// If only [assetPackName] is specified, the target pack folder is deleted.
+  /// If only [packName] is specified, the target pack folder is deleted.
   /// Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
   Future<bool?> deleteCopiedAssetFile({
-    String? assetPackName,
+    String? packName,
     String? relativeAssetPath,
   }) async {
     try {
       if (Platform.isAndroid) {
         return await androidApi.deleteCopiedAssetFileOnInstallTimeAsset(
-          assetPackName: assetPackName,
+          assetPackName: packName,
           relativeAssetPath: relativeAssetPath,
         );
       } else {
@@ -485,25 +522,38 @@ class OnlineAssets {
   /// If [fetchOnNotDownloading] is [true], [fetch] is called when the status is "Not Installed", "Canceled", "Failed".
   /// If you want to use a different logic to manage whether fetch is performed or not, set it to [false].
   Stream<(File?, OnlinePack)> streamFile({
-    required String assetName,
+    required String packName,
     required String relativePath,
     bool fetchOnNotDownloading = true,
   }) async* {
     try {
-      if (Platform.isAndroid &&
-          packSettingsMap[assetName]?.isInstallTimeAssetPack == true) {
-        // If the asset is an install-time asset, it is already downloaded.
-        final file = await getFile(
-          assetName: assetName,
-          relativePath: relativePath,
-        );
-        yield (file, onlinePackSubjectMap[assetName]!.value);
-        return;
+      if (Platform.isAndroid) {
+        if (packSettingsMap[packName]!.androidAssetPackDeliveryMode ==
+            AndroidAssetPackDeliveryMode.installTime) {
+          // If the asset is an install-time asset, it is already exist.
+          final file = await getFile(
+            packName: packName,
+            relativePath: relativePath,
+          );
+          yield (file, onlinePackSubjectMap[packName]!.value);
+          return;
+        }
+      } else {
+        if (packSettingsMap[packName]!.iosOnDemandResourceType ==
+            IOSOnDemandResourceType.assetsWithoutTag) {
+          // If the asset is an standard asset, it is already exist.
+          final file = await getFile(
+            packName: packName,
+            relativePath: relativePath,
+          );
+          yield (file, onlinePackSubjectMap[packName]!.value);
+          return;
+        }
       }
 
-      final packSubject = onlinePackSubjectMap[assetName];
+      final packSubject = onlinePackSubjectMap[packName];
       if (packSubject == null) {
-        throw Exception("Please register [$assetName] stream.");
+        throw Exception("Please register [$packName] stream.");
       }
 
       if (fetchOnNotDownloading) {
@@ -511,7 +561,7 @@ class OnlineAssets {
           case OnlineAssetStatus.notInstalled ||
               OnlineAssetStatus.canceled ||
               OnlineAssetStatus.failed:
-            fetch([assetName]);
+            fetch([packName]);
             break;
           default:
             break;
@@ -522,7 +572,7 @@ class OnlineAssets {
       await for (final resource in packSubject) {
         if (resource.status == OnlineAssetStatus.completed) {
           final file = await getFile(
-            assetName: assetName,
+            packName: packName,
             relativePath: relativePath,
           );
           yield (file, resource);

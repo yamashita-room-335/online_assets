@@ -92,7 +92,9 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
         }
     }
 
-    func requestNSBundleResourceRequests(tags: [String]) throws -> IOSOnDemandResourcesPigeon {
+    func requestNSBundleResourceRequests(
+        tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void
+    ) {
         let methodInfo = "[requestNSBundleResourceRequests(tags: \(tags))]"
         log("\(methodInfo) start")
 
@@ -107,13 +109,43 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
             // Set up progress monitoring
             request.progress.addObserver(
                 self, forKeyPath: progressKeyPath, options: [.new], context: nil)
-            let resource = IOSOnDemandResourcePigeon.fromIOS(tag: tag, request: request)
-            resourceMap[tag] = resource
         }
 
-        let response = IOSOnDemandResourcesPigeon(resourceMap: resourceMap)
-        log("\(methodInfo)  response: \(response)")
-        return response
+        // DispatchGroup to wait for completion of all resource accesses
+        let group = DispatchGroup()
+
+        for (tag, (request, _)) in resourceRequests {
+            group.enter()
+
+            // Downloaded or not
+            log("\(methodInfo) \(tag) conditionallyBeginAccessingResources")
+            request.conditionallyBeginAccessingResources { [weak self] (condition) in
+                if condition {
+                    self?.log("\(methodInfo) \(tag) existing resource")
+                    // The already downloaded Progress is not updated and notified, so it is necessary to set the progress as completed from the code.
+                    request.progress.becomeCurrent(withPendingUnitCount: 100)
+                    request.progress.resignCurrent()
+                    let resource = IOSOnDemandResourcePigeon.fromIOS(
+                        tag: tag, request: request, condition: condition)
+
+                    resourceMap[tag] = resource
+                } else {
+                    self?.log("\(methodInfo) \(tag) need to download resource")
+                    let resource = IOSOnDemandResourcePigeon.fromIOS(
+                        tag: tag, request: request, condition: condition)
+
+                    resourceMap[tag] = resource
+                }
+
+                group.leave()
+            }
+        }
+
+        // Call completion when all resource access processing is complete
+        group.notify(queue: .main) {
+            let response = IOSOnDemandResourcesPigeon(resourceMap: resourceMap)
+            completion(.success(response))
+        }
     }
 
     func beginAccessingResources(
@@ -144,9 +176,9 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
             // Downloaded or not
             log("\(methodInfo) conditionallyBeginAccessingResources")
             request.conditionallyBeginAccessingResources { [weak self] (condition) in
-                self?.log("\(methodInfo) beginAccessingResources condition: \(condition)")
+                self?.log("\(methodInfo) \(tag) beginAccessingResources condition: \(condition)")
                 if condition {
-                    self?.log("\(methodInfo) existing resource")
+                    self?.log("\(methodInfo) \(tag) existing resource")
                     // The already downloaded Progress is not updated and notified, so it is necessary to set the progress as completed from the code.
                     request.progress.becomeCurrent(withPendingUnitCount: 100)
                     request.progress.resignCurrent()
@@ -158,18 +190,19 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
                     group.leave()
                 } else if !calledBeginAccessingResources {
                     // ダウンロード開始
-                    self?.log("\(methodInfo) request.beginAccessingResources start")
+                    self?.log("\(methodInfo) \(tag) request.beginAccessingResources start")
                     request.beginAccessingResources { [weak self] (error) in
                         defer { group.leave() }
 
                         if let error = error as? NSError {
-                            self?.log("\(methodInfo) beginAccessingResources error: \(error)")
+                            self?.log(
+                                "\(methodInfo) \(tag) beginAccessingResources error: \(error)")
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, error: error, condition: condition)
 
                             resourceMap[tag] = resource
                         } else {
-                            self?.log("\(methodInfo) download finish tag: \(tag)")
+                            self?.log("\(methodInfo) \(tag) download finish tag: \(tag)")
                             let resource = IOSOnDemandResourcePigeon.fromIOS(
                                 tag: tag, request: request, condition: condition)
 
@@ -178,7 +211,8 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApiMeth
                     }
                 } else {
                     self?.log(
-                        "\(methodInfo) before call request.beginAccessingResources. Nothing to do")
+                        "\(methodInfo) \(tag) before call request.beginAccessingResources. Nothing to do"
+                    )
                     // Nothing to do here because the download is called elsewhere
                     let resource = IOSOnDemandResourcePigeon.fromIOS(
                         tag: tag, request: request, condition: condition)

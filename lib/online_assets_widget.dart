@@ -19,8 +19,8 @@ class FutureAssetWidget extends StatelessWidget {
     required this.assetName,
     required this.relativePath,
   }) : width = null,
-        height = null,
-        isImage = false;
+       height = null,
+       isImage = false;
 
   final String assetName;
   final String relativePath;
@@ -35,7 +35,7 @@ class FutureAssetWidget extends StatelessWidget {
       height: height,
       child: FutureBuilder<File?>(
         future: OnlineAssets.instance.getFile(
-          assetName: assetName,
+          packName: assetName,
           relativePath: relativePath,
         ),
         builder: (context, snapshot) {
@@ -91,7 +91,7 @@ class StreamAssetWidget extends StatelessWidget {
       height: height,
       child: StreamBuilder<(File?, OnlinePack)>(
         stream: OnlineAssets.instance.streamFile(
-          assetName: assetName,
+          packName: assetName,
           relativePath: relativePath,
         ),
         builder: (context, snapshot) {
