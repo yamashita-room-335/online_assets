@@ -179,12 +179,14 @@ abstract class IOSProgress with _$IOSProgress {
 }
 
 /// Pack-related settings
+///
+/// If the asset exists on only one platform, the one that does not exist should be set to null.
 @freezed
 abstract class OnlineAssetPackSettings with _$OnlineAssetPackSettings {
   const factory OnlineAssetPackSettings({
     required String packName,
-    required AndroidAssetPackDeliveryMode androidAssetPackDeliveryMode,
-    required IOSOnDemandResourceType iosOnDemandResourceType,
+    required AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode,
+    required IOSOnDemandResourceType? iosOnDemandResourceType,
   }) = _OnlineAssetPackSettings;
 }
 
@@ -313,17 +315,24 @@ class OnlineAssets {
 
     try {
       for (final settings in assetPackSettingsList) {
+        if (Platform.isAndroid &&
+            settings.androidAssetPackDeliveryMode == null) {
+          continue;
+        } else if (Platform.isIOS && settings.iosOnDemandResourceType == null) {
+          continue;
+        }
+
         packSettingsMap[settings.packName] = settings;
 
         // Generate only the Subject of the online assets.
         if (Platform.isAndroid) {
-          if (settings.androidAssetPackDeliveryMode !=
+          if (settings.androidAssetPackDeliveryMode! !=
               AndroidAssetPackDeliveryMode.installTime) {
             onlinePackSubjectMap[settings.packName] =
                 BehaviorSubject<OnlinePack>();
           }
         } else {
-          if (settings.iosOnDemandResourceType !=
+          if (settings.iosOnDemandResourceType! !=
               IOSOnDemandResourceType.assetsWithoutTag) {
             onlinePackSubjectMap[settings.packName] =
                 BehaviorSubject<OnlinePack>();
@@ -444,12 +453,21 @@ class OnlineAssets {
       throw Exception(
         "Please register [$packName] settings in OnlineAssets.instance.init().",
       );
+    } else if (Platform.isAndroid &&
+        packSettings.androidAssetPackDeliveryMode == null) {
+      throw Exception(
+        "It's trying to call an asset registered as non-existent in OnlineAssets.instance.init(). Please check if the pack name　($packName) is correct.",
+      );
+    } else if (Platform.isIOS && packSettings.iosOnDemandResourceType == null) {
+      throw Exception(
+        "It's trying to call an asset registered as non-existent in OnlineAssets.instance.init(). Please check if the pack name　($packName) is correct.",
+      );
     }
 
     try {
       final String? path;
       if (Platform.isAndroid) {
-        if (packSettings.androidAssetPackDeliveryMode ==
+        if (packSettings.androidAssetPackDeliveryMode! ==
             AndroidAssetPackDeliveryMode.installTime) {
           path = await _androidApi.getCopiedAssetFilePathOnInstallTimeAsset(
             assetPackName: packName,
@@ -462,7 +480,7 @@ class OnlineAssets {
           );
         }
       } else {
-        if (packSettings.iosOnDemandResourceType ==
+        if (packSettings.iosOnDemandResourceType! ==
             IOSOnDemandResourceType.assetsWithoutTag) {
           path = await _iosApi.getCopiedAssetFilePath(
             tag: null,
@@ -530,9 +548,25 @@ class OnlineAssets {
     required String relativePath,
     bool fetchOnNotDownloading = true,
   }) async* {
+    final packSettings = packSettingsMap[packName];
+    if (packSettings == null) {
+      throw Exception(
+        "Please register [$packName] settings in OnlineAssets.instance.init().",
+      );
+    } else if (Platform.isAndroid &&
+        packSettings.androidAssetPackDeliveryMode == null) {
+      throw Exception(
+        "It's trying to call an asset registered as non-existent in OnlineAssets.instance.init(). Please check if the pack name　($packName) is correct.",
+      );
+    } else if (Platform.isIOS && packSettings.iosOnDemandResourceType == null) {
+      throw Exception(
+        "It's trying to call an asset registered as non-existent in OnlineAssets.instance.init(). Please check if the pack name　($packName) is correct.",
+      );
+    }
+
     try {
       if (Platform.isAndroid) {
-        if (packSettingsMap[packName]!.androidAssetPackDeliveryMode ==
+        if (packSettings.androidAssetPackDeliveryMode! ==
             AndroidAssetPackDeliveryMode.installTime) {
           // If the asset is an install-time asset, it is already exist.
           final file = await getFile(
@@ -543,7 +577,7 @@ class OnlineAssets {
           return;
         }
       } else {
-        if (packSettingsMap[packName]!.iosOnDemandResourceType ==
+        if (packSettings.iosOnDemandResourceType! ==
             IOSOnDemandResourceType.assetsWithoutTag) {
           // If the asset is an standard asset, it is already exist.
           final file = await getFile(

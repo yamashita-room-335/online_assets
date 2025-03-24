@@ -223,7 +223,7 @@
 				BuildIndependentTargetsInParallel = YES;
 				KnownAssetTags = (
 					fast_follow_sample_pack,
-					install_time_sample_pack,
+					initial_install_sample_pack,
 					on_demand_sample_pack,
 				);
 				LastUpgradeCheck = 1510;
@@ -490,6 +490,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = initial_install_sample_pack;
+				ON_DEMAND_RESOURCES_PREFETCH_ORDER = fast_follow_sample_pack;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kourokuroom.onlineAssets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -673,6 +675,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = initial_install_sample_pack;
+				ON_DEMAND_RESOURCES_PREFETCH_ORDER = fast_follow_sample_pack;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kourokuroom.onlineAssets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -696,6 +700,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = initial_install_sample_pack;
+				ON_DEMAND_RESOURCES_PREFETCH_ORDER = fast_follow_sample_pack;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kourokuroom.onlineAssets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";

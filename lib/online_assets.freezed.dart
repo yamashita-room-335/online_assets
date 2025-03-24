@@ -800,7 +800,7 @@ as bool,
 /// @nodoc
 mixin _$OnlineAssetPackSettings implements DiagnosticableTreeMixin {
 
- String get packName; AndroidAssetPackDeliveryMode get androidAssetPackDeliveryMode; IOSOnDemandResourceType get iosOnDemandResourceType;
+ String get packName; AndroidAssetPackDeliveryMode? get androidAssetPackDeliveryMode; IOSOnDemandResourceType? get iosOnDemandResourceType;
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -837,7 +837,7 @@ abstract mixin class $OnlineAssetPackSettingsCopyWith<$Res>  {
   factory $OnlineAssetPackSettingsCopyWith(OnlineAssetPackSettings value, $Res Function(OnlineAssetPackSettings) _then) = _$OnlineAssetPackSettingsCopyWithImpl;
 @useResult
 $Res call({
- String packName, AndroidAssetPackDeliveryMode androidAssetPackDeliveryMode, IOSOnDemandResourceType iosOnDemandResourceType
+ String packName, AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode, IOSOnDemandResourceType? iosOnDemandResourceType
 });
 
 
@@ -854,12 +854,12 @@ class _$OnlineAssetPackSettingsCopyWithImpl<$Res>
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? packName = null,Object? androidAssetPackDeliveryMode = null,Object? iosOnDemandResourceType = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? packName = null,Object? androidAssetPackDeliveryMode = freezed,Object? iosOnDemandResourceType = freezed,}) {
   return _then(_self.copyWith(
 packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
-as String,androidAssetPackDeliveryMode: null == androidAssetPackDeliveryMode ? _self.androidAssetPackDeliveryMode : androidAssetPackDeliveryMode // ignore: cast_nullable_to_non_nullable
-as AndroidAssetPackDeliveryMode,iosOnDemandResourceType: null == iosOnDemandResourceType ? _self.iosOnDemandResourceType : iosOnDemandResourceType // ignore: cast_nullable_to_non_nullable
-as IOSOnDemandResourceType,
+as String,androidAssetPackDeliveryMode: freezed == androidAssetPackDeliveryMode ? _self.androidAssetPackDeliveryMode : androidAssetPackDeliveryMode // ignore: cast_nullable_to_non_nullable
+as AndroidAssetPackDeliveryMode?,iosOnDemandResourceType: freezed == iosOnDemandResourceType ? _self.iosOnDemandResourceType : iosOnDemandResourceType // ignore: cast_nullable_to_non_nullable
+as IOSOnDemandResourceType?,
   ));
 }
 
@@ -874,8 +874,8 @@ class _OnlineAssetPackSettings with DiagnosticableTreeMixin implements OnlineAss
   
 
 @override final  String packName;
-@override final  AndroidAssetPackDeliveryMode androidAssetPackDeliveryMode;
-@override final  IOSOnDemandResourceType iosOnDemandResourceType;
+@override final  AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode;
+@override final  IOSOnDemandResourceType? iosOnDemandResourceType;
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -913,7 +913,7 @@ abstract mixin class _$OnlineAssetPackSettingsCopyWith<$Res> implements $OnlineA
   factory _$OnlineAssetPackSettingsCopyWith(_OnlineAssetPackSettings value, $Res Function(_OnlineAssetPackSettings) _then) = __$OnlineAssetPackSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- String packName, AndroidAssetPackDeliveryMode androidAssetPackDeliveryMode, IOSOnDemandResourceType iosOnDemandResourceType
+ String packName, AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode, IOSOnDemandResourceType? iosOnDemandResourceType
 });
 
 
@@ -930,12 +930,12 @@ class __$OnlineAssetPackSettingsCopyWithImpl<$Res>
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? packName = null,Object? androidAssetPackDeliveryMode = null,Object? iosOnDemandResourceType = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? packName = null,Object? androidAssetPackDeliveryMode = freezed,Object? iosOnDemandResourceType = freezed,}) {
   return _then(_OnlineAssetPackSettings(
 packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
-as String,androidAssetPackDeliveryMode: null == androidAssetPackDeliveryMode ? _self.androidAssetPackDeliveryMode : androidAssetPackDeliveryMode // ignore: cast_nullable_to_non_nullable
-as AndroidAssetPackDeliveryMode,iosOnDemandResourceType: null == iosOnDemandResourceType ? _self.iosOnDemandResourceType : iosOnDemandResourceType // ignore: cast_nullable_to_non_nullable
-as IOSOnDemandResourceType,
+as String,androidAssetPackDeliveryMode: freezed == androidAssetPackDeliveryMode ? _self.androidAssetPackDeliveryMode : androidAssetPackDeliveryMode // ignore: cast_nullable_to_non_nullable
+as AndroidAssetPackDeliveryMode?,iosOnDemandResourceType: freezed == iosOnDemandResourceType ? _self.iosOnDemandResourceType : iosOnDemandResourceType // ignore: cast_nullable_to_non_nullable
+as IOSOnDemandResourceType?,
   ));
 }
 

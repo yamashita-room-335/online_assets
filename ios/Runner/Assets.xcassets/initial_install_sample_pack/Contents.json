@@ -1,0 +1,12 @@
+{
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "on-demand-resource-tags" : [
+      "initial_install_sample_pack"
+    ],
+    "provides-namespace" : true
+  }
+}
