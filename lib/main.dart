@@ -246,7 +246,7 @@ class FastFollowStreamImagePage extends StatelessWidget {
   static buildDescription() {
     return ListTile(
       title: Text(
-        'streamFile() on Pack start downloading after the app is installed',
+        'streamFile() on Pack start downloading after the app is installed\n⚠️Prefetch assets in iOS do not start downloading when the installation is complete with the Run button in Xcode, but work the same way as On Demand. Only in TestFlight and production environments will downloading begin after installation is complete.',
       ),
       subtitle: Text(
         'Android: [packName: fast_follow_sample_pack, .fastFollow]\niOS: [packName: fast_follow_sample_pack, .prefetch]',
@@ -371,7 +371,9 @@ class DifferentPacksStreamImagePage extends StatelessWidget {
 
   static buildDescription() {
     return ListTile(
-      title: Text('streamFile() on Different packs'),
+      title: Text(
+        'streamFile() on Different packs\n⚠️Assets in the iOS Initial Install Tags are not downloaded with the Run button in Xcode. They are only available in TestFlight and production environments.',
+      ),
       subtitle: Text(
         'Android: [packName: install_time_sample_pack, .installTime]\niOS: [packName: initial_install_sample_pack, .initialInstall]',
       ),
