@@ -199,8 +199,12 @@ enum AndroidAssetPackDeliveryMode { installTime, fastFollow, onDemand }
 enum IOSOnDemandResourceType {
   // Assets for which the "On-Demand Resources Tag" was not set
   assetsWithoutTag,
-  // This asset can be deleted, so the asset status should be checked.
+  // Xcode's Run button will not download this asset.
+  // It will only be downloaded in TestFlight and production environments, so please try other types during developing.
+  // https://stackoverflow.com/questions/39870159/on-demand-resources-initial-install-tags-do-not-work-as-expected
   initialInstall,
+  // In Xcode's Run button, this asset behaves the same way as onDemand.
+  // However, the basic management method is the same as onDemand because even in a production environment, if it takes a long time from installation to application launch, it may be deleted.
   prefetch,
   onDemand,
 }
