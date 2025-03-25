@@ -236,7 +236,7 @@ class OnlineAssets {
             log('Unexpected Asset Pack Error: $androidPack');
             break;
         }
-        onlinePackSubject.add(androidPack);
+        _onlinePackSubject.add(androidPack);
       }, onError: (e) => log(e.toString()));
     } else if (Platform.isIOS) {
       streamOnDemandResource().listen((iosOnDemandResource) {
@@ -262,7 +262,7 @@ class OnlineAssets {
             log('Unexpected Asset Pack Error: $iOSPack');
             break;
         }
-        onlinePackSubject.add(iOSPack);
+        _onlinePackSubject.add(iOSPack);
       }, onError: (e) => log(e.toString()));
     }
   }
@@ -293,7 +293,7 @@ class OnlineAssets {
   /// Subject that receives Platform's EventChannelApi
   ///
   /// Since each AssetPack is notified through the same Subject, it is sorted by packSubjectMap.
-  final PublishSubject<OnlinePack> onlinePackSubject =
+  final PublishSubject<OnlinePack> _onlinePackSubject =
       PublishSubject<OnlinePack>();
 
   /// Subject for each Pack
@@ -344,7 +344,7 @@ class OnlineAssets {
         }
       }
 
-      onlinePackSubject.listen((pack) {
+      _onlinePackSubject.listen((pack) {
         if (onlinePackSubjectMap.containsKey(pack.name)) {
           onlinePackSubjectMap[pack.name]!.add(pack);
         } else {
