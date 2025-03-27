@@ -58,6 +58,10 @@ class MyHomePage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              Text(
+                'This app works with "Google Play Console"\'s internal testing and "App Store Connect"\'s TestFlight, but some features may not work in other ways.\nSee the README if app does not work correctly.',
+              ),
+              Divider(),
               Column(
                 children: [
                   InstallTimePackFutureImagePage.buildDescription(),
@@ -171,6 +175,23 @@ class MyHomePage extends StatelessWidget {
                   ),
                 ],
               ),
+              Divider(),
+              Column(
+                children: [
+                  DownloadGuardImagePage.buildDescription(),
+                  ElevatedButton(
+                    child: Text('Image'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DownloadGuardImagePage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -184,7 +205,9 @@ class InstallTimePackFutureImagePage extends StatelessWidget {
 
   static buildDescription() {
     return ListTile(
-      title: Text('getFile() on Files that always exist'),
+      title: Text(
+        'Example of using OnlineAssets.instance.getFile() in asset pack where the file always exists (unless an exception is raised).',
+      ),
       subtitle: Text(
         'Android: [packName: install_time_sample_pack, .installTime]\niOS: [packName: install_time_sample_pack, .assetsWithoutTag]',
       ),
@@ -199,6 +222,7 @@ class InstallTimePackFutureImagePage extends StatelessWidget {
         child: Column(
           children: [
             InstallTimePackFutureImagePage.buildDescription(),
+            Divider(),
             FutureAssetWidget.image(
               assetName: 'install_time_sample_pack',
               relativePath:
@@ -230,6 +254,7 @@ class InstallTimePackFutureVideoPage extends StatelessWidget {
       body: Column(
         children: [
           InstallTimePackFutureImagePage.buildDescription(),
+          Divider(),
           FutureAssetWidget.video(
             assetName: 'install_time_sample_pack',
             relativePath: 'dog${Platform.pathSeparator}movie.mp4',
@@ -246,7 +271,7 @@ class FastFollowStreamImagePage extends StatelessWidget {
   static buildDescription() {
     return ListTile(
       title: Text(
-        'streamFile() on Pack start downloading after the app is installed\n⚠️Prefetch assets in iOS do not start downloading when the installation is complete with the Run button in Xcode, but work the same way as On Demand. Only in TestFlight and production environments will downloading begin after installation is complete.',
+        'Example of using OnlineAssets.instance.streamFile() with a pack that is downloaded promptly after installation.\n⚠️Prefetch assets in iOS do not start downloading when the installation is complete with the Run button in Xcode, but work the same way as On Demand. Only in TestFlight and production environments will downloading begin after installation is complete.',
       ),
       subtitle: Text(
         'Android: [packName: fast_follow_sample_pack, .fastFollow]\niOS: [packName: fast_follow_sample_pack, .prefetch]',
@@ -262,6 +287,7 @@ class FastFollowStreamImagePage extends StatelessWidget {
         child: Column(
           children: [
             FastFollowStreamImagePage.buildDescription(),
+            Divider(),
             StreamAssetWidget.image(
               assetName: 'fast_follow_sample_pack',
               relativePath:
@@ -293,6 +319,7 @@ class FastFollowStreamVideoPage extends StatelessWidget {
       body: Column(
         children: [
           FastFollowStreamImagePage.buildDescription(),
+          Divider(),
           StreamAssetWidget.video(
             assetName: 'fast_follow_sample_pack',
             relativePath: 'dog${Platform.pathSeparator}movie.mp4',
@@ -309,7 +336,7 @@ class OnDemandStreamImagePage extends StatelessWidget {
   static buildDescription() {
     return ListTile(
       title: Text(
-        'streamFile() on Pack start downloading when requested fetch',
+        'Example of using OnlineAssets.instance.streamFile() with an on-demand pack. Download is started when OnlineAssets.instance.streamFile() is used',
       ),
       subtitle: Text(
         'Android: [packName: on_demand_sample_pack, .onDemand]\niOS: [packName: on_demand_sample_pack, .onDemand]',
@@ -325,6 +352,7 @@ class OnDemandStreamImagePage extends StatelessWidget {
         child: Column(
           children: [
             OnDemandStreamImagePage.buildDescription(),
+            Divider(),
             StreamAssetWidget.image(
               assetName: 'on_demand_sample_pack',
               relativePath:
@@ -356,6 +384,7 @@ class OnDemandStreamVideoPage extends StatelessWidget {
       body: Column(
         children: [
           OnDemandStreamImagePage.buildDescription(),
+          Divider(),
           StreamAssetWidget.video(
             assetName: 'on_demand_sample_pack',
             relativePath: 'dog${Platform.pathSeparator}movie.mp4',
@@ -371,11 +400,9 @@ class DifferentPacksStreamImagePage extends StatelessWidget {
 
   static buildDescription() {
     return ListTile(
-      title: Text(
-        'streamFile() on Different packs\n⚠️Assets in the iOS Initial Install Tags are not downloaded with the Run button in Xcode. They are only available in TestFlight and production environments.',
-      ),
+      title: Text('Example of using different pack names across platforms.'),
       subtitle: Text(
-        'Android: [packName: install_time_sample_pack, .installTime]\niOS: [packName: initial_install_sample_pack, .initialInstall]',
+        'Android: [packName: install_time_sample_pack, .installTime]\niOS: [packName: fast_follow_sample_pack, .prefetch]',
       ),
     );
   }
@@ -388,27 +415,28 @@ class DifferentPacksStreamImagePage extends StatelessWidget {
         child: Column(
           children: [
             DifferentPacksStreamImagePage.buildDescription(),
-            FutureAssetWidget.image(
+            Divider(),
+            StreamAssetWidget.image(
               assetName:
                   Platform.isAndroid
                       ? 'install_time_sample_pack'
-                      : 'initial_install_sample_pack',
+                      : 'fast_follow_sample_pack',
               relativePath:
                   'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
             ),
-            FutureAssetWidget.image(
+            StreamAssetWidget.image(
               assetName:
                   Platform.isAndroid
                       ? 'install_time_sample_pack'
-                      : 'initial_install_sample_pack',
+                      : 'fast_follow_sample_pack',
               relativePath:
                   'dog${Platform.pathSeparator}dog_great_pyrenees.png',
             ),
-            FutureAssetWidget.image(
+            StreamAssetWidget.image(
               assetName:
                   Platform.isAndroid
                       ? 'install_time_sample_pack'
-                      : 'initial_install_sample_pack',
+                      : 'fast_follow_sample_pack',
               relativePath: 'dog_shetland_sheepdog_blue_merle.png',
             ),
           ],
@@ -428,14 +456,152 @@ class DifferentPacksStreamVideoPage extends StatelessWidget {
       body: Column(
         children: [
           DifferentPacksStreamImagePage.buildDescription(),
-          FutureAssetWidget.video(
+          Divider(),
+          StreamAssetWidget.video(
             assetName:
                 Platform.isAndroid
                     ? 'install_time_sample_pack'
-                    : 'initial_install_sample_pack',
+                    : 'fast_follow_sample_pack',
             relativePath: 'dog${Platform.pathSeparator}movie.mp4',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class DownloadGuardImagePage extends StatelessWidget {
+  const DownloadGuardImagePage({super.key});
+
+  static buildDescription() {
+    return ListTile(
+      title: Text(
+        'Example with a mechanism that monitors the status of the pack and allows transition to the screen to use the asset if the download is complete.',
+      ),
+      subtitle: Text(
+        'Android: [packName: on_demand_sample_pack, .onDemand]\niOS: [packName: on_demand_sample_pack, .onDemand]',
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            DownloadGuardImagePage.buildDescription(),
+            Divider(),
+            StreamBuilder(
+              stream:
+                  OnlineAssets
+                      .instance
+                      .onlinePackSubjectMap['on_demand_sample_pack']!,
+              builder: (
+                BuildContext context,
+                AsyncSnapshot<OnlinePack> snapshot,
+              ) {
+                final downloadButton = IconButton(
+                  icon: Icon(Icons.cloud_download),
+                  onPressed:
+                      () => OnlineAssets.instance.fetch([
+                        'on_demand_sample_pack',
+                      ]),
+                );
+
+                if (snapshot.hasError) {
+                  return Column(
+                    children: [
+                      Text("snapshot.error: ${snapshot.error}"),
+                      downloadButton,
+                    ],
+                  );
+                } else if (!snapshot.hasData) {
+                  return downloadButton;
+                }
+
+                final onlinePack = snapshot.data!;
+                return Column(
+                  children: [
+                    Text('on_demand_sample_pack: ${onlinePack.status}'),
+                    LinearProgressIndicator(value: onlinePack.progress),
+                    switch (onlinePack.status) {
+                      OnlineAssetStatus.waitingForWifiOnAndroid ||
+                      OnlineAssetStatus
+                          .requiresUserConfirmationOnAndroid => IconButton(
+                        icon: Icon(Icons.cloud_download),
+                        onPressed:
+                            () =>
+                                OnlineAssets.instance.showConfirmationDialog(),
+                      ),
+                      OnlineAssetStatus.failed ||
+                      OnlineAssetStatus.notInstalled ||
+                      OnlineAssetStatus.canceled ||
+                      OnlineAssetStatus.unknown => downloadButton,
+                      OnlineAssetStatus.pending ||
+                      OnlineAssetStatus.downloading => SizedBox.shrink(),
+                      OnlineAssetStatus.completed => TextButton(
+                        child: Text('Next Page where the file exists'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              //
+                              builder: (context) => FutureImagePage(),
+                            ),
+                          );
+                        },
+                      ),
+                    },
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FutureImagePage extends StatelessWidget {
+  const FutureImagePage({super.key});
+
+  static buildDescription() {
+    return ListTile(
+      title: Text('getFile() on Files exists with high probability'),
+      subtitle: Text(
+        'Android: [packName: on_demand_sample_pack, .onDemand]\niOS: [packName: on_demand_sample_pack, .onDemand]',
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            InstallTimePackFutureImagePage.buildDescription(),
+            Divider(),
+            FutureAssetWidget.image(
+              assetName: 'on_demand_sample_pack',
+              relativePath:
+                  'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
+            ),
+            FutureAssetWidget.image(
+              assetName: 'on_demand_sample_pack',
+              relativePath:
+                  'dog${Platform.pathSeparator}dog_great_pyrenees.png',
+            ),
+            FutureAssetWidget.image(
+              assetName: 'on_demand_sample_pack',
+              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+            ),
+          ],
+        ),
       ),
     );
   }
