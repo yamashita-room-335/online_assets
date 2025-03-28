@@ -63,6 +63,10 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
     // Therefore, calls to beginAccessingResources() should be held as true.
     private var resourceRequests: [String: (NSBundleResourceRequest, Bool)] = [:]
 
+    private var cacheDirectoryURL: URL = FileManager.default.temporaryDirectory
+        .appendingPathComponent(
+            "odr_cache", isDirectory: true)
+
     // KVO Callback
     override func observeValue(
         forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?,
@@ -264,13 +268,13 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
         }
 
         let fileManager = FileManager.default
-        var targetFolderURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        var targetFolderURL = cacheDirectoryURL
         let relativePathComponents = relativeAssetPathWithTagNamespace.components(separatedBy: "/")
         let nestFolders = relativePathComponents.dropLast()
         let fileName = relativePathComponents.last ?? relativeAssetPathWithTagNamespace
 
         for folderName in nestFolders {
-            targetFolderURL = targetFolderURL.appendingPathComponent(folderName)
+            targetFolderURL = targetFolderURL.appendingPathComponent(folderName, isDirectory: true)
         }
         log("\(methodInfo) targetFolderURL: \(targetFolderURL), fileName: \(fileName)")
 
@@ -317,14 +321,15 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
 
         let targetURL: URL
         if fileExtension.isEmpty {
-            targetURL = targetFolderURL.appendingPathComponent("\(fileNameWithoutExtension)")
+            targetURL = targetFolderURL.appendingPathComponent(
+                "\(fileNameWithoutExtension)", isDirectory: false)
         } else if isImageFile {
             // To output images as pngData
             targetURL = targetFolderURL.appendingPathComponent(
-                "\(fileNameWithoutExtension).png")
+                "\(fileNameWithoutExtension).png", isDirectory: false)
         } else {
             targetURL = targetFolderURL.appendingPathComponent(
-                "\(fileNameWithoutExtension).\(fileExtension)")
+                "\(fileNameWithoutExtension).\(fileExtension)", isDirectory: false)
         }
 
         let name: String
