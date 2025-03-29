@@ -381,6 +381,16 @@ I also considered passing the data as bytes, but I could not adopt it because it
 
 If you know how to properly pass data between the platform and Flutter and display it with Widget, please send an issue or pull request.
 
+## Execution thread
+
+Android uses `CoroutineScope(Dispatchers.IO)` where file operations are performed.
+
+However, iOS is not able to implement this in a thread-aware manner. (Todo)
+
+If you are concerned about processing speed or have knowledge of threads or parallel processing, please submit a modified pull request.
+
+It's no problem to avoid using [DispatchQueue](https://developer.apple.com/documentation/dispatch/dispatchqueue), change the sample app to iOS 13.0+ and use [Task](https://developer.apple.com/documentation/swift/task).
+
 ---
 
 For other parts, I added many code comments, so please look at them to understand the structure!

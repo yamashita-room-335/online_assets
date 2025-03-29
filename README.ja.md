@@ -381,6 +381,16 @@ Flutter側では各パックの最新情報を保持し、Widgetなどで購読�
 
 プラットフォームとFlutter間で適切にデータの受け渡しを行って、Widgetで表示する方法を知っている方は、Issueやプルリクエストを送信してください。
 
+## 実行スレッド
+
+Androidでは、ファイル操作を行う箇所では`CoroutineScope(Dispatchers.IO)`を使用しています。
+
+ただし、iOSではスレッドを意識した実装にできていません。（Todo）
+
+もし、処理速度が気になる方や、スレッドや並列処理に知見がある方は、修正したプルリクエストを送信してください。
+
+[DispatchQueue](https://developer.apple.com/documentation/dispatch/dispatchqueue)を使用せず、サンプルアプリをiOS 13.0+に変更して[Task](https://developer.apple.com/documentation/swift/task)を使用したプルリクエストでも構いません。
+
 ---
 
 他の箇所に関しては、コードコメントを多めに追加したので、そちらを見て構造を把握してください！
