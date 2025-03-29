@@ -359,6 +359,12 @@ Normal Stream does not have a mechanism to get the latest information at the mom
 
 Since I used RxDart for that function, you can delete this library if you implement it with another logic.
 
+#### Path
+
+Used to extract the extension from a relative path or only the extension from a relative path as a value to be passed to an iOS method.
+
+This library can be removed if implemented in a different logic for simple processing.
+
 #### Video Player
 
 I adopted it just to handle large file size assets in the sample, so of course, you can delete it.
