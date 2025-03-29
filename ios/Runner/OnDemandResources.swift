@@ -243,9 +243,9 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
             "[getAbsoluteAssetPath(tag: \(tag ?? "nil"), assetNameWithPackNameNamespace: \(assetNameWithPackNameNamespace), ext: \(ext))]"
         log("\(methodInfo) start")
 
-        if let unwrapTag = tag {
+        if let tag = tag {
             // On-Demand Resources Asset
-            if let (request, _) = resourceRequests[unwrapTag] {
+            if let (request, _) = resourceRequests[tag] {
                 guard request.progress.isFinished else {
                     log(
                         "\(methodInfo) The subject tag's resource has not yet been fully downloaded."
@@ -267,44 +267,70 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
             // Normal Asset (like Android install-time asset pack)
         }
 
-        let isImageFile = ext.isImageExtension()
-
-        let path: String
-        if isImageFile {
-            // To output images as pngData
-            path = "\(assetNameWithPackNameNamespace).png"
-        } else if ext.isEmpty {
-            path = "\(assetNameWithPackNameNamespace)"
+        let relativePath: String
+        var uiImage: UIImage?
+        if ext.isImageExtension() {
+            if let image = UIImage(named: assetNameWithPackNameNamespace) {
+                uiImage = image
+                // To output images as pngData
+                relativePath = "\(assetNameWithPackNameNamespace).png"
+            } else {
+                log("\(methodInfo) Can not load as UIImage")
+                relativePath = "\(assetNameWithPackNameNamespace)\(ext)"
+            }
         } else {
-            path = "\(assetNameWithPackNameNamespace)\(ext)"
+            relativePath = "\(assetNameWithPackNameNamespace)\(ext)"
         }
 
         let copyFileURL: URL
         if #available(iOS 16.0, *) {
             copyFileURL = cacheDirectoryURL.appending(
-                path: path, directoryHint: URL.DirectoryHint.notDirectory)
+                path: relativePath, directoryHint: URL.DirectoryHint.notDirectory)
         } else {
-            copyFileURL = cacheDirectoryURL.appendingPathComponent(path, isDirectory: false)
+            copyFileURL = cacheDirectoryURL.appendingPathComponent(relativePath, isDirectory: false)
         }
 
         log("\(methodInfo) copyFileURL: \(copyFileURL)")
 
         let fileManager = FileManager.default
 
-        // Failure to create a parent folder for the copy destination will result in failure when writing file.
-        let parentCopyFolderURL = copyFileURL.deletingLastPathComponent()
-        let isNeedCreateParentFolder: Bool
-        var isDir: ObjCBool = true
-        if fileManager.fileExists(atPath: parentCopyFolderURL.path, isDirectory: &isDir) {
-            if isDir.boolValue {
-                isNeedCreateParentFolder = false
+        let isExistCopyFile = fileManager.fileExists(atPath: copyFileURL.path)
+
+        if !isExistCopyFile {
+            // Failure to create a parent folder for the copy destination will result in failure when writing file.
+            let parentCopyFolderURL = copyFileURL.deletingLastPathComponent()
+            let isNeedCreateParentFolder: Bool
+            var isDir: ObjCBool = true
+            if fileManager.fileExists(atPath: parentCopyFolderURL.path, isDirectory: &isDir) {
+                if isDir.boolValue {
+                    isNeedCreateParentFolder = false
+                } else {
+                    isNeedCreateParentFolder = true
+                    log(
+                        "\(methodInfo) Delete file with the same path as the target parent folder. \(parentCopyFolderURL.path)"
+                    )
+                    do {
+                        try fileManager.removeItem(at: parentCopyFolderURL)
+                    } catch {
+                        completion(
+                            .failure(
+                                PigeonError(
+                                    code: "-1",
+                                    message:
+                                        "\(methodInfo) error.",
+                                    details: "\(error)")))
+                        return
+                    }
+                }
             } else {
                 isNeedCreateParentFolder = true
-                log(
-                    "\(methodInfo) Delete file with the same path as the target parent folder. \(parentCopyFolderURL.path)"
-                )
+            }
+
+            if isNeedCreateParentFolder {
+                log("\(methodInfo) Create parent folder. \(parentCopyFolderURL.path)")
                 do {
-                    try fileManager.removeItem(at: parentCopyFolderURL)
+                    try fileManager.createDirectory(
+                        at: parentCopyFolderURL, withIntermediateDirectories: true)
                 } catch {
                     completion(
                         .failure(
@@ -316,35 +342,16 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
                     return
                 }
             }
-        } else {
-            isNeedCreateParentFolder = true
         }
 
-        if isNeedCreateParentFolder {
-            log("\(methodInfo) Create parent folder. \(parentCopyFolderURL.path)")
-            do {
-                try fileManager.createDirectory(
-                    at: parentCopyFolderURL, withIntermediateDirectories: true)
-            } catch {
-                completion(
-                    .failure(
-                        PigeonError(
-                            code: "-1",
-                            message:
-                                "\(methodInfo) error.",
-                            details: "\(error)")))
-                return
-            }
-        }
-
-        if isImageFile, let image = UIImage(named: assetNameWithPackNameNamespace) {
-            if fileManager.fileExists(atPath: copyFileURL.path) {
+        if let uiImage = uiImage {
+            if isExistCopyFile {
                 // Because of the time required, this function do not check file hash.
                 do {
                     let preSavedData = try Data(contentsOf: copyFileURL)
                     let preSavedImage = UIImage(data: preSavedData)
                     if let preImageData = preSavedImage?.cgImage?.dataProvider?.data as? Data,
-                        let currentImageData = image.cgImage?.dataProvider?.data as? Data
+                        let currentImageData = uiImage.cgImage?.dataProvider?.data as? Data
                     {
                         if preImageData.count == currentImageData.count {
                             log("\(methodInfo) Skip copying, same file size")
@@ -358,10 +365,10 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
                 // Perhaps it may not be a problem to simply overwrite the file without removeItem().
             }
 
-            if let imagePngData = image.pngData() {
+            if let pngData = uiImage.pngData() {
                 do {
                     log("\(methodInfo) Write pngData to file: \(copyFileURL)")
-                    try imagePngData.write(to: copyFileURL, options: [Data.WritingOptions.atomic])
+                    try pngData.write(to: copyFileURL, options: [Data.WritingOptions.atomic])
                     completion(.success(copyFileURL.path))
                 } catch {
                     completion(
@@ -376,12 +383,12 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
             }
         }
 
-        if let asset = NSDataAsset(name: assetNameWithPackNameNamespace) {
-            if fileManager.fileExists(atPath: copyFileURL.path) {
+        if let nsDataAsset = NSDataAsset(name: assetNameWithPackNameNamespace) {
+            if isExistCopyFile {
                 // Because of the time required, this function do not check file hash.
                 do {
                     let preSavedData = try Data(contentsOf: copyFileURL)
-                    if preSavedData.count == asset.data.count {
+                    if preSavedData.count == nsDataAsset.data.count {
                         log("\(methodInfo) Skip copying, same file size")
                         completion(.success(copyFileURL.path))
                         return
@@ -394,7 +401,7 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
 
             do {
                 log("\(methodInfo) Write NSDataAsset to file: \(copyFileURL)")
-                try asset.data.write(to: copyFileURL, options: [Data.WritingOptions.atomic])
+                try nsDataAsset.data.write(to: copyFileURL, options: [Data.WritingOptions.atomic])
                 completion(.success(copyFileURL.path))
             } catch {
                 completion(
@@ -419,24 +426,32 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
             "[deleteCopiedAssetFile(assetNameWithPackNameNamespace: \(assetNameWithPackNameNamespace), ext: \(ext))]"
         log("\(methodInfo) start")
 
-        let path: String
-        if ext.isImageExtension() {
-            // To output images as pngData
-            path = "\(assetNameWithPackNameNamespace).png"
-        } else if ext.isEmpty {
-            path = "\(assetNameWithPackNameNamespace)"
-        } else {
-            path = "\(assetNameWithPackNameNamespace)\(ext)"
-        }
+        let relativePath = "\(assetNameWithPackNameNamespace)\(ext)"
+        // For cache deletion, do not check whether the output is output as a png or not, both are deleted.
+        let relativePngPath = ext.isImageExtension() ? "\(assetNameWithPackNameNamespace).png" : nil
 
         let copyFileURL: URL
+        let copyPngFileURL: URL?
         if #available(iOS 16.0, *) {
             copyFileURL = cacheDirectoryURL.appending(
-                path: path,
+                path: relativePath,
                 directoryHint: URL.DirectoryHint.notDirectory)
+            if let relativePngPath = relativePngPath {
+                copyPngFileURL = cacheDirectoryURL.appending(
+                    path: relativePngPath,
+                    directoryHint: URL.DirectoryHint.notDirectory)
+            } else {
+                copyPngFileURL = nil
+            }
         } else {
             copyFileURL = cacheDirectoryURL.appendingPathComponent(
-                path, isDirectory: false)
+                relativePath, isDirectory: false)
+            if let relativePngPath = relativePngPath {
+                copyPngFileURL = cacheDirectoryURL.appendingPathComponent(
+                    relativePngPath, isDirectory: false)
+            } else {
+                copyPngFileURL = nil
+            }
         }
 
         let fileManager = FileManager.default
@@ -459,6 +474,26 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
                 return
             }
         }
+        if let copyPngFileURL = copyPngFileURL {
+            if fileManager.fileExists(atPath: copyPngFileURL.path) {
+                do {
+                    log("\(methodInfo) Remove copy file")
+                    try fileManager.removeItem(at: copyFileURL)
+                } catch {
+                    log(
+                        "\(methodInfo) ttry fileManager.removeItem(at: \(copyFileURL)) error: \(error)"
+                    )
+                    completion(
+                        .failure(
+                            PigeonError(
+                                code: "-1",
+                                message:
+                                    "\(methodInfo) error.",
+                                details: "\(error)")))
+                    return
+                }
+            }
+        }
         completion(.success(true))
     }
 
@@ -469,13 +504,15 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
             "[deleteCopiedAssetFile(packName: \(packName))]"
         log("\(methodInfo) start")
 
+        let relativePath = "\(packName)"
+
         let copyFolderURL: URL
         if #available(iOS 16.0, *) {
             copyFolderURL = cacheDirectoryURL.appending(
-                path: "\(packName)", directoryHint: URL.DirectoryHint.isDirectory)
+                path: relativePath, directoryHint: URL.DirectoryHint.isDirectory)
         } else {
             copyFolderURL = cacheDirectoryURL.appendingPathComponent(
-                "\(packName)", isDirectory: true)
+                relativePath, isDirectory: true)
         }
 
         let fileManager = FileManager.default
@@ -510,7 +547,7 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
 
         if fileManager.fileExists(atPath: cacheDirectoryURL.path) {
             do {
-                log("\(methodInfo) Remove cache directory")
+                log("\(methodInfo) Remove odr cache directory")
                 try fileManager.removeItem(at: cacheDirectoryURL)
             } catch {
                 log(
