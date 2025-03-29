@@ -107,13 +107,7 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
 
         assetPackManager = AssetPackManagerFactory.getInstance(context)
         assetManager = context.assets
-        ioScope.launch {
-            cacheDir = File(context.cacheDir, "pad_cache").apply {
-                if (!exists()) {
-                    mkdirs()
-                }
-            }
-        }
+        cacheDir = File(context.cacheDir, "pad_cache")
         activityResultLauncher = mainActivity.registerForActivityResult(
             ActivityResultContracts.StartIntentSenderForResult()
         ) { result ->
@@ -228,28 +222,53 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
         ioScope.launch {
             try {
                 val assetFileDescriptor = assetManager.openFd(relativeAssetPath)
-                val targetFile =
-                    File(cacheDir, (assetPackName + File.separator + relativeAssetPath))
-                if (targetFile.exists()) {
-                    if (targetFile.length() == assetFileDescriptor.length) {
+                val copyFile =
+                    File(cacheDir, "$assetPackName${File.separator}$relativeAssetPath")
+
+                val isExistCopyFile = copyFile.exists()
+
+                if (!isExistCopyFile) {
+                    // Failure to create a parent folder for the copy destination will result in failure when writing file.
+                    val isNeedCreateParentFolder: Boolean
+                    val parentCopyFile = copyFile.parentFile as File
+                    if (parentCopyFile.exists()) {
+                        if (parentCopyFile.isDirectory) {
+                            isNeedCreateParentFolder = false
+                        } else {
+                            isNeedCreateParentFolder = true
+                            Log.d(
+                                TAG,
+                                "$methodInfo Delete file with the same path as the target parent folder. $parentCopyFile"
+                            )
+                            parentCopyFile.delete()
+                        }
+                    } else {
+                        isNeedCreateParentFolder = true
+                    }
+
+                    if (isNeedCreateParentFolder) {
+                        Log.d(TAG, "$methodInfo Create parent folder. $parentCopyFile")
+                        parentCopyFile.mkdirs()
+                    }
+
+                }
+
+                if (isExistCopyFile) {
+                    if (copyFile.length() == assetFileDescriptor.length) {
                         // Because of the time required, this function do not check file hash.
                         Log.d(TAG, "$methodInfo skip saving, same file size")
                         mainScope.launch {
-                            callback(Result.success(targetFile.absolutePath))
+                            callback(Result.success(copyFile.absolutePath))
                         }
                         return@launch
                     }
-                    Log.d(TAG, "$methodInfo Remove pre saved file")
-                    targetFile.delete()
-                } else if (targetFile.parentFile?.exists() == false) {
-                    targetFile.parentFile?.mkdirs()
                 }
 
                 assetManager.open(relativeAssetPath).use { assetInputStream ->
-                    targetFile.copyInputStreamToFile(assetInputStream)
+                    copyFile.copyInputStreamToFile(assetInputStream)
                 }
                 mainScope.launch {
-                    callback(Result.success(targetFile.absolutePath))
+                    callback(Result.success(copyFile.absolutePath))
                 }
             } catch (e: Exception) {
                 mainScope.launch {
@@ -268,8 +287,8 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
     }
 
     override fun deleteCopiedAssetFileOnInstallTimeAsset(
-        assetPackName: String?,
-        relativeAssetPath: String?,
+        assetPackName: String,
+        relativeAssetPath: String,
         callback: (Result<Boolean>) -> Unit
     ) {
         val methodInfo =
@@ -278,20 +297,77 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
 
         ioScope.launch {
             try {
-                val targetFile = if (assetPackName == null) {
-                    cacheDir
-                } else if (relativeAssetPath == null) {
-                    File(cacheDir, assetPackName)
-                } else {
-                    File(cacheDir, (assetPackName + File.separator + relativeAssetPath))
-                }
-                if (targetFile.exists()) {
-                    mainScope.launch {
-                        callback(Result.success(targetFile.delete()))
-                    }
+                val copyFile = File(cacheDir, "$assetPackName${File.separator}$relativeAssetPath")
+                var result = true
+                if (copyFile.exists()) {
+                    result = copyFile.delete()
                 }
                 mainScope.launch {
-                    callback(Result.success(true))
+                    callback(Result.success(result))
+                }
+            } catch (e: Exception) {
+                mainScope.launch {
+                    callback(
+                        Result.failure(
+                            FlutterError(
+                                code = TAG,
+                                message = methodInfo + e.message,
+                                details = e.toString()
+                            )
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    override fun deleteCopiedAssetFolderOnInstallTimeAsset(
+        assetPackName: String,
+        callback: (Result<Boolean>) -> Unit
+    ) {
+        val methodInfo =
+            "[deleteCopiedAssetFolderOnInstallTimeAsset(assetPackName: $assetPackName)]"
+        Log.d(TAG, "$methodInfo start")
+
+        ioScope.launch {
+            try {
+                val copyFolder = File(cacheDir, assetPackName)
+                var result = true
+                if (copyFolder.exists()) {
+                    result = copyFolder.delete()
+                }
+                mainScope.launch {
+                    callback(Result.success(result))
+                }
+            } catch (e: Exception) {
+                mainScope.launch {
+                    callback(
+                        Result.failure(
+                            FlutterError(
+                                code = TAG,
+                                message = methodInfo + e.message,
+                                details = e.toString()
+                            )
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    override fun deleteAllCopiedAssetFoldersOnInstallTimeAsset(callback: (Result<Boolean>) -> Unit) {
+        val methodInfo =
+            "[deleteAllCopiedAssetFoldersOnInstallTimeAsset()]"
+        Log.d(TAG, "$methodInfo start")
+
+        ioScope.launch {
+            try {
+                var result = true
+                if (cacheDir.exists()) {
+                    result = cacheDir.delete()
+                }
+                mainScope.launch {
+                    callback(Result.success(result))
                 }
             } catch (e: Exception) {
                 mainScope.launch {
