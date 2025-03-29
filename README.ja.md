@@ -40,7 +40,7 @@ Play Asset Delivery（Android）とOn-Demand Resources（iOS）の機能を統�
     StreamBuilder<(File?, OnlinePack)>(
       stream: OnlineAssets.instance.streamFile(
         packName:'install_time_sample_pack',
-        relativePath: 'dog${Platform.pathSeparator}dog_corgi_tricolor.png',
+        relativePath: 'dog/dog_corgi_tricolor.png',
       ),
       // ...
     )

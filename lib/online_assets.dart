@@ -493,7 +493,7 @@ class OnlineAssets {
                   : packName,
           // The default asset name in iOS is no extension
           assetNameWithPackNameNamespace:
-              '$packName${Platform.pathSeparator}${withoutExtension(relativePath)}',
+              '$packName/${withoutExtension(relativePath)}',
           ext: extension(relativePath),
         );
       }
@@ -540,7 +540,7 @@ class OnlineAssets {
         return await _iosApi.deleteCopiedAssetFile(
           // The default asset name in iOS is no extension
           assetNameWithPackNameNamespace:
-              '${targetAssetPack.packName}${Platform.pathSeparator}${withoutExtension(relativePath)}',
+              '${targetAssetPack.packName}/${withoutExtension(relativePath)}',
           ext: extension(relativePath),
         );
       }
