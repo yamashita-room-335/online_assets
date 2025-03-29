@@ -6,6 +6,59 @@ import 'package:online_assets/play_asset_delivery.g.dart';
 
 import 'online_assets_widget.dart';
 
+// In the sample app, the enum is not created for the sake of clarity,
+// but if you create it in this way, you can avoid specifying the wrong packName.
+/*
+enum MyAssetPack {
+  installTimeSamplePack(
+    packName: 'install_time_sample_pack',
+    androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.installTime,
+    iosOnDemandResourceType: IOSOnDemandResourceType.assetsWithoutTag,
+  ),
+  initialInstallSamplePack(
+    packName: 'initial_install_sample_pack',
+    androidAssetPackDeliveryMode: null,
+    iosOnDemandResourceType: IOSOnDemandResourceType.initialInstall,
+  ),
+  fastFollowSamplePack(
+    packName: 'fast_follow_sample_pack',
+    androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.fastFollow,
+    iosOnDemandResourceType: IOSOnDemandResourceType.prefetch,
+  ),
+  onDemandSamplePack(
+    packName: 'on_demand_sample_pack',
+    androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.onDemand,
+    iosOnDemandResourceType: IOSOnDemandResourceType.onDemand,
+  );
+
+  const MyAssetPack({
+    required this.packName,
+    required this.androidAssetPackDeliveryMode,
+    required this.iosOnDemandResourceType,
+  });
+  final String packName;
+  final AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode;
+  final IOSOnDemandResourceType? iosOnDemandResourceType;
+}
+
+void main() {
+  // ...
+  OnlineAssets.instance.init(
+    assetPackSettingsList:
+    MyAssetPack.values
+        .map(
+          (e) => OnlineAssetPackSettings(
+        packName: e.packName,
+        androidAssetPackDeliveryMode: e.androidAssetPackDeliveryMode,
+        iosOnDemandResourceType: e.iosOnDemandResourceType,
+      ),
+    )
+        .toList(),
+  );
+  // ...
+}
+*/
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   PlayAssetDeliveryFlutterApi.setUp(PlayAssetDeliveryFlutterApiWrapper());
