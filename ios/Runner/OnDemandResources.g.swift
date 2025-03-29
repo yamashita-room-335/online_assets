@@ -317,16 +317,35 @@ protocol OnDemandResourcesHostApi {
   func beginAccessingResources(tags: [String], completion: @escaping (Result<IOSOnDemandResourcesPigeon, Error>) -> Void)
   /// Get the path to the copy of the iOS Asset file.
   ///
-  /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
-  /// Standard iOS assets are used to perform the same behavior as Android's install-time asset pack.
-  ///
   /// It is not possible to obtain the file path of the asset file itself.
-  /// Therefore, the path of the copied file as a temporary file is obtained.
-  /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
-  /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
+  /// Therefore, the path of the file copied to temporary directory is obtained.
   ///
-  /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
-  func getCopiedAssetFilePath(tag: String?, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64, completion: @escaping (Result<String?, Error>) -> Void)
+  /// If the file is still in the temporary folder when this function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// In this case, use the [deleteCopiedAssetFile] function.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+  ///
+  /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
+  ///
+  /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
+  /// The copied files and on-demand resource files will be deleted by system when storage space is running low due to temporary files, but will be copied or downloaded again on use.
+  ///
+  /// The reason for including the tag namespace in the asset name is so that there is no conflict if the name is same with other asset packs.
+  func getCopiedAssetFilePath(tag: String?, assetNameWithPackNameNamespace: String, ext: String, completion: @escaping (Result<String?, Error>) -> Void)
+  /// Delete the copied asset file.
+  ///
+  /// If [tag] == [null], delete standard iOS assets copied file that is not On-Demand Resources.
+  ///
+  /// Returns true if the target file or folder was successfully deleted.
+  /// Also returns true if the target file or folder does not yet exist.
+  ///
+  /// If the file is still in the temporary folder when [getCopiedAssetFilePath] function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// If you want to avoid this case, you call delete function when your app update.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+  func deleteCopiedAssetFile(assetNameWithPackNameNamespace: String, ext: String, completion: @escaping (Result<Bool, Error>) -> Void)
+  func deleteCopiedAssetFolder(packName: String, completion: @escaping (Result<Bool, Error>) -> Void)
+  func deleteAllCopiedAssetFolders(completion: @escaping (Result<Bool, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -371,23 +390,28 @@ class OnDemandResourcesHostApiSetup {
     }
     /// Get the path to the copy of the iOS Asset file.
     ///
-    /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
-    /// Standard iOS assets are used to perform the same behavior as Android's install-time asset pack.
-    ///
     /// It is not possible to obtain the file path of the asset file itself.
-    /// Therefore, the path of the copied file as a temporary file is obtained.
-    /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
-    /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
+    /// Therefore, the path of the file copied to temporary directory is obtained.
     ///
-    /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
+    /// If the file is still in the temporary folder when this function is called and the file size is the same as the asset, file is reused.
+    /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+    /// In this case, use the [deleteCopiedAssetFile] function.
+    /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+    ///
+    /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
+    ///
+    /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
+    /// The copied files and on-demand resource files will be deleted by system when storage space is running low due to temporary files, but will be copied or downloaded again on use.
+    ///
+    /// The reason for including the tag namespace in the asset name is so that there is no conflict if the name is same with other asset packs.
     let getCopiedAssetFilePathChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.getCopiedAssetFilePath\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       getCopiedAssetFilePathChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let tagArg: String? = nilOrValue(args[0])
-        let relativeAssetPathWithTagNamespaceArg = args[1] as! String
-        let extensionLevelArg = args[2] as! Int64
-        api.getCopiedAssetFilePath(tag: tagArg, relativeAssetPathWithTagNamespace: relativeAssetPathWithTagNamespaceArg, extensionLevel: extensionLevelArg) { result in
+        let assetNameWithPackNameNamespaceArg = args[1] as! String
+        let extArg = args[2] as! String
+        api.getCopiedAssetFilePath(tag: tagArg, assetNameWithPackNameNamespace: assetNameWithPackNameNamespaceArg, ext: extArg) { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))
@@ -398,6 +422,67 @@ class OnDemandResourcesHostApiSetup {
       }
     } else {
       getCopiedAssetFilePathChannel.setMessageHandler(nil)
+    }
+    /// Delete the copied asset file.
+    ///
+    /// If [tag] == [null], delete standard iOS assets copied file that is not On-Demand Resources.
+    ///
+    /// Returns true if the target file or folder was successfully deleted.
+    /// Also returns true if the target file or folder does not yet exist.
+    ///
+    /// If the file is still in the temporary folder when [getCopiedAssetFilePath] function is called and the file size is the same as the asset, file is reused.
+    /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+    /// If you want to avoid this case, you call delete function when your app update.
+    /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+    let deleteCopiedAssetFileChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteCopiedAssetFile\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      deleteCopiedAssetFileChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let assetNameWithPackNameNamespaceArg = args[0] as! String
+        let extArg = args[1] as! String
+        api.deleteCopiedAssetFile(assetNameWithPackNameNamespace: assetNameWithPackNameNamespaceArg, ext: extArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      deleteCopiedAssetFileChannel.setMessageHandler(nil)
+    }
+    let deleteCopiedAssetFolderChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteCopiedAssetFolder\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      deleteCopiedAssetFolderChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let packNameArg = args[0] as! String
+        api.deleteCopiedAssetFolder(packName: packNameArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      deleteCopiedAssetFolderChannel.setMessageHandler(nil)
+    }
+    let deleteAllCopiedAssetFoldersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteAllCopiedAssetFolders\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      deleteAllCopiedAssetFoldersChannel.setMessageHandler { _, reply in
+        api.deleteAllCopiedAssetFolders { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      deleteAllCopiedAssetFoldersChannel.setMessageHandler(nil)
     }
   }
 }

@@ -38,6 +38,9 @@ dependencies:
   # Used to enable values to be retrieved at the time the Stream is subscribed to.
   rxdart: ^0.28.0
 
+  # It is used to obtain extensions from relative paths for iOS.
+  path: ^1.9.1
+
   # For Freezed
   # https://pub.dev/packages/freezed#install
   freezed_annotation: ^3.0.0

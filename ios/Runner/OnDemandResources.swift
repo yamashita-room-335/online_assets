@@ -236,16 +236,16 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
     }
 
     func getCopiedAssetFilePath(
-        tag: String?, relativeAssetPathWithTagNamespace: String, extensionLevel: Int64,
+        tag: String?, assetNameWithPackNameNamespace: String, ext: String,
         completion: @escaping (Result<String?, Error>) -> Void
     ) {
         let methodInfo =
-            "[getAbsoluteAssetPath(tag: \(tag ?? "nil"), relativeAssetPathWithTagNamespace: \(relativeAssetPathWithTagNamespace))]"
+            "[getAbsoluteAssetPath(tag: \(tag ?? "nil"), assetNameWithPackNameNamespace: \(assetNameWithPackNameNamespace), ext: \(ext))]"
         log("\(methodInfo) start")
 
-        if tag != nil {
-            if let (request, _) = resourceRequests[tag!] {
-                // On-Demand Resources Asset
+        if let unwrapTag = tag {
+            // On-Demand Resources Asset
+            if let (request, _) = resourceRequests[unwrapTag] {
                 guard request.progress.isFinished else {
                     log(
                         "\(methodInfo) The subject tag's resource has not yet been fully downloaded."
@@ -267,114 +267,102 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
             // Normal Asset (like Android install-time asset pack)
         }
 
-        let fileManager = FileManager.default
-        var targetFolderURL = cacheDirectoryURL
-        let relativePathComponents = relativeAssetPathWithTagNamespace.components(separatedBy: "/")
-        let nestFolders = relativePathComponents.dropLast()
-        let fileName = relativePathComponents.last ?? relativeAssetPathWithTagNamespace
+        let isImageFile = ext.isImageExtension()
 
-        for folderName in nestFolders {
-            targetFolderURL = targetFolderURL.appendingPathComponent(folderName, isDirectory: true)
-        }
-        log("\(methodInfo) targetFolderURL: \(targetFolderURL), fileName: \(fileName)")
-
-        do {
-            try fileManager.createDirectory(
-                at: targetFolderURL, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-            completion(
-                .failure(
-                    PigeonError(
-                        code: "-1",
-                        message:
-                            "\(methodInfo) fileManager.createDirectory error",
-                        details: "\(error)")))
-            return
-        }
-
-        var fileNameWithoutExtension = fileName
-        var fileExtension = ""
-
-        let fileNameComponents = fileName.components(separatedBy: ".")
-        if fileNameComponents.count > extensionLevel {
-            fileNameWithoutExtension = fileNameComponents.dropLast(
-                Int(truncatingIfNeeded: extensionLevel)
-            )
-            .joined(separator: ".")
-            fileExtension = fileName.replacingOccurrences(
-                of: "\(fileNameWithoutExtension).", with: "")
-        }
-
-        // iOS support image format
-        let isImageFile =
-            switch fileExtension.lowercased() {
-            case "tiff", "tif": true
-            case "jpg", "jpeg": true
-            case "gif": true
-            case "png": true
-            case "bmp", "bmpf": true
-            case "ico": true
-            case "cur": true
-            case "xbm": true
-            default: false
-            }
-
-        let targetURL: URL
-        if fileExtension.isEmpty {
-            targetURL = targetFolderURL.appendingPathComponent(
-                "\(fileNameWithoutExtension)", isDirectory: false)
-        } else if isImageFile {
+        let path: String
+        if isImageFile {
             // To output images as pngData
-            targetURL = targetFolderURL.appendingPathComponent(
-                "\(fileNameWithoutExtension).png", isDirectory: false)
+            path = "\(assetNameWithPackNameNamespace).png"
+        } else if ext.isEmpty {
+            path = "\(assetNameWithPackNameNamespace)"
         } else {
-            targetURL = targetFolderURL.appendingPathComponent(
-                "\(fileNameWithoutExtension).\(fileExtension)", isDirectory: false)
+            path = "\(assetNameWithPackNameNamespace)\(ext)"
         }
 
-        let name: String
-        if nestFolders.isEmpty {
-            name = fileNameWithoutExtension
+        let copyFileURL: URL
+        if #available(iOS 16.0, *) {
+            copyFileURL = cacheDirectoryURL.appending(
+                path: path, directoryHint: URL.DirectoryHint.notDirectory)
         } else {
-            name = "\(nestFolders.joined(separator: "/"))/\(fileNameWithoutExtension)"
+            copyFileURL = cacheDirectoryURL.appendingPathComponent(path, isDirectory: false)
         }
 
-        log("\(methodInfo) targetURL: \(targetURL), named: \(name)")
+        log("\(methodInfo) copyFileURL: \(copyFileURL)")
 
-        if isImageFile, let image = UIImage(named: name) {
-            if fileManager.fileExists(atPath: targetURL.path) {
+        let fileManager = FileManager.default
+
+        // Failure to create a parent folder for the copy destination will result in failure when writing file.
+        let parentCopyFolderURL = copyFileURL.deletingLastPathComponent()
+        let isNeedCreateParentFolder: Bool
+        var isDir: ObjCBool = true
+        if fileManager.fileExists(atPath: parentCopyFolderURL.path, isDirectory: &isDir) {
+            if isDir.boolValue {
+                isNeedCreateParentFolder = false
+            } else {
+                isNeedCreateParentFolder = true
+                log(
+                    "\(methodInfo) Delete file with the same path as the target parent folder. \(parentCopyFolderURL.path)"
+                )
+                do {
+                    try fileManager.removeItem(at: parentCopyFolderURL)
+                } catch {
+                    completion(
+                        .failure(
+                            PigeonError(
+                                code: "-1",
+                                message:
+                                    "\(methodInfo) error.",
+                                details: "\(error)")))
+                    return
+                }
+            }
+        } else {
+            isNeedCreateParentFolder = true
+        }
+
+        if isNeedCreateParentFolder {
+            log("\(methodInfo) Create parent folder. \(parentCopyFolderURL.path)")
+            do {
+                try fileManager.createDirectory(
+                    at: parentCopyFolderURL, withIntermediateDirectories: true)
+            } catch {
+                completion(
+                    .failure(
+                        PigeonError(
+                            code: "-1",
+                            message:
+                                "\(methodInfo) error.",
+                            details: "\(error)")))
+                return
+            }
+        }
+
+        if isImageFile, let image = UIImage(named: assetNameWithPackNameNamespace) {
+            if fileManager.fileExists(atPath: copyFileURL.path) {
                 // Because of the time required, this function do not check file hash.
                 do {
-                    let preSavedData = try Data(contentsOf: targetURL)
+                    let preSavedData = try Data(contentsOf: copyFileURL)
                     let preSavedImage = UIImage(data: preSavedData)
                     if let preImageData = preSavedImage?.cgImage?.dataProvider?.data as? Data,
                         let currentImageData = image.cgImage?.dataProvider?.data as? Data
                     {
                         if preImageData.count == currentImageData.count {
-                            log("\(methodInfo) skip saving, same file size")
-                            completion(.success(targetURL.path))
+                            log("\(methodInfo) Skip copying, same file size")
+                            completion(.success(copyFileURL.path))
                             return
                         }
                     }
                 } catch {
-                    log("\(methodInfo) try Data(contentsOf: \(targetURL)) error: \(error)")
+                    log("\(methodInfo) try Data(contentsOf: \(copyFileURL)) error: \(error)")
                 }
-
-                do {
-                    log("\(methodInfo) Remove pre saved file")
-                    try fileManager.removeItem(at: targetURL)
-                } catch {
-                    log(
-                        "\(methodInfo) ttry fileManager.removeItem(at: \(targetURL)) error: \(error)"
-                    )
-                }
+                // Perhaps it may not be a problem to simply overwrite the file without removeItem().
             }
 
             if let imagePngData = image.pngData() {
                 do {
-                    log("\(methodInfo) Write pngData to file: \(targetURL)")
-                    try imagePngData.write(to: targetURL)
-                    completion(.success(targetURL.path))
+                    log("\(methodInfo) Write pngData to file: \(copyFileURL)")
+                    try imagePngData.write(to: copyFileURL, options: [Data.WritingOptions.atomic])
+                    completion(.success(copyFileURL.path))
                 } catch {
                     completion(
                         .failure(
@@ -388,34 +376,26 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
             }
         }
 
-        if let asset = NSDataAsset(name: name) {
-            if fileManager.fileExists(atPath: targetURL.path) {
+        if let asset = NSDataAsset(name: assetNameWithPackNameNamespace) {
+            if fileManager.fileExists(atPath: copyFileURL.path) {
                 // Because of the time required, this function do not check file hash.
                 do {
-                    let preSavedData = try Data(contentsOf: targetURL)
+                    let preSavedData = try Data(contentsOf: copyFileURL)
                     if preSavedData.count == asset.data.count {
-                        log("\(methodInfo) skip saving, same file size")
-                        completion(.success(targetURL.path))
+                        log("\(methodInfo) Skip copying, same file size")
+                        completion(.success(copyFileURL.path))
                         return
                     }
                 } catch {
-                    log("\(methodInfo) try Data(contentsOf: \(targetURL)) error: \(error)")
+                    log("\(methodInfo) try Data(contentsOf: \(copyFileURL)) error: \(error)")
                 }
-
-                do {
-                    log("\(methodInfo) Remove pre saved file")
-                    try fileManager.removeItem(at: targetURL)
-                } catch {
-                    log(
-                        "\(methodInfo) ttry fileManager.removeItem(at: \(targetURL)) error: \(error)"
-                    )
-                }
+                // Perhaps it may not be a problem to simply overwrite the file without removeItem().
             }
 
             do {
-                log("\(methodInfo) Write NSDataAsset to file: \(targetURL)")
-                try asset.data.write(to: targetURL)
-                completion(.success(targetURL.path))
+                log("\(methodInfo) Write NSDataAsset to file: \(copyFileURL)")
+                try asset.data.write(to: copyFileURL, options: [Data.WritingOptions.atomic])
+                completion(.success(copyFileURL.path))
             } catch {
                 completion(
                     .failure(
@@ -429,6 +409,141 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
         }
 
         completion(.success(nil))
+    }
+
+    func deleteCopiedAssetFile(
+        assetNameWithPackNameNamespace: String, ext: String,
+        completion: @escaping (Result<Bool, Error>) -> Void
+    ) {
+        let methodInfo =
+            "[deleteCopiedAssetFile(assetNameWithPackNameNamespace: \(assetNameWithPackNameNamespace), ext: \(ext))]"
+        log("\(methodInfo) start")
+
+        let path: String
+        if ext.isImageExtension() {
+            // To output images as pngData
+            path = "\(assetNameWithPackNameNamespace).png"
+        } else if ext.isEmpty {
+            path = "\(assetNameWithPackNameNamespace)"
+        } else {
+            path = "\(assetNameWithPackNameNamespace)\(ext)"
+        }
+
+        let copyFileURL: URL
+        if #available(iOS 16.0, *) {
+            copyFileURL = cacheDirectoryURL.appending(
+                path: path,
+                directoryHint: URL.DirectoryHint.notDirectory)
+        } else {
+            copyFileURL = cacheDirectoryURL.appendingPathComponent(
+                path, isDirectory: false)
+        }
+
+        let fileManager = FileManager.default
+
+        if fileManager.fileExists(atPath: copyFileURL.path) {
+            do {
+                log("\(methodInfo) Remove copy file")
+                try fileManager.removeItem(at: copyFileURL)
+            } catch {
+                log(
+                    "\(methodInfo) ttry fileManager.removeItem(at: \(copyFileURL)) error: \(error)"
+                )
+                completion(
+                    .failure(
+                        PigeonError(
+                            code: "-1",
+                            message:
+                                "\(methodInfo) error.",
+                            details: "\(error)")))
+                return
+            }
+        }
+        completion(.success(true))
+    }
+
+    func deleteCopiedAssetFolder(
+        packName: String, completion: @escaping (Result<Bool, Error>) -> Void
+    ) {
+        let methodInfo =
+            "[deleteCopiedAssetFile(packName: \(packName))]"
+        log("\(methodInfo) start")
+
+        let copyFolderURL: URL
+        if #available(iOS 16.0, *) {
+            copyFolderURL = cacheDirectoryURL.appending(
+                path: "\(packName)", directoryHint: URL.DirectoryHint.isDirectory)
+        } else {
+            copyFolderURL = cacheDirectoryURL.appendingPathComponent(
+                "\(packName)", isDirectory: true)
+        }
+
+        let fileManager = FileManager.default
+
+        if fileManager.fileExists(atPath: copyFolderURL.path) {
+            do {
+                log("\(methodInfo) Remove copy directory")
+                try fileManager.removeItem(at: copyFolderURL)
+            } catch {
+                log(
+                    "\(methodInfo) ttry fileManager.removeItem(at: \(copyFolderURL)) error: \(error)"
+                )
+                completion(
+                    .failure(
+                        PigeonError(
+                            code: "-1",
+                            message:
+                                "\(methodInfo) error.",
+                            details: "\(error)")))
+                return
+            }
+        }
+        completion(.success(true))
+    }
+
+    func deleteAllCopiedAssetFolders(completion: @escaping (Result<Bool, Error>) -> Void) {
+        let methodInfo =
+            "[deleteAllCopiedAssetFolders()]"
+        log("\(methodInfo) start")
+
+        let fileManager = FileManager.default
+
+        if fileManager.fileExists(atPath: cacheDirectoryURL.path) {
+            do {
+                log("\(methodInfo) Remove cache directory")
+                try fileManager.removeItem(at: cacheDirectoryURL)
+            } catch {
+                log(
+                    "\(methodInfo) ttry fileManager.removeItem(at: \(cacheDirectoryURL)) error: \(error)"
+                )
+                completion(
+                    .failure(
+                        PigeonError(
+                            code: "-1",
+                            message:
+                                "\(methodInfo) error.",
+                            details: "\(error)")))
+                return
+            }
+        }
+        completion(.success(true))
+    }
+}
+
+extension String {
+    func isImageExtension() -> Bool {
+        // iOS support image format
+        return switch self.lowercased() {
+        case ".tiff", ".tif": true
+        case ".jpg", ".jpeg": true
+        case ".gif": true
+        case ".png": true
+        case ".bmp", ".bmpf": true
+        case ".ico": true
+        case ".cur": true
+        case ".xbm": true
+        default: false
+        }
     }
 }
 

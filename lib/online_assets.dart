@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:path/path.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'on_demand_resources.g.dart';
@@ -484,20 +485,17 @@ class OnlineAssets {
           );
         }
       } else {
-        if (packSettings.iosOnDemandResourceType! ==
-            IOSOnDemandResourceType.assetsWithoutTag) {
-          path = await _iosApi.getCopiedAssetFilePath(
-            tag: null,
-            relativeAssetPathWithTagNamespace:
-                '$packName${Platform.pathSeparator}$relativePath',
-          );
-        } else {
-          path = await _iosApi.getCopiedAssetFilePath(
-            tag: packName,
-            relativeAssetPathWithTagNamespace:
-                '$packName${Platform.pathSeparator}$relativePath',
-          );
-        }
+        path = await _iosApi.getCopiedAssetFilePath(
+          tag:
+              packSettings.iosOnDemandResourceType! ==
+                      IOSOnDemandResourceType.assetsWithoutTag
+                  ? null
+                  : packName,
+          // The default asset name in iOS is no extension
+          assetNameWithPackNameNamespace:
+              '$packName${Platform.pathSeparator}${withoutExtension(relativePath)}',
+          ext: extension(relativePath),
+        );
       }
 
       if (path == null) {
@@ -519,20 +517,94 @@ class OnlineAssets {
   /// Returns true if the target file or folder was successfully deleted.
   /// Also returns true if the target file or folder does not yet exist.
   ///
-  /// If only [packName] is specified, the target pack folder is deleted.
-  /// Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
+  /// The delete function can delete previous asset packs that have not been set in [init].
+  /// The argument is changed from String to OnlineAssetPackSettings to convey this.
+  ///
+  /// If the file is still in the temporary folder when [getFile] function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// If you want to avoid this case, you call delete function when your app update.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
   Future<bool?> deleteCopiedAssetFile({
-    String? packName,
-    String? relativeAssetPath,
+    required OnlineAssetPackSettings targetAssetPack,
+    required String relativePath,
   }) async {
     try {
-      if (Platform.isAndroid) {
+      if (Platform.isAndroid &&
+          targetAssetPack.androidAssetPackDeliveryMode ==
+              AndroidAssetPackDeliveryMode.installTime) {
         return await _androidApi.deleteCopiedAssetFileOnInstallTimeAsset(
-          assetPackName: packName,
-          relativeAssetPath: relativeAssetPath,
+          assetPackName: targetAssetPack.packName,
+          relativeAssetPath: relativePath,
         );
-      } else {
-        // Todo Implement iOS
+      } else if (Platform.isIOS) {
+        return await _iosApi.deleteCopiedAssetFile(
+          // The default asset name in iOS is no extension
+          assetNameWithPackNameNamespace:
+              '${targetAssetPack.packName}${Platform.pathSeparator}${withoutExtension(relativePath)}',
+          ext: extension(relativePath),
+        );
+      }
+    } catch (e) {
+      log(e.toString());
+      return null;
+    }
+    return null;
+  }
+
+  /// Delete the copied asset folder on Android Install-Time asset and iOS asset.
+  ///
+  /// Returns true if the target file or folder was successfully deleted.
+  /// Also returns true if the target file or folder does not yet exist.
+  ///
+  /// The delete function can delete previous asset packs that have not been set in [init].
+  /// The argument is changed from String to OnlineAssetPackSettings to convey this.
+  ///
+  /// If the file is still in the temporary folder when [getFile] function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// If you want to avoid this case, you call delete function when your app update.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+  ///
+  /// You can call this function to delete the copied asset folder you no longer use, but don't worry too much about temporary folder, as the system will automatically delete temporary folder when they run low on space.
+  Future<bool?> deleteCopiedAssetFolder({
+    required OnlineAssetPackSettings targetAssetPack,
+  }) async {
+    try {
+      if (Platform.isAndroid &&
+          targetAssetPack.androidAssetPackDeliveryMode ==
+              AndroidAssetPackDeliveryMode.installTime) {
+        return await _androidApi.deleteCopiedAssetFolderOnInstallTimeAsset(
+          assetPackName: targetAssetPack.packName,
+        );
+      } else if (Platform.isIOS) {
+        return await _iosApi.deleteCopiedAssetFolder(
+          packName: targetAssetPack.packName,
+        );
+      }
+    } catch (e) {
+      log(e.toString());
+      return null;
+    }
+    return null;
+  }
+
+  /// Delete the copied asset folder on Android Install-Time asset and iOS asset.
+  ///
+  /// Returns true if the target file or folder was successfully deleted.
+  /// Also returns true if the target file or folder does not yet exist.
+  ///
+  /// If the file is still in the temporary folder when [getFile] function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// If you want to avoid this case, you call delete function when your app update.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+  ///
+  /// You can call this function to delete the copied asset folder you no longer use, but don't worry too much about temporary folder, as the system will automatically delete temporary folder when they run low on space.
+  Future<bool?> deleteAllCopiedAssetFolders() async {
+    try {
+      if (Platform.isAndroid) {
+        return await _androidApi
+            .deleteAllCopiedAssetFoldersOnInstallTimeAsset();
+      } else if (Platform.isIOS) {
+        return await _iosApi.deleteAllCopiedAssetFolders();
       }
     } catch (e) {
       log(e.toString());

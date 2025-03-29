@@ -31,13 +31,18 @@ abstract class PlayAssetDeliveryHostApi {
   /// https://developer.android.com/reference/com/google/android/play/core/assetpacks/AssetPackManager#showCellularDataConfirmation(android.app.Activity)
   bool showConfirmationDialog();
 
-  /// It is not possible to obtain the file path of the asset file itself.
-  /// Therefore, the path of the copied file as a temporary file is obtained.
-  /// Note that using this function uses twice as much device storage due to the asset and the copied files.
+  /// Get the path to the copy of the Android install-time asset file.
   ///
-  /// If this function is called and the file has already been copied and the file size is the same, the overwrite copy process is not performed.
+  /// It is not possible to obtain the file path of the install-time asset file itself.
+  /// Therefore, the path of the file copied to temporary directory is obtained.
   ///
-  /// If you are replacing asset files when updating your app and the file size is the same as the file before the replacement, you will need to call [getAssetFilePathOnDownloadAsset] function.
+  /// If the file is still in the temporary folder when this function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, etc., and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// If you want to avoid this case, you call [deleteCopiedAssetFileOnInstallTimeAsset] function to delete cache on app update.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+  ///
+  /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
+  /// The copied files will be deleted by system when storage space is running low due to temporary files, but will be copied again on use.
   @async
   String? getCopiedAssetFilePathOnInstallTimeAsset({
     required String assetPackName,
@@ -46,18 +51,26 @@ abstract class PlayAssetDeliveryHostApi {
 
   /// Delete the copied asset file.
   ///
-  /// Returns true if the target file or folder was successfully deleted.
-  /// Also returns true if the target file or folder does not yet exist.
+  /// Returns true if the target file was successfully deleted.
+  /// Also returns true if the target file does not yet exist.
   ///
-  /// If [assetPackName] = null, all install-time pack folder is deleted.
-  /// If [relativeAssetPath] = null, [assetPackName]'s install-time pack folder is deleted.
-  ///
-  /// Call this function if you are replacing assets and the file size is the same as the file before the replacement and want to be sure to update the files.
+  /// If the file is still in the temporary folder when [getCopiedAssetFilePathOnInstallTimeAsset] function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// If you want to avoid this case, you call delete function when your app update.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
   @async
   bool deleteCopiedAssetFileOnInstallTimeAsset({
-    String? assetPackName,
-    String? relativeAssetPath,
+    required String assetPackName,
+    required String relativeAssetPath,
   });
+
+  @async
+  bool deleteCopiedAssetFolderOnInstallTimeAsset({
+    required String assetPackName,
+  });
+
+  @async
+  bool deleteAllCopiedAssetFoldersOnInstallTimeAsset();
 
   @async
   String? getAssetFilePathOnDownloadAsset({

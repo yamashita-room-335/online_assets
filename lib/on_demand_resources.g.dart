@@ -388,23 +388,28 @@ class OnDemandResourcesHostApi {
 
   /// Get the path to the copy of the iOS Asset file.
   ///
-  /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
-  /// Standard iOS assets are used to perform the same behavior as Android's install-time asset pack.
-  ///
   /// It is not possible to obtain the file path of the asset file itself.
-  /// Therefore, the path of the copied file as a temporary file is obtained.
-  /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
-  /// The temporary files will be deleted when storage space is running low due to temporary files, but will be re-downloaded on reuse.
+  /// Therefore, the path of the file copied to temporary directory is obtained.
   ///
-  /// The reason for including the tag namespace in the path is so that there is no conflict if the filename is same with other asset packs.
-  Future<String?> getCopiedAssetFilePath({required String? tag, required String relativeAssetPathWithTagNamespace, int extensionLevel = 1, }) async {
+  /// If the file is still in the temporary folder when this function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// In this case, use the [deleteCopiedAssetFile] function.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+  ///
+  /// If [tag] == [null], access is made to standard iOS assets that is not On-Demand Resources.
+  ///
+  /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
+  /// The copied files and on-demand resource files will be deleted by system when storage space is running low due to temporary files, but will be copied or downloaded again on use.
+  ///
+  /// The reason for including the tag namespace in the asset name is so that there is no conflict if the name is same with other asset packs.
+  Future<String?> getCopiedAssetFilePath({required String? tag, required String assetNameWithPackNameNamespace, required String ext, }) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.getCopiedAssetFilePath$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tag, relativeAssetPathWithTagNamespace, extensionLevel]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tag, assetNameWithPackNameNamespace, ext]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -417,6 +422,101 @@ class OnDemandResourcesHostApi {
       );
     } else {
       return (pigeonVar_replyList[0] as String?);
+    }
+  }
+
+  /// Delete the copied asset file.
+  ///
+  /// If [tag] == [null], delete standard iOS assets copied file that is not On-Demand Resources.
+  ///
+  /// Returns true if the target file or folder was successfully deleted.
+  /// Also returns true if the target file or folder does not yet exist.
+  ///
+  /// If the file is still in the temporary folder when [getCopiedAssetFilePath] function is called and the file size is the same as the asset, file is reused.
+  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
+  /// If you want to avoid this case, you call delete function when your app update.
+  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
+  Future<bool> deleteCopiedAssetFile({required String assetNameWithPackNameNamespace, required String ext}) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteCopiedAssetFile$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[assetNameWithPackNameNamespace, ext]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as bool?)!;
+    }
+  }
+
+  Future<bool> deleteCopiedAssetFolder({required String packName}) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteCopiedAssetFolder$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[packName]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as bool?)!;
+    }
+  }
+
+  Future<bool> deleteAllCopiedAssetFolders() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteAllCopiedAssetFolders$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as bool?)!;
     }
   }
 }
