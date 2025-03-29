@@ -649,7 +649,20 @@ class OnlineAssets {
             packName: packName,
             relativePath: relativePath,
           );
-          yield (file, onlinePackSubjectMap[packName]!.value);
+          yield (
+            file,
+            AndroidPack(
+              name: packName,
+              status: OnlineAssetStatus.completed,
+              hasError: false,
+              progress: 1,
+              androidBytesDownloaded: 0,
+              androidErrorCode: AndroidAssetPackErrorCode.noError,
+              androidStatus: AndroidAssetPackStatus.completed,
+              androidTotalBytesToDownload: 0,
+              androidTransferProgressPercentage: 100,
+            ),
+          );
           return;
         }
       } else {
@@ -660,7 +673,24 @@ class OnlineAssets {
             packName: packName,
             relativePath: relativePath,
           );
-          yield (file, onlinePackSubjectMap[packName]!.value);
+          yield (
+            file,
+            IOSPack(
+              name: packName,
+              status: OnlineAssetStatus.completed,
+              hasError: false,
+              progress: 1,
+              iOSError: null,
+              iOSProgress: IOSProgress(
+                isCancelled: false,
+                isPaused: false,
+                fractionCompleted: 1,
+                isFinished: true,
+              ),
+              iOSCondition: true,
+              iOSLoadingPriority: 0,
+            ),
+          );
           return;
         }
       }
