@@ -339,7 +339,7 @@ Android側の制限も把握して、どのようにアセットパックを分�
 ```.dart
 OnlineAssets.instance.streamFile(
   assetName: Platform.isAndroid ? 'install_time_sample_pack' : 'install_time_sample_pack_1',
-  relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+  relativePath: 'dog_image.png',
 )
 ```
 

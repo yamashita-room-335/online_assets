@@ -339,7 +339,7 @@ If it seems that you will reach the limit in the future, you will need to either
 ```.dart
 OnlineAssets.instance.streamFile(
   assetName: Platform.isAndroid ? 'install_time_sample_pack' : 'install_time_sample_pack_1',
-  relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+  relativePath: 'dog_image.png',
 )
 ```
 
