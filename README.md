@@ -272,34 +272,39 @@ That's all you need to use Play Asset Delivery on Android, the rest will be desc
 
 ## On-Demand Resources (iOS)
 
-### Setup of Asset and On-Demand Resources Tags
+### Setup Asset and On-Demand Resources Tags configuration
 
 Open ios/Runner.xcworkspace in Xcode and add asset files to `Assets`.
 
-To obtain them with a similar path to Android and avoid path name collisions between asset packs, I stored them according to the following rules.
+To prevent path names from colliding between asset packs, the following rules are used to store the files.
 
-- In Xcode, create a folder named [asset pack name] in `Assets` and set the folder as follows.
-    - `On-Demand Resource Tags`: [asset pack name]
-    - `Provides Namespace`: Enabled
-- Drag and drop [files under the assets folder on the Android side] into the folder in Xcode.
-    - If the dragged content includes folders, you need to enable "Provides Namespace".
-    - The parent folder's `On-Demand Resource Tags` are automatically inherited, so you do not need to set them for the dragged content. (It is desirable to avoid setting them individually as it may cause update omissions when moving to another asset pack.)
+- Drag and drop [folders (or files) in the assets folder of each asset pack on the Android side] to `Assets` on Xcode.
+
+- Set the top folder (or file) to `On-Demand Resource Tags`: [asset pack name].
+
+  The `On-Demand Resource Tags` in the parent folder are automatically inherited, so there is no need to set them in the inner folders.
+
+  (Rather, it is preferable to avoid setting them individually, as this will cause forgetting to update them when moving to another asset pack.)
+
+- Set “`Provides Namespace`: Enabled” for all folders so that they are on the same path as Android.
+
+  This should be set for the inner folders as well as the parent folders.
 
 Example:
 - Android
 
-    - Path: `android/install_time_sample_pack/src/main/assets/dog_shetland_sheepdog_blue_merle.png`
+    - Path: `android/install_time_sample_pack/src/main/assets/install_time_sample_pack/dog_image.png`
 
 - iOS
 
-   - Display path in Xcode: `install_time_sample_pack/dog_shetland_sheepdog_blue_merle` 
+   - Display path in Xcode: `install_time_sample_pack/dog_image` 
 
 - Flutter call (details will be described later)
 
     ```.dart
     OnlineAssets.instance.streamFile(
       packName: 'install_time_sample_pack',
-      relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+      relativePath: 'install_time_sample_pack/dog_image.png',
     )
     ```
 

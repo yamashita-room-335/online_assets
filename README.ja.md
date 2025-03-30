@@ -196,7 +196,6 @@ Execution failed for task ':app:packageReleaseBundle'.
 *　android/install_time_sample_pack/src/main/assets/install_time_sample_pack/dog/image.png
 *　android/on_demand_sample_pack/src/main/assets/on_demand_sample_pack/dog/image.png
 
-
 #### Androidのアセットパックの制限について
 
 [Play Console Help](https://support.google.com/googleplay/android-developer/answer/9859372?hl=ja#size_limits)に制限の記載があります。
@@ -277,30 +276,35 @@ AndroidでPlay Asset Deliveryを使用するために必要なものは以上で
 
 ios/Runner.xcworkspaceをXcodeで開き、`Assets`へアセットファイルを追加しました。
 
-Androidと似たようなパスで取得でき、なおかつアセットパック間でパス名が衝突しないように、以下のルールで格納しています。
+アセットパック間でパス名が衝突しないように、以下のルールで格納しています。
 
-- Xcode上で、`Assets`に[アセットパック名]のフォルダを作成し、そのフォルダの設定を以下のようにします。
-    - `On-Demand Resource Tags`: [アセットパック名]
-    - `Provides Namespace`: 有効
-- Xcode上で、そのフォルダに[Android側のassetsフォルダ以下のファイル]をドラッグ＆ドロップします。
-    - もし、ドラッグした内容にフォルダが含まれていた場合は、「`Provides Namespace`: 有効」にする必要があります。
-    - 親フォルダの`On-Demand Resource Tags`は自動で継承されるため、ドラッグした内容に設定する必要はありません。（むしろ個別で設定すると別のアセットパックへ移動する際に更新忘れが発生するため、避けることが望ましいです）
+- [Android側の各アセットパックのassetsフォルダ内のフォルダ（またはファイル）]をXcode上の`Assets`にドラッグ＆ドロップします。
+
+- 一番上のフォルダ（またはファイル）には、`On-Demand Resource Tags`: [アセットパック名]を設定します。
+
+  親フォルダの`On-Demand Resource Tags`は自動で継承されるため、内側のフォルダに設定する必要はありません。
+
+  （むしろ個別で設定すると別のアセットパックへ移動する際に更新忘れが発生するため、避けることが望ましいです）
+
+- 全てのフォルダに「`Provides Namespace`: 有効」を設定して、Androidと同じパスになるようにします。
+
+  これは親フォルダだけでなく内側のフォルダにも設定する必要があります。
 
 例）
 - Android
 
-    - パス: `android/install_time_sample_pack/src/main/assets/dog_shetland_sheepdog_blue_merle.png`
+    - パス: `android/install_time_sample_pack/src/main/assets/install_time_sample_pack/dog_image.png`
 
 - iOS側
 
-   - Xcodeでの表示パス: `install_time_sample_pack/dog_shetland_sheepdog_blue_merle` 
+   - Xcodeでの表示パス: `install_time_sample_pack/dog_image` 
 
 - Flutter呼び出し（詳細は後述）
 
     ```.dart
     OnlineAssets.instance.streamFile(
       packName: 'install_time_sample_pack',
-      relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+      relativePath: 'install_time_sample_pack/dog_image.png',
     )
     ```
 
