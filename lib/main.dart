@@ -278,15 +278,11 @@ class InstallTimePackFutureImagePage extends StatelessWidget {
             Divider(),
             FutureAssetWidget.image(
               assetName: 'install_time_sample_pack',
-              relativePath: 'dog/dog_corgi_tricolor.png',
+              relativePath: 'install_time_sample_pack/dog/image.png',
             ),
             FutureAssetWidget.image(
               assetName: 'install_time_sample_pack',
-              relativePath: 'dog/dog_great_pyrenees.png',
-            ),
-            FutureAssetWidget.image(
-              assetName: 'install_time_sample_pack',
-              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+              relativePath: 'install_time_sample_pack/dog_image.png',
             ),
           ],
         ),
@@ -308,7 +304,7 @@ class InstallTimePackFutureVideoPage extends StatelessWidget {
           Divider(),
           FutureAssetWidget.video(
             assetName: 'install_time_sample_pack',
-            relativePath: 'dog/movie.mp4',
+            relativePath: 'install_time_sample_pack/dog/movie.mp4',
           ),
         ],
       ),
@@ -341,15 +337,11 @@ class FastFollowStreamImagePage extends StatelessWidget {
             Divider(),
             StreamAssetWidget.image(
               assetName: 'fast_follow_sample_pack',
-              relativePath: 'dog/dog_corgi_tricolor.png',
+              relativePath: 'fast_follow_sample_pack/dog/image.png',
             ),
             StreamAssetWidget.image(
               assetName: 'fast_follow_sample_pack',
-              relativePath: 'dog/dog_great_pyrenees.png',
-            ),
-            StreamAssetWidget.image(
-              assetName: 'fast_follow_sample_pack',
-              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+              relativePath: 'fast_follow_sample_pack/dog_image.png',
             ),
           ],
         ),
@@ -371,7 +363,7 @@ class FastFollowStreamVideoPage extends StatelessWidget {
           Divider(),
           StreamAssetWidget.video(
             assetName: 'fast_follow_sample_pack',
-            relativePath: 'dog/movie.mp4',
+            relativePath: 'fast_follow_sample_pack/dog/movie.mp4',
           ),
         ],
       ),
@@ -404,15 +396,11 @@ class OnDemandStreamImagePage extends StatelessWidget {
             Divider(),
             StreamAssetWidget.image(
               assetName: 'on_demand_sample_pack',
-              relativePath: 'dog/dog_corgi_tricolor.png',
+              relativePath: 'on_demand_sample_pack/dog/image.png',
             ),
             StreamAssetWidget.image(
               assetName: 'on_demand_sample_pack',
-              relativePath: 'dog/dog_great_pyrenees.png',
-            ),
-            StreamAssetWidget.image(
-              assetName: 'on_demand_sample_pack',
-              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+              relativePath: 'on_demand_sample_pack/dog_image.png',
             ),
           ],
         ),
@@ -434,7 +422,7 @@ class OnDemandStreamVideoPage extends StatelessWidget {
           Divider(),
           StreamAssetWidget.video(
             assetName: 'on_demand_sample_pack',
-            relativePath: 'dog/movie.mp4',
+            relativePath: 'on_demand_sample_pack/dog/movie.mp4',
           ),
         ],
       ),
@@ -468,21 +456,16 @@ class DifferentPacksStreamImagePage extends StatelessWidget {
                   Platform.isAndroid
                       ? 'install_time_sample_pack'
                       : 'fast_follow_sample_pack',
-              relativePath: 'dog/dog_corgi_tricolor.png',
+              relativePath:
+                  '${Platform.isAndroid ? 'install_time_sample_pack' : 'fast_follow_sample_pack'}/dog/image.png',
             ),
             StreamAssetWidget.image(
               assetName:
                   Platform.isAndroid
                       ? 'install_time_sample_pack'
                       : 'fast_follow_sample_pack',
-              relativePath: 'dog/dog_great_pyrenees.png',
-            ),
-            StreamAssetWidget.image(
-              assetName:
-                  Platform.isAndroid
-                      ? 'install_time_sample_pack'
-                      : 'fast_follow_sample_pack',
-              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+              relativePath:
+                  '${Platform.isAndroid ? 'install_time_sample_pack' : 'fast_follow_sample_pack'}/dog_image.png',
             ),
           ],
         ),
@@ -507,7 +490,8 @@ class DifferentPacksStreamVideoPage extends StatelessWidget {
                 Platform.isAndroid
                     ? 'install_time_sample_pack'
                     : 'fast_follow_sample_pack',
-            relativePath: 'dog/movie.mp4',
+            relativePath:
+                '${Platform.isAndroid ? 'install_time_sample_pack' : 'fast_follow_sample_pack'}/dog/movie.mp4',
           ),
         ],
       ),
@@ -633,15 +617,11 @@ class FutureImagePage extends StatelessWidget {
             Divider(),
             FutureAssetWidget.image(
               assetName: 'on_demand_sample_pack',
-              relativePath: 'dog/dog_corgi_tricolor.png',
+              relativePath: 'on_demand_sample_pack/dog/image.png',
             ),
             FutureAssetWidget.image(
               assetName: 'on_demand_sample_pack',
-              relativePath: 'dog/dog_great_pyrenees.png',
-            ),
-            FutureAssetWidget.image(
-              assetName: 'on_demand_sample_pack',
-              relativePath: 'dog_shetland_sheepdog_blue_merle.png',
+              relativePath: 'on_demand_sample_pack/dog_image.png',
             ),
           ],
         ),

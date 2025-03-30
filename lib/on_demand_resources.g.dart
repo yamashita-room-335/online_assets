@@ -402,14 +402,14 @@ class OnDemandResourcesHostApi {
   /// The copied files and on-demand resource files will be deleted by system when storage space is running low due to temporary files, but will be copied or downloaded again on use.
   ///
   /// The reason for including the tag namespace in the asset name is so that there is no conflict if the name is same with other asset packs.
-  Future<String?> getCopiedAssetFilePath({required String? tag, required String assetNameWithPackNameNamespace, required String ext, }) async {
+  Future<String?> getCopiedAssetFilePath({required String? tag, required String assetName, required String ext, }) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.getCopiedAssetFilePath$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tag, assetNameWithPackNameNamespace, ext]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tag, assetName, ext]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -427,8 +427,6 @@ class OnDemandResourcesHostApi {
 
   /// Delete the copied asset file.
   ///
-  /// If [tag] == [null], delete standard iOS assets copied file that is not On-Demand Resources.
-  ///
   /// Returns true if the target file or folder was successfully deleted.
   /// Also returns true if the target file or folder does not yet exist.
   ///
@@ -436,14 +434,14 @@ class OnDemandResourcesHostApi {
   /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
   /// If you want to avoid this case, you call delete function when your app update.
   /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
-  Future<bool> deleteCopiedAssetFile({required String assetNameWithPackNameNamespace, required String ext}) async {
+  Future<bool> deleteCopiedAssetFile({required String assetName, required String ext}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteCopiedAssetFile$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[assetNameWithPackNameNamespace, ext]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[assetName, ext]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {

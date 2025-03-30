@@ -40,7 +40,7 @@ Play Asset Delivery（Android）とOn-Demand Resources（iOS）の機能を統�
     StreamBuilder<(File?, OnlinePack)>(
       stream: OnlineAssets.instance.streamFile(
         packName:'install_time_sample_pack',
-        relativePath: 'dog/dog_corgi_tricolor.png',
+        relativePath: 'install_time_sample_pack/dog/image.png',
       ),
       // ...
     )
@@ -170,6 +170,32 @@ BundleToolを使用すれば、Play Asset Delivery機能を確認できますが
 そのため、純粋なAndroidアプリを作成してGradleビルドを行いAndroidManifest.xmlを確認したり、[別の機能のAndroidManifest.xmlの記述](https://developer.android.com/guide/playcore/feature-delivery/instant)を確認して、各アセットパックのAndroidManifest.xmlを作成しました。
 
 ### AndroidのAsset仕様に関するメモ
+
+#### Androidのアセットパックの名前空間について
+
+別々のアセットパックで同じ相対パスのファイルを設置することは可能ですが、それはファイルの中身も同じものである必要があります。
+
+例えば、以下のようにアセットを設置するとします。
+
+* android/install_time_sample_pack/src/main/assets/dog/image.png
+* android/on_demand_sample_pack/src/main/assets/dog/image.png
+
+もしimage.pngが同じ画像ファイルであればビルドは成功しますが、異なる画像ファイルの場合は以下のビルドエラーが発生します。
+
+```bash
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:packageReleaseBundle'.
+> A failure occurred while executing com.android.build.gradle.internal.tasks.PackageBundleTask$BundleToolWorkAction
+   > Modules 'install_time_sample_pack' and 'on_demand_sample_pack' contain entry 'assets/dog/image.png' with different content.
+```
+
+そのため、このサンプルアプリのようにassetsフォルダ以下にパック名のフォルダを作成しておく方が安全でしょう。
+
+*　android/install_time_sample_pack/src/main/assets/install_time_sample_pack/dog/image.png
+*　android/on_demand_sample_pack/src/main/assets/on_demand_sample_pack/dog/image.png
+
 
 #### Androidのアセットパックの制限について
 

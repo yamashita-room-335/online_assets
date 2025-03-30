@@ -236,11 +236,11 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
     }
 
     func getCopiedAssetFilePath(
-        tag: String?, assetNameWithPackNameNamespace: String, ext: String,
+        tag: String?, assetName: String, ext: String,
         completion: @escaping (Result<String?, Error>) -> Void
     ) {
         let methodInfo =
-            "[getAbsoluteAssetPath(tag: \(tag ?? "nil"), assetNameWithPackNameNamespace: \(assetNameWithPackNameNamespace), ext: \(ext))]"
+            "[getAbsoluteAssetPath(tag: \(tag ?? "nil"), assetName: \(assetName), ext: \(ext))]"
         log("\(methodInfo) start")
 
         if let tag = tag {
@@ -270,16 +270,16 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
         let relativePath: String
         var uiImage: UIImage?
         if ext.isImageExtension() {
-            if let image = UIImage(named: assetNameWithPackNameNamespace) {
+            if let image = UIImage(named: assetName) {
                 uiImage = image
                 // To output images as pngData
-                relativePath = "\(assetNameWithPackNameNamespace).png"
+                relativePath = "\(assetName).png"
             } else {
                 log("\(methodInfo) Can not load as UIImage")
-                relativePath = "\(assetNameWithPackNameNamespace)\(ext)"
+                relativePath = "\(assetName)\(ext)"
             }
         } else {
-            relativePath = "\(assetNameWithPackNameNamespace)\(ext)"
+            relativePath = "\(assetName)\(ext)"
         }
 
         let copyFileURL: URL
@@ -383,7 +383,7 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
             }
         }
 
-        if let nsDataAsset = NSDataAsset(name: assetNameWithPackNameNamespace) {
+        if let nsDataAsset = NSDataAsset(name: assetName) {
             if isExistCopyFile {
                 // Because of the time required, this function do not check file hash.
                 do {
@@ -419,16 +419,15 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
     }
 
     func deleteCopiedAssetFile(
-        assetNameWithPackNameNamespace: String, ext: String,
-        completion: @escaping (Result<Bool, Error>) -> Void
+        assetName: String, ext: String, completion: @escaping (Result<Bool, Error>) -> Void
     ) {
         let methodInfo =
-            "[deleteCopiedAssetFile(assetNameWithPackNameNamespace: \(assetNameWithPackNameNamespace), ext: \(ext))]"
+            "[deleteCopiedAssetFile(assetName: \(assetName), ext: \(ext))]"
         log("\(methodInfo) start")
 
-        let relativePath = "\(assetNameWithPackNameNamespace)\(ext)"
+        let relativePath = "\(assetName)\(ext)"
         // For cache deletion, do not check whether the output is output as a png or not, both are deleted.
-        let relativePngPath = ext.isImageExtension() ? "\(assetNameWithPackNameNamespace).png" : nil
+        let relativePngPath = ext.isImageExtension() ? "\(assetName).png" : nil
 
         let copyFileURL: URL
         let copyPngFileURL: URL?

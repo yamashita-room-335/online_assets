@@ -46,13 +46,11 @@ abstract class OnDemandResourcesHostApi {
   @async
   String? getCopiedAssetFilePath({
     required String? tag,
-    required String assetNameWithPackNameNamespace,
+    required String assetName,
     required String ext,
   });
 
   /// Delete the copied asset file.
-  ///
-  /// If [tag] == [null], delete standard iOS assets copied file that is not On-Demand Resources.
   ///
   /// Returns true if the target file or folder was successfully deleted.
   /// Also returns true if the target file or folder does not yet exist.
@@ -63,7 +61,7 @@ abstract class OnDemandResourcesHostApi {
   /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
   @async
   bool deleteCopiedAssetFile({
-    required String assetNameWithPackNameNamespace,
+    required String assetName,
     required String ext,
   });
 

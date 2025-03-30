@@ -331,10 +331,8 @@ protocol OnDemandResourcesHostApi {
   /// The copied files and on-demand resource files will be deleted by system when storage space is running low due to temporary files, but will be copied or downloaded again on use.
   ///
   /// The reason for including the tag namespace in the asset name is so that there is no conflict if the name is same with other asset packs.
-  func getCopiedAssetFilePath(tag: String?, assetNameWithPackNameNamespace: String, ext: String, completion: @escaping (Result<String?, Error>) -> Void)
+  func getCopiedAssetFilePath(tag: String?, assetName: String, ext: String, completion: @escaping (Result<String?, Error>) -> Void)
   /// Delete the copied asset file.
-  ///
-  /// If [tag] == [null], delete standard iOS assets copied file that is not On-Demand Resources.
   ///
   /// Returns true if the target file or folder was successfully deleted.
   /// Also returns true if the target file or folder does not yet exist.
@@ -343,7 +341,7 @@ protocol OnDemandResourcesHostApi {
   /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
   /// If you want to avoid this case, you call delete function when your app update.
   /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
-  func deleteCopiedAssetFile(assetNameWithPackNameNamespace: String, ext: String, completion: @escaping (Result<Bool, Error>) -> Void)
+  func deleteCopiedAssetFile(assetName: String, ext: String, completion: @escaping (Result<Bool, Error>) -> Void)
   func deleteCopiedAssetFolder(packName: String, completion: @escaping (Result<Bool, Error>) -> Void)
   func deleteAllCopiedAssetFolders(completion: @escaping (Result<Bool, Error>) -> Void)
 }
@@ -409,9 +407,9 @@ class OnDemandResourcesHostApiSetup {
       getCopiedAssetFilePathChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let tagArg: String? = nilOrValue(args[0])
-        let assetNameWithPackNameNamespaceArg = args[1] as! String
+        let assetNameArg = args[1] as! String
         let extArg = args[2] as! String
-        api.getCopiedAssetFilePath(tag: tagArg, assetNameWithPackNameNamespace: assetNameWithPackNameNamespaceArg, ext: extArg) { result in
+        api.getCopiedAssetFilePath(tag: tagArg, assetName: assetNameArg, ext: extArg) { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))
@@ -425,8 +423,6 @@ class OnDemandResourcesHostApiSetup {
     }
     /// Delete the copied asset file.
     ///
-    /// If [tag] == [null], delete standard iOS assets copied file that is not On-Demand Resources.
-    ///
     /// Returns true if the target file or folder was successfully deleted.
     /// Also returns true if the target file or folder does not yet exist.
     ///
@@ -438,9 +434,9 @@ class OnDemandResourcesHostApiSetup {
     if let api = api {
       deleteCopiedAssetFileChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let assetNameWithPackNameNamespaceArg = args[0] as! String
+        let assetNameArg = args[0] as! String
         let extArg = args[1] as! String
-        api.deleteCopiedAssetFile(assetNameWithPackNameNamespace: assetNameWithPackNameNamespaceArg, ext: extArg) { result in
+        api.deleteCopiedAssetFile(assetName: assetNameArg, ext: extArg) { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))

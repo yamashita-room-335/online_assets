@@ -40,7 +40,7 @@ The license is MIT, so feel free to customize or library it individually.
     StreamBuilder<(File?, OnlinePack)>(
       stream: OnlineAssets.instance.streamFile(
         packName:'install_time_sample_pack',
-        relativePath: 'dog/dog_corgi_tricolor.png',
+        relativePath: 'install_time_sample_pack/dog/image.png',
       ),
       // ...
     )
@@ -170,6 +170,31 @@ As of March 23, 2025, it is stated that the AndroidManifest.xml of each asset pa
 Therefore, I created a pure Android app, performed a Gradle build to check the AndroidManifest.xml, and created the AndroidManifest.xml for each asset pack by referring to the [description of the AndroidManifest.xml of another function](https://developer.android.com/guide/playcore/feature-delivery/instant).
 
 ### Notes on Android Asset Specifications
+
+#### Regarding namespace for Android asset packs
+
+It is possible to install files with the same relative path in different asset packs, but that requires that the contents of the files must also be the same.
+
+For example, suppose you put assets as follows.
+
+* android/install_time_sample_pack/src/main/assets/dog/image.png
+* android/on_demand_sample_pack/src/main/assets/dog/image.png
+
+If image.png is the same image file, the build will succeed, but if it is a different image file, the following build error will occur
+
+```bash
+FAILURE: Build failed with an exception.
+
+* What went wrong: Execution failed for task ':app
+Execution failed for task ':app:packageReleaseBundle'.
+> A failure occurred while executing com.android.build.gradle.internal.tasks.PackageBundleTask$BundleToolWorkAction
+   > Modules 'install_time_sample_pack' and 'on_demand_sample_pack' contain entry 'assets/dog/image.png' with different content.
+```
+
+Therefore, it would be safer to create a folder with the pack name under the assets folder, as in this sample app.
+
+* android/install_time_sample_pack/src/main/assets/install_time_sample_pack/dog/image.png
+* android/on_demand_sample_pack/src/main/assets/on_demand_sample_pack/dog/image.png
 
 #### Restrictions on Android Asset Packs
 
