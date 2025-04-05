@@ -297,6 +297,7 @@ class OnlineAssets {
   /// Settings for each Pack
   ///
   /// The settings are used to determine whether the pack is install-time or download on Android.
+  /// The empty key's value will set the iOS assetsWithoutTag.
   final Map<String, OnlineAssetPackSettings> packSettingsMap = {};
 
   /// Subject that receives Platform's EventChannelApi
