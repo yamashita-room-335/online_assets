@@ -332,9 +332,9 @@ interface PlayAssetDeliveryHostApi {
    * Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
    * The copied files will be deleted by system when storage space is running low due to temporary files, but will be copied again on use.
    */
-  fun getCopiedAssetFilePathOnInstallTimeAsset(assetPackName: String, relativeAssetPath: String, callback: (Result<String?>) -> Unit)
+  fun getCopiedAssetFilePathOnInstallTimeAsset(relativeAssetPath: String, callback: (Result<String?>) -> Unit)
   /**
-   * Delete the copied asset file.
+   * Delete the copied asset file or directory.
    *
    * Returns true if the target file was successfully deleted.
    * Also returns true if the target file does not yet exist.
@@ -344,9 +344,7 @@ interface PlayAssetDeliveryHostApi {
    * If you want to avoid this case, you call delete function when your app update.
    * However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
    */
-  fun deleteCopiedAssetFileOnInstallTimeAsset(assetPackName: String, relativeAssetPath: String, callback: (Result<Boolean>) -> Unit)
-  fun deleteCopiedAssetFolderOnInstallTimeAsset(assetPackName: String, callback: (Result<Boolean>) -> Unit)
-  fun deleteAllCopiedAssetFoldersOnInstallTimeAsset(callback: (Result<Boolean>) -> Unit)
+  fun deleteCopiedAssetOnInstallTimeAsset(relativePath: String, callback: (Result<Boolean>) -> Unit)
   fun getAssetFilePathOnDownloadAsset(assetPackName: String, relativeAssetPath: String, callback: (Result<String?>) -> Unit)
 
   companion object {
@@ -418,9 +416,8 @@ interface PlayAssetDeliveryHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val assetPackNameArg = args[0] as String
-            val relativeAssetPathArg = args[1] as String
-            api.getCopiedAssetFilePathOnInstallTimeAsset(assetPackNameArg, relativeAssetPathArg) { result: Result<String?> ->
+            val relativeAssetPathArg = args[0] as String
+            api.getCopiedAssetFilePathOnInstallTimeAsset(relativeAssetPathArg) { result: Result<String?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))
@@ -435,51 +432,12 @@ interface PlayAssetDeliveryHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteCopiedAssetFileOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteCopiedAssetOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val assetPackNameArg = args[0] as String
-            val relativeAssetPathArg = args[1] as String
-            api.deleteCopiedAssetFileOnInstallTimeAsset(assetPackNameArg, relativeAssetPathArg) { result: Result<Boolean> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(wrapResult(data))
-              }
-            }
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteCopiedAssetFolderOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { message, reply ->
-            val args = message as List<Any?>
-            val assetPackNameArg = args[0] as String
-            api.deleteCopiedAssetFolderOnInstallTimeAsset(assetPackNameArg) { result: Result<Boolean> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(wrapResult(data))
-              }
-            }
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteAllCopiedAssetFoldersOnInstallTimeAsset$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            api.deleteAllCopiedAssetFoldersOnInstallTimeAsset{ result: Result<Boolean> ->
+            val relativePathArg = args[0] as String
+            api.deleteCopiedAssetOnInstallTimeAsset(relativePathArg) { result: Result<Boolean> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))

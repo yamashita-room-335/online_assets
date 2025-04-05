@@ -45,11 +45,10 @@ abstract class PlayAssetDeliveryHostApi {
   /// The copied files will be deleted by system when storage space is running low due to temporary files, but will be copied again on use.
   @async
   String? getCopiedAssetFilePathOnInstallTimeAsset({
-    required String assetPackName,
     required String relativeAssetPath,
   });
 
-  /// Delete the copied asset file.
+  /// Delete the copied asset file or directory.
   ///
   /// Returns true if the target file was successfully deleted.
   /// Also returns true if the target file does not yet exist.
@@ -59,18 +58,7 @@ abstract class PlayAssetDeliveryHostApi {
   /// If you want to avoid this case, you call delete function when your app update.
   /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
   @async
-  bool deleteCopiedAssetFileOnInstallTimeAsset({
-    required String assetPackName,
-    required String relativeAssetPath,
-  });
-
-  @async
-  bool deleteCopiedAssetFolderOnInstallTimeAsset({
-    required String assetPackName,
-  });
-
-  @async
-  bool deleteAllCopiedAssetFoldersOnInstallTimeAsset();
+  bool deleteCopiedAssetOnInstallTimeAsset({required String relativePath});
 
   @async
   String? getAssetFilePathOnDownloadAsset({

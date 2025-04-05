@@ -365,14 +365,14 @@ class PlayAssetDeliveryHostApi {
   ///
   /// Note that using this function uses twice as much device storage due to the assets of the system and the copied files.
   /// The copied files will be deleted by system when storage space is running low due to temporary files, but will be copied again on use.
-  Future<String?> getCopiedAssetFilePathOnInstallTimeAsset({required String assetPackName, required String relativeAssetPath}) async {
+  Future<String?> getCopiedAssetFilePathOnInstallTimeAsset({required String relativeAssetPath}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.getCopiedAssetFilePathOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[assetPackName, relativeAssetPath]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[relativeAssetPath]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -388,7 +388,7 @@ class PlayAssetDeliveryHostApi {
     }
   }
 
-  /// Delete the copied asset file.
+  /// Delete the copied asset file or directory.
   ///
   /// Returns true if the target file was successfully deleted.
   /// Also returns true if the target file does not yet exist.
@@ -397,70 +397,14 @@ class PlayAssetDeliveryHostApi {
   /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
   /// If you want to avoid this case, you call delete function when your app update.
   /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
-  Future<bool> deleteCopiedAssetFileOnInstallTimeAsset({required String assetPackName, required String relativeAssetPath}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteCopiedAssetFileOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
+  Future<bool> deleteCopiedAssetOnInstallTimeAsset({required String relativePath}) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteCopiedAssetOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[assetPackName, relativeAssetPath]);
-    final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_sendFuture as List<Object?>?;
-    if (pigeonVar_replyList == null) {
-      throw _createConnectionError(pigeonVar_channelName);
-    } else if (pigeonVar_replyList.length > 1) {
-      throw PlatformException(
-        code: pigeonVar_replyList[0]! as String,
-        message: pigeonVar_replyList[1] as String?,
-        details: pigeonVar_replyList[2],
-      );
-    } else if (pigeonVar_replyList[0] == null) {
-      throw PlatformException(
-        code: 'null-error',
-        message: 'Host platform returned null value for non-null return value.',
-      );
-    } else {
-      return (pigeonVar_replyList[0] as bool?)!;
-    }
-  }
-
-  Future<bool> deleteCopiedAssetFolderOnInstallTimeAsset({required String assetPackName}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteCopiedAssetFolderOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[assetPackName]);
-    final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_sendFuture as List<Object?>?;
-    if (pigeonVar_replyList == null) {
-      throw _createConnectionError(pigeonVar_channelName);
-    } else if (pigeonVar_replyList.length > 1) {
-      throw PlatformException(
-        code: pigeonVar_replyList[0]! as String,
-        message: pigeonVar_replyList[1] as String?,
-        details: pigeonVar_replyList[2],
-      );
-    } else if (pigeonVar_replyList[0] == null) {
-      throw PlatformException(
-        code: 'null-error',
-        message: 'Host platform returned null value for non-null return value.',
-      );
-    } else {
-      return (pigeonVar_replyList[0] as bool?)!;
-    }
-  }
-
-  Future<bool> deleteAllCopiedAssetFoldersOnInstallTimeAsset() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.online_assets.PlayAssetDeliveryHostApi.deleteAllCopiedAssetFoldersOnInstallTimeAsset$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[relativePath]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {

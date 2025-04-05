@@ -211,19 +211,13 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
     }
 
     override fun getCopiedAssetFilePathOnInstallTimeAsset(
-        assetPackName: String,
         relativeAssetPath: String,
         callback: (Result<String?>) -> Unit
     ) {
-        val methodInfo =
-            "[getCopiedAssetFilePathOnInstallTimeAsset(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
-        Log.d(TAG, "$methodInfo start")
-
         ioScope.launch {
             try {
                 val assetFileDescriptor = assetManager.openFd(relativeAssetPath)
-                val copyFile =
-                    File(cacheDir, "$assetPackName${File.separator}$relativeAssetPath")
+                val copyFile = File(cacheDir, relativeAssetPath)
 
                 val isExistCopyFile = copyFile.exists()
 
@@ -286,85 +280,17 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
         }
     }
 
-    override fun deleteCopiedAssetFileOnInstallTimeAsset(
-        assetPackName: String,
-        relativeAssetPath: String,
-        callback: (Result<Boolean>) -> Unit
-    ) {
+    override fun deleteCopiedAssetOnInstallTimeAsset(relativePath: String, callback: (Result<Boolean>) -> Unit) {
         val methodInfo =
-            "[deleteCopiedAssetFileOnInstallTimeAsset(assetPackName: $assetPackName, relativeAssetPath: $relativeAssetPath)]"
+            "[deleteCopiedAssetOnInstallTimeAsset(relativePath: $relativePath)]"
         Log.d(TAG, "$methodInfo start")
 
         ioScope.launch {
             try {
-                val copyFile = File(cacheDir, "$assetPackName${File.separator}$relativeAssetPath")
+                val copyFile = File(cacheDir, relativePath)
                 var result = true
                 if (copyFile.exists()) {
                     result = copyFile.delete()
-                }
-                mainScope.launch {
-                    callback(Result.success(result))
-                }
-            } catch (e: Exception) {
-                mainScope.launch {
-                    callback(
-                        Result.failure(
-                            FlutterError(
-                                code = TAG,
-                                message = methodInfo + e.message,
-                                details = e.toString()
-                            )
-                        )
-                    )
-                }
-            }
-        }
-    }
-
-    override fun deleteCopiedAssetFolderOnInstallTimeAsset(
-        assetPackName: String,
-        callback: (Result<Boolean>) -> Unit
-    ) {
-        val methodInfo =
-            "[deleteCopiedAssetFolderOnInstallTimeAsset(assetPackName: $assetPackName)]"
-        Log.d(TAG, "$methodInfo start")
-
-        ioScope.launch {
-            try {
-                val copyFolder = File(cacheDir, assetPackName)
-                var result = true
-                if (copyFolder.exists()) {
-                    result = copyFolder.delete()
-                }
-                mainScope.launch {
-                    callback(Result.success(result))
-                }
-            } catch (e: Exception) {
-                mainScope.launch {
-                    callback(
-                        Result.failure(
-                            FlutterError(
-                                code = TAG,
-                                message = methodInfo + e.message,
-                                details = e.toString()
-                            )
-                        )
-                    )
-                }
-            }
-        }
-    }
-
-    override fun deleteAllCopiedAssetFoldersOnInstallTimeAsset(callback: (Result<Boolean>) -> Unit) {
-        val methodInfo =
-            "[deleteAllCopiedAssetFoldersOnInstallTimeAsset()]"
-        Log.d(TAG, "$methodInfo start")
-
-        ioScope.launch {
-            try {
-                var result = true
-                if (cacheDir.exists()) {
-                    result = cacheDir.delete()
                 }
                 mainScope.launch {
                     callback(Result.success(result))

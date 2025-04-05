@@ -332,7 +332,7 @@ protocol OnDemandResourcesHostApi {
   ///
   /// The reason for including the tag namespace in the asset name is so that there is no conflict if the name is same with other asset packs.
   func getCopiedAssetFilePath(tag: String?, assetName: String, ext: String, completion: @escaping (Result<String?, Error>) -> Void)
-  /// Delete the copied asset file.
+  /// Delete the copied asset file or directory.
   ///
   /// Returns true if the target file or folder was successfully deleted.
   /// Also returns true if the target file or folder does not yet exist.
@@ -341,9 +341,7 @@ protocol OnDemandResourcesHostApi {
   /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
   /// If you want to avoid this case, you call delete function when your app update.
   /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
-  func deleteCopiedAssetFile(assetName: String, ext: String, completion: @escaping (Result<Bool, Error>) -> Void)
-  func deleteCopiedAssetFolder(packName: String, completion: @escaping (Result<Bool, Error>) -> Void)
-  func deleteAllCopiedAssetFolders(completion: @escaping (Result<Bool, Error>) -> Void)
+  func deleteCopiedAsset(relativePath: String, completion: @escaping (Result<Bool, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -421,7 +419,7 @@ class OnDemandResourcesHostApiSetup {
     } else {
       getCopiedAssetFilePathChannel.setMessageHandler(nil)
     }
-    /// Delete the copied asset file.
+    /// Delete the copied asset file or directory.
     ///
     /// Returns true if the target file or folder was successfully deleted.
     /// Also returns true if the target file or folder does not yet exist.
@@ -430,13 +428,12 @@ class OnDemandResourcesHostApiSetup {
     /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
     /// If you want to avoid this case, you call delete function when your app update.
     /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
-    let deleteCopiedAssetFileChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteCopiedAssetFile\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let deleteCopiedAssetChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteCopiedAsset\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      deleteCopiedAssetFileChannel.setMessageHandler { message, reply in
+      deleteCopiedAssetChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let assetNameArg = args[0] as! String
-        let extArg = args[1] as! String
-        api.deleteCopiedAssetFile(assetName: assetNameArg, ext: extArg) { result in
+        let relativePathArg = args[0] as! String
+        api.deleteCopiedAsset(relativePath: relativePathArg) { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))
@@ -446,39 +443,7 @@ class OnDemandResourcesHostApiSetup {
         }
       }
     } else {
-      deleteCopiedAssetFileChannel.setMessageHandler(nil)
-    }
-    let deleteCopiedAssetFolderChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteCopiedAssetFolder\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      deleteCopiedAssetFolderChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let packNameArg = args[0] as! String
-        api.deleteCopiedAssetFolder(packName: packNameArg) { result in
-          switch result {
-          case .success(let res):
-            reply(wrapResult(res))
-          case .failure(let error):
-            reply(wrapError(error))
-          }
-        }
-      }
-    } else {
-      deleteCopiedAssetFolderChannel.setMessageHandler(nil)
-    }
-    let deleteAllCopiedAssetFoldersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.online_assets.OnDemandResourcesHostApi.deleteAllCopiedAssetFolders\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      deleteAllCopiedAssetFoldersChannel.setMessageHandler { _, reply in
-        api.deleteAllCopiedAssetFolders { result in
-          switch result {
-          case .success(let res):
-            reply(wrapResult(res))
-          case .failure(let error):
-            reply(wrapError(error))
-          }
-        }
-      }
-    } else {
-      deleteAllCopiedAssetFoldersChannel.setMessageHandler(nil)
+      deleteCopiedAssetChannel.setMessageHandler(nil)
     }
   }
 }

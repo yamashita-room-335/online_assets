@@ -474,7 +474,6 @@ class OnlineAssets {
           if (packSettings.deliveryMode ==
               AndroidAssetPackDeliveryMode.installTime) {
             path = await _androidApi.getCopiedAssetFilePathOnInstallTimeAsset(
-              assetPackName: packName,
               relativeAssetPath: relativePath,
             );
           } else {
@@ -511,87 +510,10 @@ class OnlineAssets {
     }
   }
 
-  /// Delete the copied asset file on Android Install-Time asset and iOS asset.
+  /// Delete the copied asset file or directory on Android Install-Time asset and iOS asset.
   ///
-  /// Returns true if the target file or folder was successfully deleted.
-  /// Also returns true if the target file or folder does not yet exist.
-  ///
-  /// The delete function can delete previous asset packs that have not been set in [init].
-  /// The argument is changed from String to OnlineAssetPackSettings to convey this.
-  ///
-  /// If the file is still in the temporary folder when [getFile] function is called and the file size is the same as the asset, file is reused.
-  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
-  /// If you want to avoid this case, you call delete function when your app update.
-  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
-  Future<bool?> deleteCopiedAssetFile({
-    required OnlineAssetPackSettings targetAssetPack,
-    required String relativePath,
-  }) async {
-    try {
-      switch (targetAssetPack) {
-        case AndroidPackSettings():
-          if (targetAssetPack.deliveryMode ==
-              AndroidAssetPackDeliveryMode.installTime) {
-            return await _androidApi.deleteCopiedAssetFileOnInstallTimeAsset(
-              assetPackName: targetAssetPack.packName,
-              relativeAssetPath: relativePath,
-            );
-          }
-          break;
-        case IOSPackSettings():
-          return await _iosApi.deleteCopiedAssetFile(
-            // The default asset name in iOS is no extension
-            assetName: withoutExtension(relativePath),
-            ext: extension(relativePath),
-          );
-      }
-    } catch (e) {
-      log(e.toString());
-      return null;
-    }
-    return null;
-  }
-
-  /// Delete the copied asset folder on Android Install-Time asset and iOS asset.
-  ///
-  /// Returns true if the target file or folder was successfully deleted.
-  /// Also returns true if the target file or folder does not yet exist.
-  ///
-  /// The delete function can delete previous asset packs that have not been set in [init].
-  /// The argument is changed from String to OnlineAssetPackSettings to convey this.
-  ///
-  /// If the file is still in the temporary folder when [getFile] function is called and the file size is the same as the asset, file is reused.
-  /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
-  /// If you want to avoid this case, you call delete function when your app update.
-  /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
-  ///
-  /// You can call this function to delete the copied asset folder you no longer use, but don't worry too much about temporary folder, as the system will automatically delete temporary folder when they run low on space.
-  Future<bool?> deleteCopiedAssetFolder({
-    required OnlineAssetPackSettings targetAssetPack,
-  }) async {
-    try {
-      switch (targetAssetPack) {
-        case AndroidPackSettings():
-          if (targetAssetPack.deliveryMode ==
-              AndroidAssetPackDeliveryMode.installTime) {
-            return await _androidApi.deleteCopiedAssetFolderOnInstallTimeAsset(
-              assetPackName: targetAssetPack.packName,
-            );
-          }
-          break;
-        case IOSPackSettings():
-          return await _iosApi.deleteCopiedAssetFolder(
-            packName: targetAssetPack.packName,
-          );
-      }
-    } catch (e) {
-      log(e.toString());
-      return null;
-    }
-    return null;
-  }
-
-  /// Delete the copied asset folder on Android Install-Time asset and iOS asset.
+  /// You can also set a relative path to a folder.
+  /// Passing an empty string will delete the copied all assets parent folder.
   ///
   /// Returns true if the target file or folder was successfully deleted.
   /// Also returns true if the target file or folder does not yet exist.
@@ -600,21 +522,19 @@ class OnlineAssets {
   /// Therefore, if an asset is replaced by app update, and the file size is exactly the same but the contents are different, there is a problem that the previous file will be used.
   /// If you want to avoid this case, you call delete function when your app update.
   /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
-  ///
-  /// You can call this function to delete the copied asset folder you no longer use, but don't worry too much about temporary folder, as the system will automatically delete temporary folder when they run low on space.
-  Future<bool?> deleteAllCopiedAssetFolders() async {
+  Future<bool?> deleteCopiedAssetFile({required String relativePath}) async {
     try {
       if (Platform.isAndroid) {
-        return await _androidApi
-            .deleteAllCopiedAssetFoldersOnInstallTimeAsset();
-      } else if (Platform.isIOS) {
-        return await _iosApi.deleteAllCopiedAssetFolders();
+        return await _androidApi.deleteCopiedAssetOnInstallTimeAsset(
+          relativePath: relativePath,
+        );
+      } else {
+        return await _iosApi.deleteCopiedAsset(relativePath: relativePath);
       }
     } catch (e) {
       log(e.toString());
       return null;
     }
-    return null;
   }
 
   /// Stream information on target assets

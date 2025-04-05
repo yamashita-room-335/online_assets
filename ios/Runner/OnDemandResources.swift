@@ -418,36 +418,34 @@ class OnDemandResourcesApiImplementation: NSObject, OnDemandResourcesHostApi {
         completion(.success(nil))
     }
 
-    func deleteCopiedAssetFile(
-        assetName: String, ext: String, completion: @escaping (Result<Bool, Error>) -> Void
+    func deleteCopiedAsset(
+        relativePath: String, completion: @escaping (Result<Bool, Error>) -> Void
     ) {
-        let methodInfo =
-            "[deleteCopiedAssetFile(assetName: \(assetName), ext: \(ext))]"
+        let methodInfo = "[deleteCopiedAsset(relativePath: \(relativePath))]"
         log("\(methodInfo) start")
 
-        let relativePath = "\(assetName)\(ext)"
         // For cache deletion, do not check whether the output is output as a png or not, both are deleted.
-        let relativePngPath = ext.isImageExtension() ? "\(assetName).png" : nil
+        var relativePngPath: String? = nil
+        if relativePath.isImageExtension() {
+            var relativePathComponents = relativePath.components(separatedBy: ".")
+            relativePathComponents = relativePathComponents.dropLast()
+            relativePathComponents.append("png")
+            relativePngPath = relativePathComponents.joined(separator: ".")
+        }
 
         let copyFileURL: URL
         let copyPngFileURL: URL?
         if #available(iOS 16.0, *) {
-            copyFileURL = cacheDirectoryURL.appending(
-                path: relativePath,
-                directoryHint: URL.DirectoryHint.notDirectory)
+            copyFileURL = cacheDirectoryURL.appending(path: relativePath)
             if let relativePngPath = relativePngPath {
-                copyPngFileURL = cacheDirectoryURL.appending(
-                    path: relativePngPath,
-                    directoryHint: URL.DirectoryHint.notDirectory)
+                copyPngFileURL = cacheDirectoryURL.appending(path: relativePngPath)
             } else {
                 copyPngFileURL = nil
             }
         } else {
-            copyFileURL = cacheDirectoryURL.appendingPathComponent(
-                relativePath, isDirectory: false)
+            copyFileURL = cacheDirectoryURL.appendingPathComponent(relativePath)
             if let relativePngPath = relativePngPath {
-                copyPngFileURL = cacheDirectoryURL.appendingPathComponent(
-                    relativePngPath, isDirectory: false)
+                copyPngFileURL = cacheDirectoryURL.appendingPathComponent(relativePngPath)
             } else {
                 copyPngFileURL = nil
             }
@@ -570,14 +568,14 @@ extension String {
     func isImageExtension() -> Bool {
         // iOS support image format
         return switch self.lowercased() {
-        case ".tiff", ".tif": true
-        case ".jpg", ".jpeg": true
-        case ".gif": true
-        case ".png": true
-        case ".bmp", ".bmpf": true
-        case ".ico": true
-        case ".cur": true
-        case ".xbm": true
+        case let str where str.hasSuffix(".tiff"), let str where str.hasSuffix(".tif"): true
+        case let str where str.hasSuffix(".jpg"), let str where str.hasSuffix(".jpeg"): true
+        case let str where str.hasSuffix(".gif"): true
+        case let str where str.hasSuffix(".png"): true
+        case let str where str.hasSuffix(".bmp"), let str where str.hasSuffix(".bmpf"): true
+        case let str where str.hasSuffix(".ico"): true
+        case let str where str.hasSuffix(".cur"): true
+        case let str where str.hasSuffix(".xbm"): true
         default: false
         }
     }

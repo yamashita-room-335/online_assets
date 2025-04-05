@@ -50,7 +50,7 @@ abstract class OnDemandResourcesHostApi {
     required String ext,
   });
 
-  /// Delete the copied asset file.
+  /// Delete the copied asset file or directory.
   ///
   /// Returns true if the target file or folder was successfully deleted.
   /// Also returns true if the target file or folder does not yet exist.
@@ -60,16 +60,7 @@ abstract class OnDemandResourcesHostApi {
   /// If you want to avoid this case, you call delete function when your app update.
   /// However, the possibility that the file contents are different and the file size is exactly the same is quite small, so you do not need to worry too much about it.
   @async
-  bool deleteCopiedAssetFile({
-    required String assetName,
-    required String ext,
-  });
-
-  @async
-  bool deleteCopiedAssetFolder({required String packName});
-
-  @async
-  bool deleteAllCopiedAssetFolders();
+  bool deleteCopiedAsset({required String relativePath});
 }
 
 /// Holder

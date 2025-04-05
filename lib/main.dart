@@ -300,6 +300,13 @@ class MyHomePage extends StatelessWidget {
                   ),
                 ],
               ),
+              Divider(),
+              ElevatedButton(
+                child: Text('Delete copied asset'),
+                onPressed: () {
+                  OnlineAssets.instance.deleteCopiedAssetFile(relativePath: "");
+                },
+              ),
             ],
           ),
         ),
