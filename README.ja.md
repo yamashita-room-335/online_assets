@@ -20,16 +20,24 @@ Play Asset Delivery（Android）とOn-Demand Resources（iOS）の機能を統�
     void main() {
       // ...
       OnlineAssets.instance.init(
-        assetPackSettingsList: [
-          OnlineAssetPackSettings(
-            packName: 'install_time_sample_pack',
-            androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.installTime,
-            iosOnDemandResourceType: IOSOnDemandResourceType.assetsWithoutTag,
+        androidPackSettingsList: [
+          // ...
+          AndroidPackSettings(
+            packName: 'on_demand_sample_pack',
+            deliveryMode: AndroidAssetPackDeliveryMode.onDemand,
+          ),
+          // ...
+        ],
+        iosPackSettingsList: [
+          // ...
+          IOSPackSettings(
+            packName: 'on_demand_sample_pack',
+            odrType: IOSOnDemandResourceType.onDemand,
           ),
           // ...
         ],
       );
-    
+      // ...
       runApp(const MyApp());
     }
     ```
@@ -39,8 +47,8 @@ Play Asset Delivery（Android）とOn-Demand Resources（iOS）の機能を統�
     ```dart
     StreamBuilder<(File?, OnlinePack)>(
       stream: OnlineAssets.instance.streamFile(
-        packName:'install_time_sample_pack',
-        relativePath: 'install_time_sample_pack/dog/image.png',
+        packName:'on_demand_sample_pack',
+        relativePath: 'on_demand_sample_pack/dog/image.png',
       ),
       // ...
     )
@@ -57,11 +65,13 @@ Play Asset Delivery（Android）とOn-Demand Resources（iOS）の機能を統�
     ])
     ```
 
-- パックのダウンロード状況の確認もできます。
+- `OnlineAssets.instance.stream()`を呼び出せば、パックのダウンロード状況の確認もできます。
 
     ```dart
     StreamBuilder(
-      stream: OnlineAssets.instance.onlinePackSubjectMap['on_demand_sample_pack']!,
+      stream: OnlineAssets.instance.stream(
+        packName: 'on_demand_sample_pack',
+      ),
       builder: (
         BuildContext context,
         AsyncSnapshot<OnlinePack> snapshot,
@@ -69,6 +79,7 @@ Play Asset Delivery（Android）とOn-Demand Resources（iOS）の機能を統�
         // ...
         final onlinePack = snapshot.data!;
         // ...
+      }
     ```
 
 - 「Androidのinstall-timeアセットパックを使用している」、「iOSのInitial install tagsのアセットを使用している」、「前の画面でダウンロード済みなことを確認している」など、ファイルが高い確率で存在していると分かっている場合は`OnlineAssets.instance.getFile()`で呼び出すこともできます。

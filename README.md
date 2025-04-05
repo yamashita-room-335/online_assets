@@ -20,16 +20,24 @@ The license is MIT, so feel free to customize or library it individually.
     void main() {
       // ...
       OnlineAssets.instance.init(
-        assetPackSettingsList: [
-          OnlineAssetPackSettings(
-            packName: 'install_time_sample_pack',
-            androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.installTime,
-            iosOnDemandResourceType: IOSOnDemandResourceType.assetsWithoutTag,
+        androidPackSettingsList: [
+          // ...
+          AndroidPackSettings(
+            packName: 'on_demand_sample_pack',
+            deliveryMode: AndroidAssetPackDeliveryMode.onDemand,
+          ),
+          // ...
+        ],
+        iosPackSettingsList: [
+          // ...
+          IOSPackSettings(
+            packName: 'on_demand_sample_pack',
+            odrType: IOSOnDemandResourceType.onDemand,
           ),
           // ...
         ],
       );
-    
+      // ...
       runApp(const MyApp());
     }
     ```
@@ -39,8 +47,8 @@ The license is MIT, so feel free to customize or library it individually.
     ```dart
     StreamBuilder<(File?, OnlinePack)>(
       stream: OnlineAssets.instance.streamFile(
-        packName:'install_time_sample_pack',
-        relativePath: 'install_time_sample_pack/dog/image.png',
+        packName:'on_demand_sample_pack',
+        relativePath: 'on_demand_sample_pack/dog/image.png',
       ),
       // ...
     )
@@ -57,11 +65,13 @@ There are many other features as well.
     ])
     ```
 
-- You can also check the download status of the packs.
+- Call `OnlineAssets.instance.stream()` to check the download status of the packs.
 
     ```dart
     StreamBuilder(
-      stream: OnlineAssets.instance.onlinePackSubjectMap['on_demand_sample_pack']!,
+      stream: OnlineAssets.instance.stream(
+        packName: 'on_demand_sample_pack',
+      ),
       builder: (
         BuildContext context,
         AsyncSnapshot<OnlinePack> snapshot,
@@ -69,6 +79,7 @@ There are many other features as well.
         // ...
         final onlinePack = snapshot.data!;
         // ...
+      }
     ```
 
 - If you are sure that the files exist, such as "using Android's install-time asset pack", "using iOS's Initial install tags assets", or "confirmed that they have been downloaded on the previous screen", you can call `OnlineAssets.instance.getFile()`.

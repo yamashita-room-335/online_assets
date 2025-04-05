@@ -800,7 +800,8 @@ as bool,
 /// @nodoc
 mixin _$OnlineAssetPackSettings implements DiagnosticableTreeMixin {
 
- String get packName; AndroidAssetPackDeliveryMode? get androidAssetPackDeliveryMode; IOSOnDemandResourceType? get iosOnDemandResourceType;
+/// Asset Pack Name
+ String get packName;
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -812,21 +813,21 @@ $OnlineAssetPackSettingsCopyWith<OnlineAssetPackSettings> get copyWith => _$Onli
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'OnlineAssetPackSettings'))
-    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('androidAssetPackDeliveryMode', androidAssetPackDeliveryMode))..add(DiagnosticsProperty('iosOnDemandResourceType', iosOnDemandResourceType));
+    ..add(DiagnosticsProperty('packName', packName));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.androidAssetPackDeliveryMode, androidAssetPackDeliveryMode) || other.androidAssetPackDeliveryMode == androidAssetPackDeliveryMode)&&(identical(other.iosOnDemandResourceType, iosOnDemandResourceType) || other.iosOnDemandResourceType == iosOnDemandResourceType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,packName,androidAssetPackDeliveryMode,iosOnDemandResourceType);
+int get hashCode => Object.hash(runtimeType,packName);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'OnlineAssetPackSettings(packName: $packName, androidAssetPackDeliveryMode: $androidAssetPackDeliveryMode, iosOnDemandResourceType: $iosOnDemandResourceType)';
+  return 'OnlineAssetPackSettings(packName: $packName)';
 }
 
 
@@ -837,7 +838,7 @@ abstract mixin class $OnlineAssetPackSettingsCopyWith<$Res>  {
   factory $OnlineAssetPackSettingsCopyWith(OnlineAssetPackSettings value, $Res Function(OnlineAssetPackSettings) _then) = _$OnlineAssetPackSettingsCopyWithImpl;
 @useResult
 $Res call({
- String packName, AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode, IOSOnDemandResourceType? iosOnDemandResourceType
+ String packName
 });
 
 
@@ -854,12 +855,10 @@ class _$OnlineAssetPackSettingsCopyWithImpl<$Res>
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? packName = null,Object? androidAssetPackDeliveryMode = freezed,Object? iosOnDemandResourceType = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? packName = null,}) {
   return _then(_self.copyWith(
 packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
-as String,androidAssetPackDeliveryMode: freezed == androidAssetPackDeliveryMode ? _self.androidAssetPackDeliveryMode : androidAssetPackDeliveryMode // ignore: cast_nullable_to_non_nullable
-as AndroidAssetPackDeliveryMode?,iosOnDemandResourceType: freezed == iosOnDemandResourceType ? _self.iosOnDemandResourceType : iosOnDemandResourceType // ignore: cast_nullable_to_non_nullable
-as IOSOnDemandResourceType?,
+as String,
   ));
 }
 
@@ -869,51 +868,51 @@ as IOSOnDemandResourceType?,
 /// @nodoc
 
 
-class _OnlineAssetPackSettings with DiagnosticableTreeMixin implements OnlineAssetPackSettings {
-  const _OnlineAssetPackSettings({required this.packName, required this.androidAssetPackDeliveryMode, required this.iosOnDemandResourceType});
+class AndroidPackSettings with DiagnosticableTreeMixin implements OnlineAssetPackSettings {
+  const AndroidPackSettings({required this.packName, required this.deliveryMode});
   
 
+/// Asset Pack Name
 @override final  String packName;
-@override final  AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode;
-@override final  IOSOnDemandResourceType? iosOnDemandResourceType;
+ final  AndroidAssetPackDeliveryMode deliveryMode;
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$OnlineAssetPackSettingsCopyWith<_OnlineAssetPackSettings> get copyWith => __$OnlineAssetPackSettingsCopyWithImpl<_OnlineAssetPackSettings>(this, _$identity);
+$AndroidPackSettingsCopyWith<AndroidPackSettings> get copyWith => _$AndroidPackSettingsCopyWithImpl<AndroidPackSettings>(this, _$identity);
 
 
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
-    ..add(DiagnosticsProperty('type', 'OnlineAssetPackSettings'))
-    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('androidAssetPackDeliveryMode', androidAssetPackDeliveryMode))..add(DiagnosticsProperty('iosOnDemandResourceType', iosOnDemandResourceType));
+    ..add(DiagnosticsProperty('type', 'OnlineAssetPackSettings.android'))
+    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('deliveryMode', deliveryMode));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnlineAssetPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.androidAssetPackDeliveryMode, androidAssetPackDeliveryMode) || other.androidAssetPackDeliveryMode == androidAssetPackDeliveryMode)&&(identical(other.iosOnDemandResourceType, iosOnDemandResourceType) || other.iosOnDemandResourceType == iosOnDemandResourceType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AndroidPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.deliveryMode, deliveryMode) || other.deliveryMode == deliveryMode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,packName,androidAssetPackDeliveryMode,iosOnDemandResourceType);
+int get hashCode => Object.hash(runtimeType,packName,deliveryMode);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'OnlineAssetPackSettings(packName: $packName, androidAssetPackDeliveryMode: $androidAssetPackDeliveryMode, iosOnDemandResourceType: $iosOnDemandResourceType)';
+  return 'OnlineAssetPackSettings.android(packName: $packName, deliveryMode: $deliveryMode)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$OnlineAssetPackSettingsCopyWith<$Res> implements $OnlineAssetPackSettingsCopyWith<$Res> {
-  factory _$OnlineAssetPackSettingsCopyWith(_OnlineAssetPackSettings value, $Res Function(_OnlineAssetPackSettings) _then) = __$OnlineAssetPackSettingsCopyWithImpl;
+abstract mixin class $AndroidPackSettingsCopyWith<$Res> implements $OnlineAssetPackSettingsCopyWith<$Res> {
+  factory $AndroidPackSettingsCopyWith(AndroidPackSettings value, $Res Function(AndroidPackSettings) _then) = _$AndroidPackSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- String packName, AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode, IOSOnDemandResourceType? iosOnDemandResourceType
+ String packName, AndroidAssetPackDeliveryMode deliveryMode
 });
 
 
@@ -921,21 +920,97 @@ $Res call({
 
 }
 /// @nodoc
-class __$OnlineAssetPackSettingsCopyWithImpl<$Res>
-    implements _$OnlineAssetPackSettingsCopyWith<$Res> {
-  __$OnlineAssetPackSettingsCopyWithImpl(this._self, this._then);
+class _$AndroidPackSettingsCopyWithImpl<$Res>
+    implements $AndroidPackSettingsCopyWith<$Res> {
+  _$AndroidPackSettingsCopyWithImpl(this._self, this._then);
 
-  final _OnlineAssetPackSettings _self;
-  final $Res Function(_OnlineAssetPackSettings) _then;
+  final AndroidPackSettings _self;
+  final $Res Function(AndroidPackSettings) _then;
 
 /// Create a copy of OnlineAssetPackSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? packName = null,Object? androidAssetPackDeliveryMode = freezed,Object? iosOnDemandResourceType = freezed,}) {
-  return _then(_OnlineAssetPackSettings(
+@override @pragma('vm:prefer-inline') $Res call({Object? packName = null,Object? deliveryMode = null,}) {
+  return _then(AndroidPackSettings(
 packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
-as String,androidAssetPackDeliveryMode: freezed == androidAssetPackDeliveryMode ? _self.androidAssetPackDeliveryMode : androidAssetPackDeliveryMode // ignore: cast_nullable_to_non_nullable
-as AndroidAssetPackDeliveryMode?,iosOnDemandResourceType: freezed == iosOnDemandResourceType ? _self.iosOnDemandResourceType : iosOnDemandResourceType // ignore: cast_nullable_to_non_nullable
-as IOSOnDemandResourceType?,
+as String,deliveryMode: null == deliveryMode ? _self.deliveryMode : deliveryMode // ignore: cast_nullable_to_non_nullable
+as AndroidAssetPackDeliveryMode,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class IOSPackSettings with DiagnosticableTreeMixin implements OnlineAssetPackSettings {
+  const IOSPackSettings({required this.packName, required this.odrType});
+  
+
+/// On-Demand Resource Tag
+///
+/// If you use IOSOnDemandResourceType.assetsWithoutTag, set empty string for normal iOS assets (not On-Demand Resources)
+@override final  String packName;
+ final  IOSOnDemandResourceType odrType;
+
+/// Create a copy of OnlineAssetPackSettings
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$IOSPackSettingsCopyWith<IOSPackSettings> get copyWith => _$IOSPackSettingsCopyWithImpl<IOSPackSettings>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'OnlineAssetPackSettings'))
+    ..add(DiagnosticsProperty('packName', packName))..add(DiagnosticsProperty('odrType', odrType));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IOSPackSettings&&(identical(other.packName, packName) || other.packName == packName)&&(identical(other.odrType, odrType) || other.odrType == odrType));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,packName,odrType);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'OnlineAssetPackSettings(packName: $packName, odrType: $odrType)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $IOSPackSettingsCopyWith<$Res> implements $OnlineAssetPackSettingsCopyWith<$Res> {
+  factory $IOSPackSettingsCopyWith(IOSPackSettings value, $Res Function(IOSPackSettings) _then) = _$IOSPackSettingsCopyWithImpl;
+@override @useResult
+$Res call({
+ String packName, IOSOnDemandResourceType odrType
+});
+
+
+
+
+}
+/// @nodoc
+class _$IOSPackSettingsCopyWithImpl<$Res>
+    implements $IOSPackSettingsCopyWith<$Res> {
+  _$IOSPackSettingsCopyWithImpl(this._self, this._then);
+
+  final IOSPackSettings _self;
+  final $Res Function(IOSPackSettings) _then;
+
+/// Create a copy of OnlineAssetPackSettings
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? packName = null,Object? odrType = null,}) {
+  return _then(IOSPackSettings(
+packName: null == packName ? _self.packName : packName // ignore: cast_nullable_to_non_nullable
+as String,odrType: null == odrType ? _self.odrType : odrType // ignore: cast_nullable_to_non_nullable
+as IOSOnDemandResourceType,
   ));
 }
 

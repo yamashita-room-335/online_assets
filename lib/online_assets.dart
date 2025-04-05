@@ -183,12 +183,20 @@ abstract class IOSProgress with _$IOSProgress {
 ///
 /// If the asset exists on only one platform, the one that does not exist should be set to null.
 @freezed
-abstract class OnlineAssetPackSettings with _$OnlineAssetPackSettings {
-  const factory OnlineAssetPackSettings({
+sealed class OnlineAssetPackSettings with _$OnlineAssetPackSettings {
+  const factory OnlineAssetPackSettings.android({
+    /// Asset Pack Name
     required String packName,
-    required AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode,
-    required IOSOnDemandResourceType? iosOnDemandResourceType,
-  }) = _OnlineAssetPackSettings;
+    required AndroidAssetPackDeliveryMode deliveryMode,
+  }) = AndroidPackSettings;
+
+  const factory OnlineAssetPackSettings({
+    /// On-Demand Resource Tag
+    ///
+    /// If you use IOSOnDemandResourceType.assetsWithoutTag, set empty string for normal iOS assets (not On-Demand Resources)
+    required String packName,
+    required IOSOnDemandResourceType odrType,
+  }) = IOSPackSettings;
 }
 
 /// https://developer.android.com/guide/playcore/asset-delivery#delivery-modes
@@ -302,14 +310,16 @@ class OnlineAssets {
   /// Holds the Subject with the AssetName registered by registerStream() as the key.
   /// BehaviorSubject is used to enable the last state to be retrieved.
   /// Since the install-time asset pack cannot obtain the pack status in Android.
-  final Map<String, BehaviorSubject<OnlinePack>> onlinePackSubjectMap = {};
+  final Map<String, BehaviorSubject<OnlinePack>> _onlinePackSubjectMap = {};
 
   /// Initialize
   ///
-  /// [assetPackSettingsList] are the asset pack settings.
+  /// [androidPackSettingsList] are the asset pack settings in Android.
+  /// [iosPackSettingsList] are the asset pack settings in iOS.
   /// The settings are used to determine whether the pack is install-time or download on Android.
   Future<void> init({
-    required List<OnlineAssetPackSettings> assetPackSettingsList,
+    required List<AndroidPackSettings> androidPackSettingsList,
+    required List<IOSPackSettings> iosPackSettingsList,
   }) async {
     if (_isInitialized) {
       throw Exception("Already initialized.");
@@ -319,35 +329,32 @@ class OnlineAssets {
     }
 
     try {
-      for (final settings in assetPackSettingsList) {
-        if (Platform.isAndroid &&
-            settings.androidAssetPackDeliveryMode == null) {
-          continue;
-        } else if (Platform.isIOS && settings.iosOnDemandResourceType == null) {
-          continue;
-        }
-
-        packSettingsMap[settings.packName] = settings;
-
-        // Generate only the Subject of the online assets.
-        if (Platform.isAndroid) {
-          if (settings.androidAssetPackDeliveryMode! !=
+      if (Platform.isAndroid) {
+        for (final androidSettings in androidPackSettingsList) {
+          // Generate only the Subject of the online assets.
+          if (androidSettings.deliveryMode !=
               AndroidAssetPackDeliveryMode.installTime) {
-            onlinePackSubjectMap[settings.packName] =
+            _onlinePackSubjectMap[androidSettings.packName] =
                 BehaviorSubject<OnlinePack>();
           }
-        } else {
-          if (settings.iosOnDemandResourceType! !=
-              IOSOnDemandResourceType.assetsWithoutTag) {
-            onlinePackSubjectMap[settings.packName] =
+
+          packSettingsMap[androidSettings.packName] = androidSettings;
+        }
+      } else {
+        for (final iosSettings in iosPackSettingsList) {
+          // Generate only the Subject of the online assets.
+          if (iosSettings.odrType != IOSOnDemandResourceType.assetsWithoutTag) {
+            _onlinePackSubjectMap[iosSettings.packName] =
                 BehaviorSubject<OnlinePack>();
           }
+
+          packSettingsMap[iosSettings.packName] = iosSettings;
         }
       }
 
       _onlinePackSubject.listen((pack) {
-        if (onlinePackSubjectMap.containsKey(pack.name)) {
-          onlinePackSubjectMap[pack.name]!.add(pack);
+        if (_onlinePackSubjectMap.containsKey(pack.name)) {
+          _onlinePackSubjectMap[pack.name]!.add(pack);
         } else {
           // An unexpected asset pack name is being downloaded.
           log('Unknown pack name: ${pack.name}');
@@ -358,13 +365,13 @@ class OnlineAssets {
       if (Platform.isAndroid) {
         packHolder = OnlinePackHolder.fromAndroid(
           await _androidApi.requestPackStates(
-            packNames: onlinePackSubjectMap.keys.toList(),
+            packNames: _onlinePackSubjectMap.keys.toList(),
           ),
         );
       } else {
         packHolder = OnlinePackHolder.fromIOS(
           await _iosApi.requestResourcesProgress(
-            tags: onlinePackSubjectMap.keys.toList(),
+            tags: _onlinePackSubjectMap.keys.toList(),
           ),
         );
       }
@@ -372,8 +379,8 @@ class OnlineAssets {
       log('OnlinePackHolder: $packHolder');
 
       for (final pack in packHolder.packMap.values) {
-        if (onlinePackSubjectMap.containsKey(pack.name)) {
-          final packSubject = onlinePackSubjectMap[pack.name]!;
+        if (_onlinePackSubjectMap.containsKey(pack.name)) {
+          final packSubject = _onlinePackSubjectMap[pack.name]!;
           // Since it seems to be possible to retrieve all the values with listen(),
           // we only add when there is no value, in case we miss a value.
           if (!packSubject.hasValue) {
@@ -394,7 +401,7 @@ class OnlineAssets {
   /// Start fetch assets
   Future<void> fetch(List<String> packNames) async {
     for (final packName in packNames) {
-      if (!onlinePackSubjectMap.containsKey(packName)) {
+      if (!_onlinePackSubjectMap.containsKey(packName)) {
         if (packSettingsMap.containsKey(packName)) {
           log(
             '[$packName] pack set ${Platform.isAndroid ? 'androidAssetPackDeliveryMode: .installTime' : 'iosOnDemandResourceType: .assetsWithoutTag'}. There is no need to call fetch because it already exists in device.',
@@ -421,8 +428,8 @@ class OnlineAssets {
       }
 
       for (final pack in packHolder.packMap.values) {
-        if (onlinePackSubjectMap.containsKey(pack.name)) {
-          final packSubject = onlinePackSubjectMap[pack.name]!;
+        if (_onlinePackSubjectMap.containsKey(pack.name)) {
+          final packSubject = _onlinePackSubjectMap[pack.name]!;
           // Since it seems to be possible to retrieve all the values with listen(),
           // we only add when there is no value, in case we miss a value.
           if (!packSubject.hasValue) {
@@ -458,43 +465,36 @@ class OnlineAssets {
       throw Exception(
         "Please register [$packName] settings in OnlineAssets.instance.init().",
       );
-    } else if (Platform.isAndroid &&
-        packSettings.androidAssetPackDeliveryMode == null) {
-      throw Exception(
-        "It's trying to call an asset registered as non-existent in OnlineAssets.instance.init(). Please check if the pack name　($packName) is correct.",
-      );
-    } else if (Platform.isIOS && packSettings.iosOnDemandResourceType == null) {
-      throw Exception(
-        "It's trying to call an asset registered as non-existent in OnlineAssets.instance.init(). Please check if the pack name　($packName) is correct.",
-      );
     }
 
     try {
       final String? path;
-      if (Platform.isAndroid) {
-        if (packSettings.androidAssetPackDeliveryMode! ==
-            AndroidAssetPackDeliveryMode.installTime) {
-          path = await _androidApi.getCopiedAssetFilePathOnInstallTimeAsset(
-            assetPackName: packName,
-            relativeAssetPath: relativePath,
+      switch (packSettings) {
+        case AndroidPackSettings():
+          if (packSettings.deliveryMode ==
+              AndroidAssetPackDeliveryMode.installTime) {
+            path = await _androidApi.getCopiedAssetFilePathOnInstallTimeAsset(
+              assetPackName: packName,
+              relativeAssetPath: relativePath,
+            );
+          } else {
+            path = await _androidApi.getAssetFilePathOnDownloadAsset(
+              assetPackName: packName,
+              relativeAssetPath: relativePath,
+            );
+          }
+          break;
+        case IOSPackSettings():
+          path = await _iosApi.getCopiedAssetFilePath(
+            tag:
+                packSettings.odrType == IOSOnDemandResourceType.assetsWithoutTag
+                    ? null
+                    : packName,
+            // The default asset name in iOS is no extension
+            assetName: withoutExtension(relativePath),
+            ext: extension(relativePath),
           );
-        } else {
-          path = await _androidApi.getAssetFilePathOnDownloadAsset(
-            assetPackName: packName,
-            relativeAssetPath: relativePath,
-          );
-        }
-      } else {
-        path = await _iosApi.getCopiedAssetFilePath(
-          tag:
-              packSettings.iosOnDemandResourceType! ==
-                      IOSOnDemandResourceType.assetsWithoutTag
-                  ? null
-                  : packName,
-          // The default asset name in iOS is no extension
-          assetName: withoutExtension(relativePath),
-          ext: extension(relativePath),
-        );
+          break;
       }
 
       if (path == null) {
@@ -528,19 +528,22 @@ class OnlineAssets {
     required String relativePath,
   }) async {
     try {
-      if (Platform.isAndroid &&
-          targetAssetPack.androidAssetPackDeliveryMode ==
+      switch (targetAssetPack) {
+        case AndroidPackSettings():
+          if (targetAssetPack.deliveryMode ==
               AndroidAssetPackDeliveryMode.installTime) {
-        return await _androidApi.deleteCopiedAssetFileOnInstallTimeAsset(
-          assetPackName: targetAssetPack.packName,
-          relativeAssetPath: relativePath,
-        );
-      } else if (Platform.isIOS) {
-        return await _iosApi.deleteCopiedAssetFile(
-          // The default asset name in iOS is no extension
-          assetName: withoutExtension(relativePath),
-          ext: extension(relativePath),
-        );
+            return await _androidApi.deleteCopiedAssetFileOnInstallTimeAsset(
+              assetPackName: targetAssetPack.packName,
+              relativeAssetPath: relativePath,
+            );
+          }
+          break;
+        case IOSPackSettings():
+          return await _iosApi.deleteCopiedAssetFile(
+            // The default asset name in iOS is no extension
+            assetName: withoutExtension(relativePath),
+            ext: extension(relativePath),
+          );
       }
     } catch (e) {
       log(e.toString());
@@ -567,16 +570,19 @@ class OnlineAssets {
     required OnlineAssetPackSettings targetAssetPack,
   }) async {
     try {
-      if (Platform.isAndroid &&
-          targetAssetPack.androidAssetPackDeliveryMode ==
+      switch (targetAssetPack) {
+        case AndroidPackSettings():
+          if (targetAssetPack.deliveryMode ==
               AndroidAssetPackDeliveryMode.installTime) {
-        return await _androidApi.deleteCopiedAssetFolderOnInstallTimeAsset(
-          assetPackName: targetAssetPack.packName,
-        );
-      } else if (Platform.isIOS) {
-        return await _iosApi.deleteCopiedAssetFolder(
-          packName: targetAssetPack.packName,
-        );
+            return await _androidApi.deleteCopiedAssetFolderOnInstallTimeAsset(
+              assetPackName: targetAssetPack.packName,
+            );
+          }
+          break;
+        case IOSPackSettings():
+          return await _iosApi.deleteCopiedAssetFolder(
+            packName: targetAssetPack.packName,
+          );
       }
     } catch (e) {
       log(e.toString());
@@ -611,6 +617,91 @@ class OnlineAssets {
     return null;
   }
 
+  /// Stream information on target assets
+  ///
+  /// If [fetchOnNotDownloading] is [true], [fetch] is called when the status is "Not Installed", "Canceled", "Failed".
+  /// If you want to use a different logic to manage whether fetch is performed or not, set it to [false].
+  Stream<OnlinePack> stream({
+    required String packName,
+    bool fetchOnNotDownloading = true,
+  }) async* {
+    final packSettings = packSettingsMap[packName];
+    if (packSettings == null) {
+      throw Exception(
+        "Please register [$packName] settings in OnlineAssets.instance.init().",
+      );
+    }
+
+    try {
+      switch (packSettings) {
+        case AndroidPackSettings():
+          if (packSettings.deliveryMode ==
+              AndroidAssetPackDeliveryMode.installTime) {
+            // If the asset is an install-time asset, it is already exist.
+            yield AndroidPack(
+              name: packName,
+              status: OnlineAssetStatus.completed,
+              hasError: false,
+              progress: 1,
+              androidBytesDownloaded: 0,
+              androidErrorCode: AndroidAssetPackErrorCode.noError,
+              androidStatus: AndroidAssetPackStatus.completed,
+              androidTotalBytesToDownload: 0,
+              androidTransferProgressPercentage: 100,
+            );
+            return;
+          }
+          break;
+        case IOSPackSettings():
+          if (packSettings.odrType ==
+              IOSOnDemandResourceType.assetsWithoutTag) {
+            // If the asset is an standard asset, it is already exist.
+            yield IOSPack(
+              name: packName,
+              status: OnlineAssetStatus.completed,
+              hasError: false,
+              progress: 1,
+              iOSError: null,
+              iOSProgress: IOSProgress(
+                isCancelled: false,
+                isPaused: false,
+                fractionCompleted: 1,
+                isFinished: true,
+              ),
+              iOSCondition: true,
+              iOSLoadingPriority: 0,
+            );
+            return;
+          }
+          break;
+      }
+
+      final packSubject = _onlinePackSubjectMap[packName];
+      if (packSubject == null) {
+        throw Exception("Please register [$packName] stream.");
+      }
+
+      if (fetchOnNotDownloading) {
+        switch (packSubject.valueOrNull?.status) {
+          case OnlineAssetStatus.notInstalled ||
+              OnlineAssetStatus.canceled ||
+              OnlineAssetStatus.failed:
+            fetch([packName]);
+            break;
+          default:
+            break;
+        }
+      }
+
+      // Return null until the download is complete, and return the file if the download is complete.
+      await for (final resource in packSubject) {
+        yield resource;
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
   /// Stream files and information on target assets
   ///
   /// Starts the download and returns a Stream including the file after the download is complete.
@@ -627,73 +718,67 @@ class OnlineAssets {
       throw Exception(
         "Please register [$packName] settings in OnlineAssets.instance.init().",
       );
-    } else if (Platform.isAndroid &&
-        packSettings.androidAssetPackDeliveryMode == null) {
-      throw Exception(
-        "It's trying to call an asset registered as non-existent in OnlineAssets.instance.init(). Please check if the pack name　($packName) is correct.",
-      );
-    } else if (Platform.isIOS && packSettings.iosOnDemandResourceType == null) {
-      throw Exception(
-        "It's trying to call an asset registered as non-existent in OnlineAssets.instance.init(). Please check if the pack name　($packName) is correct.",
-      );
     }
 
     try {
-      if (Platform.isAndroid) {
-        if (packSettings.androidAssetPackDeliveryMode! ==
-            AndroidAssetPackDeliveryMode.installTime) {
-          // If the asset is an install-time asset, it is already exist.
-          final file = await getFile(
-            packName: packName,
-            relativePath: relativePath,
-          );
-          yield (
-            file,
-            AndroidPack(
-              name: packName,
-              status: OnlineAssetStatus.completed,
-              hasError: false,
-              progress: 1,
-              androidBytesDownloaded: 0,
-              androidErrorCode: AndroidAssetPackErrorCode.noError,
-              androidStatus: AndroidAssetPackStatus.completed,
-              androidTotalBytesToDownload: 0,
-              androidTransferProgressPercentage: 100,
-            ),
-          );
-          return;
-        }
-      } else {
-        if (packSettings.iosOnDemandResourceType! ==
-            IOSOnDemandResourceType.assetsWithoutTag) {
-          // If the asset is an standard asset, it is already exist.
-          final file = await getFile(
-            packName: packName,
-            relativePath: relativePath,
-          );
-          yield (
-            file,
-            IOSPack(
-              name: packName,
-              status: OnlineAssetStatus.completed,
-              hasError: false,
-              progress: 1,
-              iOSError: null,
-              iOSProgress: IOSProgress(
-                isCancelled: false,
-                isPaused: false,
-                fractionCompleted: 1,
-                isFinished: true,
+      switch (packSettings) {
+        case AndroidPackSettings():
+          if (packSettings.deliveryMode ==
+              AndroidAssetPackDeliveryMode.installTime) {
+            // If the asset is an install-time asset, it is already exist.
+            final file = await getFile(
+              packName: packName,
+              relativePath: relativePath,
+            );
+            yield (
+              file,
+              AndroidPack(
+                name: packName,
+                status: OnlineAssetStatus.completed,
+                hasError: false,
+                progress: 1,
+                androidBytesDownloaded: 0,
+                androidErrorCode: AndroidAssetPackErrorCode.noError,
+                androidStatus: AndroidAssetPackStatus.completed,
+                androidTotalBytesToDownload: 0,
+                androidTransferProgressPercentage: 100,
               ),
-              iOSCondition: true,
-              iOSLoadingPriority: 0,
-            ),
-          );
-          return;
-        }
+            );
+            return;
+          }
+          break;
+        case IOSPackSettings():
+          if (packSettings.odrType ==
+              IOSOnDemandResourceType.assetsWithoutTag) {
+            // If the asset is an standard asset, it is already exist.
+            final file = await getFile(
+              packName: packName,
+              relativePath: relativePath,
+            );
+            yield (
+              file,
+              IOSPack(
+                name: packName,
+                status: OnlineAssetStatus.completed,
+                hasError: false,
+                progress: 1,
+                iOSError: null,
+                iOSProgress: IOSProgress(
+                  isCancelled: false,
+                  isPaused: false,
+                  fractionCompleted: 1,
+                  isFinished: true,
+                ),
+                iOSCondition: true,
+                iOSLoadingPriority: 0,
+              ),
+            );
+            return;
+          }
+          break;
       }
 
-      final packSubject = onlinePackSubjectMap[packName];
+      final packSubject = _onlinePackSubjectMap[packName];
       if (packSubject == null) {
         throw Exception("Please register [$packName] stream.");
       }

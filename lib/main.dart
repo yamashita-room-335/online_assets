@@ -9,51 +9,96 @@ import 'online_assets_widget.dart';
 // In the sample app, the enum is not created for the sake of clarity,
 // but if you create it in this way, you can avoid specifying the wrong packName.
 /*
-enum MyAssetPack {
+enum MyAndroidAssetPack {
   installTimeSamplePack(
     packName: 'install_time_sample_pack',
-    androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.installTime,
-    iosOnDemandResourceType: IOSOnDemandResourceType.assetsWithoutTag,
-  ),
-  initialInstallSamplePack(
-    packName: 'initial_install_sample_pack',
-    androidAssetPackDeliveryMode: null,
-    iosOnDemandResourceType: IOSOnDemandResourceType.initialInstall,
+    deliveryMode: AndroidAssetPackDeliveryMode.installTime,
   ),
   fastFollowSamplePack(
     packName: 'fast_follow_sample_pack',
-    androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.fastFollow,
-    iosOnDemandResourceType: IOSOnDemandResourceType.prefetch,
+    deliveryMode: AndroidAssetPackDeliveryMode.fastFollow,
   ),
   onDemandSamplePack(
     packName: 'on_demand_sample_pack',
-    androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.onDemand,
-    iosOnDemandResourceType: IOSOnDemandResourceType.onDemand,
+    deliveryMode: AndroidAssetPackDeliveryMode.onDemand,
   );
 
-  const MyAssetPack({
+  const MyAndroidAssetPack({
     required this.packName,
-    required this.androidAssetPackDeliveryMode,
-    required this.iosOnDemandResourceType,
+    required this.deliveryMode,
   });
+
   final String packName;
-  final AndroidAssetPackDeliveryMode? androidAssetPackDeliveryMode;
-  final IOSOnDemandResourceType? iosOnDemandResourceType;
+  final AndroidAssetPackDeliveryMode deliveryMode;
+}
+
+enum MyIOSAssetTag {
+  installTimeSamplePack(
+    tag: '',
+    odrType: IOSOnDemandResourceType.assetsWithoutTag,
+  ),
+  initialInstallSamplePack(
+    tag: 'initial_install_sample_pack',
+    odrType: IOSOnDemandResourceType.initialInstall,
+  ),
+  fastFollowSamplePack(
+    tag: 'fast_follow_sample_pack',
+    odrType: IOSOnDemandResourceType.prefetch,
+  ),
+  onDemandSamplePack(
+    tag: 'on_demand_sample_pack',
+    odrType: IOSOnDemandResourceType.onDemand,
+  );
+
+  const MyIOSAssetTag({required this.tag, required this.odrType});
+
+  final String tag;
+  final IOSOnDemandResourceType odrType;
+}
+
+// Create an integrated Enum for easy handling of different tags and asset pack names
+enum MyAssets {
+  installTimeSamplePack(
+    android: MyAndroidAssetPack.installTimeSamplePack,
+    ios: MyIOSAssetTag.installTimeSamplePack,
+  ),
+  initialInstallSamplePack(
+    android: MyAndroidAssetPack.installTimeSamplePack,
+    ios: MyIOSAssetTag.initialInstallSamplePack,
+  ),
+  fastFollowSamplePack(
+    android: MyAndroidAssetPack.fastFollowSamplePack,
+    ios: MyIOSAssetTag.fastFollowSamplePack,
+  ),
+  onDemandSamplePack(
+    android: MyAndroidAssetPack.onDemandSamplePack,
+    ios: MyIOSAssetTag.onDemandSamplePack,
+  );
+
+  const MyAssets({required this.android, required this.ios});
+
+  final MyAndroidAssetPack android;
+  final MyIOSAssetTag ios;
+
+  String get packName => Platform.isAndroid ? android.packName : ios.tag;
 }
 
 void main() {
   // ...
   OnlineAssets.instance.init(
-    assetPackSettingsList:
-    MyAssetPack.values
-        .map(
-          (e) => OnlineAssetPackSettings(
-        packName: e.packName,
-        androidAssetPackDeliveryMode: e.androidAssetPackDeliveryMode,
-        iosOnDemandResourceType: e.iosOnDemandResourceType,
-      ),
-    )
-        .toList(),
+    androidPackSettingsList:
+        MyAndroidAssetPack.values
+            .map(
+              (e) => AndroidPackSettings(
+                packName: e.packName,
+                deliveryMode: e.deliveryMode,
+              ),
+            )
+            .toList(),
+    iosPackSettingsList:
+        MyIOSAssetTag.values
+            .map((e) => IOSPackSettings(packName: e.tag, odrType: e.odrType))
+            .toList(),
   );
   // ...
 }
@@ -64,26 +109,36 @@ void main() {
   PlayAssetDeliveryFlutterApi.setUp(PlayAssetDeliveryFlutterApiWrapper());
 
   OnlineAssets.instance.init(
-    assetPackSettingsList: [
-      OnlineAssetPackSettings(
+    androidPackSettingsList: [
+      AndroidPackSettings(
         packName: 'install_time_sample_pack',
-        androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.installTime,
-        iosOnDemandResourceType: IOSOnDemandResourceType.assetsWithoutTag,
+        deliveryMode: AndroidAssetPackDeliveryMode.installTime,
       ),
-      OnlineAssetPackSettings(
-        packName: 'initial_install_sample_pack',
-        androidAssetPackDeliveryMode: null,
-        iosOnDemandResourceType: IOSOnDemandResourceType.initialInstall,
-      ),
-      OnlineAssetPackSettings(
+      AndroidPackSettings(
         packName: 'fast_follow_sample_pack',
-        androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.fastFollow,
-        iosOnDemandResourceType: IOSOnDemandResourceType.prefetch,
+        deliveryMode: AndroidAssetPackDeliveryMode.fastFollow,
       ),
-      OnlineAssetPackSettings(
+      AndroidPackSettings(
         packName: 'on_demand_sample_pack',
-        androidAssetPackDeliveryMode: AndroidAssetPackDeliveryMode.onDemand,
-        iosOnDemandResourceType: IOSOnDemandResourceType.onDemand,
+        deliveryMode: AndroidAssetPackDeliveryMode.onDemand,
+      ),
+    ],
+    iosPackSettingsList: [
+      IOSPackSettings(
+        packName: '',
+        odrType: IOSOnDemandResourceType.assetsWithoutTag,
+      ),
+      IOSPackSettings(
+        packName: 'initial_install_sample_pack',
+        odrType: IOSOnDemandResourceType.initialInstall,
+      ),
+      IOSPackSettings(
+        packName: 'fast_follow_sample_pack',
+        odrType: IOSOnDemandResourceType.prefetch,
+      ),
+      IOSPackSettings(
+        packName: 'on_demand_sample_pack',
+        odrType: IOSOnDemandResourceType.onDemand,
       ),
     ],
   );
@@ -523,10 +578,9 @@ class DownloadGuardImagePage extends StatelessWidget {
             DownloadGuardImagePage.buildDescription(),
             Divider(),
             StreamBuilder(
-              stream:
-                  OnlineAssets
-                      .instance
-                      .onlinePackSubjectMap['on_demand_sample_pack']!,
+              stream: OnlineAssets.instance.stream(
+                packName: 'on_demand_sample_pack',
+              ),
               builder: (
                 BuildContext context,
                 AsyncSnapshot<OnlinePack> snapshot,
