@@ -150,6 +150,173 @@ BundleToolを使用すれば、Play Asset Delivery機能を確認できますが
 
 ---
 
+# 各プラットフォームのアセットの制限について
+
+## Androidのアセットパックの制限について
+
+[Play Console Help](https://support.google.com/googleplay/android-developer/answer/9859372?hl=ja#size_limits)に制限の記載があります。
+
+- 個別のアセットパックのサイズ制限: 1.5GB
+- 全モジュールとinstall-timeアセットパックの累計のサイズ制限: 4GB
+- on-demandとfast-followアセットパックの累計のサイズ制限: 4GB
+- アセットパックの最大数: 100
+
+## iOSのOn-Demand Resources Tagsの制限について
+
+[ドキュメント](https://developer.apple.com/help/app-store-connect/reference/on-demand-resources-size-limits/)に制限の記載があります。
+
+- 縮小されたアセットパックのサイズ: 512 MB
+- Initial installとprefetched tagsの合計サイズ: 4 GB
+- アプリバンドルのサイズ: 2 GB
+- アセットパックの最大数: 1000
+
+# おすすめのアセットの分け方
+
+基本的には、「iOSのアセットパックサイズ512MB以下」と、「Androidのアセットパック数100個以下」の制限を考慮して、アセットパックを分けていく形になると思われます。
+
+まず、大きなカテゴリーでアセットを分けます。
+
+例えば、アプリにテーマ機能が存在するとして、テーマ全体の容量が大きくなる可能性があるケースを考えてみましょう。
+最初は容量のことを考えずに、カテゴリーだけで考えます。
+
+* App Theme
+  * Dog
+    * Wallpaper
+  * Cat
+    * Wallpaper
+  * Bird
+    * Wallpaper
+  * etc...
+
+Androidでは、パックのサイズ制限は1.5GBと大きく、パックの個数制限は100なので、極力同じパックにまとめるようにします。
+
+そのため、以下のようにApp Themeカテゴリーでアセットパックを作成します。
+
+* Android
+  * android/app_theme1/src/main/assets/app_theme/dog/wallpaper
+  * android/app_theme1/src/main/assets/app_theme/cat/wallpaper
+  * android/app_theme1/src/main/assets/app_theme/bird/wallpaper
+  * etc...
+
+アセットパック名に数字のサフィックスが入っているのは、テーマを追加していくと1.5GBを超える可能性があるためです。
+assetsフォルダ以下のapp_themeフォルダに数字のサフィックスが入っていないのは、後述のiOSと同じ相対パスとするためです。
+
+iOSでは、パックのサイズ制限は512MBと小さく、パックの個数制限は1000なので、サイズ制限を超えないようにパックを分散させます。
+
+* iOS（XcodeのAssetsでのフォルダ）
+  * app_theme/dog/wallpaper
+  * app_theme/cat/wallpaper
+  * app_theme/bird/wallpaper
+  * etc...
+* On-Demand Resources Tags
+  * `dog`フォルダに`app_theme_dog`タグ
+  * `cat`フォルダに`app_theme_cat`タグ
+  * `bird`フォルダに`app_theme_bird`タグ
+
+これで、各アプリテーマが512MB以下であれば、アプリテーマは1000個まで作成できます。
+Android側もapp_theme1, app_theme2...と分けていけば、アプリテーマだけで上限100個に到達する可能性は少なくできました。
+
+そして、Flutter側では以下のようなenumを作成しておけば、プラットフォーム毎のアセットパック名を意識せずに使用できます。
+
+```dart
+enum MyAndroidAssetPack {
+  appTheme1(
+    packName: 'app_theme1',
+    deliveryMode: AndroidAssetPackDeliveryMode.onDemand,
+  );
+
+  const MyAndroidAssetPack({
+    required this.packName,
+    required this.deliveryMode,
+  });
+
+  final String packName;
+  final AndroidAssetPackDeliveryMode deliveryMode;
+}
+
+enum MyIOSAssetTag {
+  appThemeDog(
+    tag: 'app_theme_dog',
+    odrType: IOSOnDemandResourceType.onDemand,
+  ),
+  appThemeCat(
+    tag: 'app_theme_cat',
+    odrType: IOSOnDemandResourceType.onDemand,
+  ),
+  appThemeBird(
+    tag: 'app_theme_bird',
+    odrType: IOSOnDemandResourceType.onDemand,
+  );
+
+  const MyIOSAssetTag({required this.tag, required this.odrType});
+
+  final String tag;
+  final IOSOnDemandResourceType odrType;
+}
+
+enum MyAssets {
+  appThemeDog(
+    android: MyAndroidAssetPack.appTheme1,
+    ios: MyIOSAssetTag.appThemeDog,
+  ),
+  appThemeCat(
+    android: MyAndroidAssetPack.appTheme1,
+    ios: MyIOSAssetTag.appThemeCat,
+  ),
+  appThemeBird(
+    android: MyAndroidAssetPack.appTheme1,
+    ios: MyIOSAssetTag.appThemeBird,
+  );
+
+  const MyAssets({required this.android, required this.ios});
+
+  final MyAndroidAssetPack android;
+  final MyIOSAssetTag ios;
+
+  String get packName => Platform.isAndroid ? android.packName : ios.tag;
+}
+```
+
+```dart
+Future<void> main() async {
+  // ...
+  OnlineAssets.instance.init(
+    androidPackSettingsList:
+    MyAndroidAssetPack.values
+        .map(
+          (e) =>
+          AndroidPackSettings(
+            packName: e.packName,
+            deliveryMode:
+            e.deliveryMode,
+          ),
+    )
+        .toList(),
+    iosPackSettingsList:
+    MyIOSAssetTag.values
+        .map(
+          (e) =>
+          IOSPackSettings(
+            packName: e.tag,
+            odrType: e.odrType,
+          ),
+    )
+        .toList(),
+  );
+  // ...
+}
+```
+
+```dart
+StreamBuilder<(File?, OnlinePack)>(
+  stream: OnlineAssets.instance.streamFile(
+    packName: MyAssets.appThemeDog.packName,
+    relativePath: 'app_theme/dog/wallpaper/image.png',
+  ),
+  // ...
+)
+```
+
 # サンプルアプリの実装説明
 
 あなたのアプリに実装を取り入れられるように、このサンプルアプリの実装の仕組みを説明します。
@@ -202,23 +369,10 @@ Execution failed for task ':app:packageReleaseBundle'.
    > Modules 'install_time_sample_pack' and 'on_demand_sample_pack' contain entry 'assets/dog/image.png' with different content.
 ```
 
-そのため、このサンプルアプリのようにassetsフォルダ以下にパック名のフォルダを作成しておく方が安全でしょう。
+そのため、assetsフォルダ以下にフォルダを作成しておく方が安全でしょう。
 
 *　android/install_time_sample_pack/src/main/assets/install_time_sample_pack/dog/image.png
 *　android/on_demand_sample_pack/src/main/assets/on_demand_sample_pack/dog/image.png
-
-#### Androidのアセットパックの制限について
-
-[Play Console Help](https://support.google.com/googleplay/android-developer/answer/9859372?hl=ja#size_limits)に制限の記載があります。
-
-- 個別のアセットパックのサイズ制限: 1.5GB
-- 全モジュールとinstall-timeアセットパックの累計のサイズ制限: 4GB
-- on-demandとfast-followアセットパックの累計のサイズ制限: 4GB
-- アセットパックの最大数: 100
-
-もしサイズ制限を考慮しなければならないほど、アプリサイズが今後大きくなりうる場合は、 大まかな機能毎にアセットパックを分けておくことを推奨します。
-
-後述のOn-Demand Resourcesの種類や制限も把握して、どのようにアセットパックを分けるか考えてください。
 
 #### AndroidのAssetの解像度について
 
@@ -330,29 +484,6 @@ ios/Runner.xcworkspaceをXcodeで開き、`Assets`へアセットファイルを
 上記のいずれもリソースが存在するかどうかの確認が必要なため、Androidのinstall-timeのように確実に存在する仕組みはOn-Demand Resourcesにはありませんでした。
 
 そのため、このサンプルアプリでは上記3つに加えて、On-Demand Resource Tagsを設定しない純粋なiOSのアセットも使用できるようにしています。（`IOSOnDemandResourceType.assetsWithoutTag`）
-
-### iOSのOn-Demand Resources仕様に関するメモ
-
-#### AndroidのOn-Demand Resources Tagsの制限について
-
-[ドキュメント](https://developer.apple.com/help/app-store-connect/reference/on-demand-resources-size-limits/)に記載があるようにiOS側にも制限があります。
-
-- 縮小されたアセットパックのサイズ: 512 MB
-- Initial installとprefetched tagsの合計サイズ: 4 GB
-- アプリバンドルのサイズ: 2 GB
-
-Android側の制限も把握して、どのようにアセットパックを分けるか考えてください。
-
-基本的には、「iOSのアセットパックサイズ512MB以下」と、「Androidのアセットパック数100個以下」の制限を考慮して、アセットパックを分けていく形になると思われます。
-
-将来的に制限に到達しそうであれば、「iOSのアセットパックを分割する」か、もしくは「Androidのアセットパックを合体させる」ことを行い、コード側でアセットパック名を呼び分けて制御する必要があります。
-
-```.dart
-OnlineAssets.instance.streamFile(
-  assetName: Platform.isAndroid ? 'install_time_sample_pack' : 'install_time_sample_pack_1',
-  relativePath: 'dog_image.png',
-)
-```
 
 iOSでOn-Demand Resourcesを使用するために必要なものは以上で、残りは『Flutter関連実装』で後述します。
 
