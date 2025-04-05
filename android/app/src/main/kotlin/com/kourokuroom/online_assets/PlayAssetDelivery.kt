@@ -214,6 +214,10 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
         relativeAssetPath: String,
         callback: (Result<String?>) -> Unit
     ) {
+        val methodInfo =
+            "[getCopiedAssetFilePathOnInstallTimeAsset(relativeAssetPath: $relativeAssetPath)]"
+        Log.d(TAG, "$methodInfo start")
+
         ioScope.launch {
             try {
                 val assetFileDescriptor = assetManager.openFd(relativeAssetPath)
@@ -280,7 +284,10 @@ class PlayAssetDeliveryApiImplementation : PlayAssetDeliveryHostApi {
         }
     }
 
-    override fun deleteCopiedAssetOnInstallTimeAsset(relativePath: String, callback: (Result<Boolean>) -> Unit) {
+    override fun deleteCopiedAssetOnInstallTimeAsset(
+        relativePath: String,
+        callback: (Result<Boolean>) -> Unit
+    ) {
         val methodInfo =
             "[deleteCopiedAssetOnInstallTimeAsset(relativePath: $relativePath)]"
         Log.d(TAG, "$methodInfo start")
