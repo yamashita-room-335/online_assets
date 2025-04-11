@@ -236,10 +236,10 @@ packages:
     dependency: "direct dev"
     description:
       name: freezed
-      sha256: "7ed2ddaa47524976d5f2aa91432a79da36a76969edd84170777ac5bea82d797c"
+      sha256: "6022db4c7bfa626841b2a10f34dd1e1b68e8f8f9650db6112dcdeeca45ca793c"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.4"
+    version: "3.0.6"
   freezed_annotation:
     dependency: "direct main"
     description:
@@ -276,10 +276,10 @@ packages:
     dependency: transitive
     description:
       name: html
-      sha256: "1fc58edeaec4307368c60d59b7e15b9d658b57d7f3125098b6294153c75337ec"
+      sha256: "9475be233c437f0e3637af55e7702cbbe5c23a68bd56e8a5fa2d426297b7c6c8"
       url: "https://pub.dev"
     source: hosted
-    version: "0.15.5"
+    version: "0.15.5+1"
   http:
     dependency: transitive
     description:
@@ -420,10 +420,10 @@ packages:
     dependency: "direct dev"
     description:
       name: pigeon
-      sha256: "2ee1eb70b16456a539d9a6ac0c79786e2751b7ff6ed3b47b5549140ac96ff26d"
+      sha256: e00b54aec06fc79cf19629cd2f2efcc0905f3468e7403a491b323108ca8387a9
       url: "https://pub.dev"
     source: hosted
-    version: "25.2.0"
+    version: "25.3.0"
   plugin_platform_interface:
     dependency: transitive
     description:
