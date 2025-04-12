@@ -12,7 +12,64 @@ import 'play_asset_delivery.g.dart';
 
 part 'online_assets.freezed.dart';
 
+/// Packed with information on all packs that could be fetched since the app was launched.
+@freezed
+abstract class OnlineTotalPack with _$OnlineTotalPack {
+  const OnlineTotalPack._();
+
+  const factory OnlineTotalPack({
+    required Map<String, OnlinePack> packMap,
+    required OnlineAssetStatus totalStatus,
+    required double progress,
+  }) = _OnlineTotalPack;
+
+  OnlineTotalPack update(Map<String, OnlinePack> updatePackMap) {
+    final packMap = {...this.packMap}..addAll(updatePackMap);
+
+    final double progress;
+    var totalStatus = OnlineAssetStatus.notInstalled;
+    if (Platform.isAndroid) {
+      var totalBytesToDownload = 0;
+      var bytesDownloaded = 0;
+      for (final (androidPack as AndroidPack) in packMap.values) {
+        totalBytesToDownload += androidPack.androidTotalBytesToDownload;
+        bytesDownloaded += androidPack.androidBytesDownloaded;
+        if (androidPack.status.priorityLevel > totalStatus.priorityLevel) {
+          totalStatus = androidPack.status;
+        }
+      }
+
+      progress =
+          totalBytesToDownload > 0
+              ? bytesDownloaded / totalBytesToDownload
+              : 1.0;
+    } else {
+      // Since the download size could not be obtained on iOS,
+      // it calculate rough progress by averaging the progress.
+      var progressSum = 0.0;
+      for (final (iosPack as IOSPack) in packMap.values) {
+        progressSum += iosPack.progress;
+        if (iosPack.status.priorityLevel > totalStatus.priorityLevel) {
+          totalStatus = iosPack.status;
+        }
+      }
+
+      progress = packMap.isNotEmpty ? progressSum / packMap.length : 1.0;
+    }
+
+    return OnlineTotalPack(
+      packMap: packMap,
+      totalStatus: totalStatus,
+      progress: progress,
+    );
+  }
+}
+
 /// Unified holder class
+///
+/// Because this class is designed to convert what is passed from the platform, it may only contain the packs requested to be [fetch].
+///
+/// Therefore, if you want to see all the information that has been fetched so far, you need to refer to [OnlineTotalPack].
 @freezed
 sealed class OnlinePackHolder with _$OnlinePackHolder {
   const factory OnlinePackHolder.android({
@@ -129,16 +186,23 @@ sealed class OnlinePack with _$OnlinePack {
 
 /// Pack Status
 enum OnlineAssetStatus {
-  notInstalled,
-  pending,
-  downloading,
-  completed,
-  failed,
-  canceled,
-  unknown,
+  notInstalled(priorityLevel: 0),
+  completed(priorityLevel: 1),
+  pending(priorityLevel: 2),
+  canceled(priorityLevel: 3),
+  failed(priorityLevel: 4),
+  downloading(priorityLevel: 5),
+  unknown(priorityLevel: 6),
   // Android Only
-  requiresUserConfirmationOnAndroid,
-  waitingForWifiOnAndroid,
+  waitingForWifiOnAndroid(priorityLevel: 7),
+  requiresUserConfirmationOnAndroid(priorityLevel: 8);
+
+  const OnlineAssetStatus({required this.priorityLevel});
+
+  /// This is the priority level of information to be communicated to the user.
+  ///
+  /// All pack information is checked and the highest level of information is stored in totalStatus.
+  final int priorityLevel;
 }
 
 /// [IOSNSErrorPigeon]
@@ -278,8 +342,13 @@ class OnlineAssets {
 
   bool _isInitialized = false;
 
-  /// https://developer.android.com/guide/playcore/asset-delivery/integrate-java#required-confirmations
-  ValueNotifier<bool> confirmationDialogShownOnAndroid = ValueNotifier(false);
+  ValueNotifier<OnlineTotalPack> onlineTotalPack = ValueNotifier(
+    OnlineTotalPack(
+      packMap: {},
+      totalStatus: OnlineAssetStatus.notInstalled,
+      progress: 0.0,
+    ),
+  );
 
   /// https://developer.android.com/guide/playcore/asset-delivery/integrate-java#required-confirmations
   ValueNotifier<bool?> confirmationDialogResult = ValueNotifier(null);
@@ -318,10 +387,10 @@ class OnlineAssets {
   /// [androidPackSettingsList] are the asset pack settings in Android.
   /// [iosPackSettingsList] are the asset pack settings in iOS.
   /// The settings are used to determine whether the pack is install-time or download on Android.
-  Future<void> init({
+  void init({
     required List<AndroidPackSettings> androidPackSettingsList,
     required List<IOSPackSettings> iosPackSettingsList,
-  }) async {
+  }) {
     if (_isInitialized) {
       throw Exception("Already initialized.");
     }
@@ -337,6 +406,21 @@ class OnlineAssets {
               AndroidAssetPackDeliveryMode.installTime) {
             _onlinePackSubjectMap[androidSettings.packName] =
                 BehaviorSubject<OnlinePack>();
+          } else {
+            // If the asset is an install-time asset, it is already exist.
+            onlineTotalPack.value = onlineTotalPack.value.update({
+              androidSettings.packName: AndroidPack(
+                name: androidSettings.packName,
+                status: OnlineAssetStatus.completed,
+                hasError: false,
+                progress: 1,
+                androidBytesDownloaded: 0,
+                androidErrorCode: AndroidAssetPackErrorCode.noError,
+                androidStatus: AndroidAssetPackStatus.completed,
+                androidTotalBytesToDownload: 0,
+                androidTransferProgressPercentage: 100,
+              ),
+            });
           }
 
           packSettingsMap[androidSettings.packName] = androidSettings;
@@ -347,6 +431,25 @@ class OnlineAssets {
           if (iosSettings.odrType != IOSOnDemandResourceType.assetsWithoutTag) {
             _onlinePackSubjectMap[iosSettings.packName] =
                 BehaviorSubject<OnlinePack>();
+          } else {
+            // If the asset is an standard asset, it is already exist.
+            onlineTotalPack.value = onlineTotalPack.value.update({
+              iosSettings.packName: IOSPack(
+                name: iosSettings.packName,
+                status: OnlineAssetStatus.completed,
+                hasError: false,
+                progress: 1,
+                iOSError: null,
+                iOSProgress: IOSProgress(
+                  isCancelled: false,
+                  isPaused: false,
+                  fractionCompleted: 1,
+                  isFinished: true,
+                ),
+                iOSCondition: true,
+                iOSLoadingPriority: 0,
+              ),
+            });
           }
 
           packSettingsMap[iosSettings.packName] = iosSettings;
@@ -360,38 +463,50 @@ class OnlineAssets {
           // An unexpected asset pack name is being downloaded.
           log('Unknown pack name: ${pack.name}');
         }
+
+        onlineTotalPack.value = onlineTotalPack.value.update({pack.name: pack});
       }, onError: (e) => log(e.toString()));
 
-      final OnlinePackHolder packHolder;
-      if (Platform.isAndroid) {
-        packHolder = OnlinePackHolder.fromAndroid(
-          await _androidApi.requestPackStates(
-            packNames: _onlinePackSubjectMap.keys.toList(),
-          ),
-        );
-      } else {
-        packHolder = OnlinePackHolder.fromIOS(
-          await _iosApi.requestResourcesProgress(
-            tags: _onlinePackSubjectMap.keys.toList(),
-          ),
-        );
-      }
+      // The await part is left to Future.sync() to handle init() is called in sync.
+      Future.sync(() async {
+            if (Platform.isAndroid) {
+              return OnlinePackHolder.fromAndroid(
+                await _androidApi.requestPackStates(
+                  packNames: _onlinePackSubjectMap.keys.toList(),
+                ),
+              );
+            } else {
+              return OnlinePackHolder.fromIOS(
+                await _iosApi.requestResourcesProgress(
+                  tags: _onlinePackSubjectMap.keys.toList(),
+                ),
+              );
+            }
+          })
+          .then((packHolder) {
+            onlineTotalPack.value = onlineTotalPack.value.update(
+              packHolder.packMap,
+            );
 
-      log('OnlinePackHolder: $packHolder');
+            log('OnlinePackHolder: $packHolder');
 
-      for (final pack in packHolder.packMap.values) {
-        if (_onlinePackSubjectMap.containsKey(pack.name)) {
-          final packSubject = _onlinePackSubjectMap[pack.name]!;
-          // Since it seems to be possible to retrieve all the values with listen(),
-          // we only add when there is no value, in case we miss a value.
-          if (!packSubject.hasValue) {
-            packSubject.add(pack);
-          }
-        } else {
-          // An unexpected asset pack name is being downloaded.
-          log('Unknown pack name: ${pack.name}');
-        }
-      }
+            for (final pack in packHolder.packMap.values) {
+              if (_onlinePackSubjectMap.containsKey(pack.name)) {
+                final packSubject = _onlinePackSubjectMap[pack.name]!;
+                // Since it seems to be possible to retrieve all the values with listen(),
+                // we only add when there is no value, in case we miss a value.
+                if (!packSubject.hasValue) {
+                  packSubject.add(pack);
+                }
+              } else {
+                // An unexpected asset pack name is being downloaded.
+                log('Unknown pack name: ${pack.name}');
+              }
+            }
+          })
+          .catchError((e) {
+            log(e.toString());
+          });
 
       _isInitialized = true;
     } catch (e) {
@@ -448,7 +563,6 @@ class OnlineAssets {
 
   Future<bool> showConfirmationDialog() async {
     if (Platform.isAndroid) {
-      confirmationDialogShownOnAndroid.value = true;
       return await _androidApi.showConfirmationDialog();
     }
     return false;
@@ -558,40 +672,14 @@ class OnlineAssets {
         case AndroidPackSettings():
           if (packSettings.deliveryMode ==
               AndroidAssetPackDeliveryMode.installTime) {
-            // If the asset is an install-time asset, it is already exist.
-            yield AndroidPack(
-              name: packName,
-              status: OnlineAssetStatus.completed,
-              hasError: false,
-              progress: 1,
-              androidBytesDownloaded: 0,
-              androidErrorCode: AndroidAssetPackErrorCode.noError,
-              androidStatus: AndroidAssetPackStatus.completed,
-              androidTotalBytesToDownload: 0,
-              androidTransferProgressPercentage: 100,
-            );
+            yield onlineTotalPack.value.packMap[packName]!;
             return;
           }
           break;
         case IOSPackSettings():
           if (packSettings.odrType ==
               IOSOnDemandResourceType.assetsWithoutTag) {
-            // If the asset is an standard asset, it is already exist.
-            yield IOSPack(
-              name: packName,
-              status: OnlineAssetStatus.completed,
-              hasError: false,
-              progress: 1,
-              iOSError: null,
-              iOSProgress: IOSProgress(
-                isCancelled: false,
-                isPaused: false,
-                fractionCompleted: 1,
-                isFinished: true,
-              ),
-              iOSCondition: true,
-              iOSLoadingPriority: 0,
-            );
+            yield onlineTotalPack.value.packMap[packName]!;
             return;
           }
           break;

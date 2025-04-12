@@ -6,172 +6,236 @@ import 'package:video_player/video_player.dart';
 import 'online_assets.dart';
 
 class FutureAssetWidget extends StatelessWidget {
+  const FutureAssetWidget({
+    super.key,
+    required this.assetName,
+    required this.relativePath,
+    required this.fileWidgetBuilder,
+    this.futureErrorBuilder = _defaultFutureErrorBuilder,
+  });
+
   const FutureAssetWidget.image({
     super.key,
     required this.assetName,
     required this.relativePath,
-    this.width,
-    this.height,
-  }) : isImage = true;
+    Image Function(BuildContext context, File file) imageBuilder =
+        _defaultImageBuilder,
+    this.futureErrorBuilder = _defaultFutureErrorBuilder,
+  }) : fileWidgetBuilder = imageBuilder;
 
   const FutureAssetWidget.video({
     super.key,
     required this.assetName,
     required this.relativePath,
-  }) : width = null,
-       height = null,
-       isImage = false;
+    Widget Function(BuildContext context, File file) videoBuilder =
+        _defaultVideoBuilder,
+    this.futureErrorBuilder = _defaultFutureErrorBuilder,
+  }) : fileWidgetBuilder = videoBuilder;
 
   final String assetName;
   final String relativePath;
-  final double? width;
-  final double? height;
-  final bool isImage;
+
+  /// If you want to pass some parameters to the widget, use this builder
+  final Widget Function(BuildContext context, File file) fileWidgetBuilder;
+
+  /// If the error is null, it is a case where File could not be retrieved and File is null.
+  final Widget Function(BuildContext context, Object? error) futureErrorBuilder;
+
+  static Image _defaultImageBuilder(BuildContext context, File file) {
+    return Image.file(file);
+  }
+
+  static Widget _defaultVideoBuilder(BuildContext context, File file) {
+    return PlayVideoPage(file: file);
+  }
+
+  static Widget _defaultFutureErrorBuilder(
+    BuildContext context,
+    Object? error,
+  ) {
+    if (error == null) {
+      return const SizedBox.shrink();
+    }
+
+    return FittedBox(fit: BoxFit.scaleDown, child: Text("error: $error"));
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: FutureBuilder<File?>(
-        future: OnlineAssets.instance.getFile(
-          packName: assetName,
-          relativePath: relativePath,
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Text("snapshot.error: ${snapshot.error}");
-          } else if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
-          }
-
-          final file = snapshot.data!;
-
-          if (isImage) {
-            return Image.file(file, width: width, height: height);
-          } else {
-            return PlayVideoPage(file: file);
-          }
-        },
+    return FutureBuilder<File?>(
+      future: OnlineAssets.instance.getFile(
+        packName: assetName,
+        relativePath: relativePath,
       ),
+      builder: (context, snapshot) {
+        final error = snapshot.error;
+        final file = snapshot.data;
+
+        if (error != null) {
+          return futureErrorBuilder(context, error);
+        } else if (file == null) {
+          return futureErrorBuilder(context, null);
+        }
+
+        return fileWidgetBuilder(context, file);
+      },
     );
   }
 }
 
 class StreamAssetWidget extends StatelessWidget {
+  const StreamAssetWidget({
+    super.key,
+    required this.assetName,
+    required this.relativePath,
+    required this.fileWidgetBuilder,
+    this.streamErrorBuilder = _defaultStreamErrorBuilder,
+    this.onlinePackWidgetBuilder = _defaultOnlinePackWidgetBuilder,
+  });
+
   const StreamAssetWidget.image({
     super.key,
     required this.assetName,
     required this.relativePath,
-    this.width,
-    this.height,
-    this.isShowConfirmationDialogIcon = true,
-  }) : isImage = true;
+    Image Function(BuildContext context, File file) imageBuilder =
+        _defaultImageBuilder,
+    this.streamErrorBuilder = _defaultStreamErrorBuilder,
+    this.onlinePackWidgetBuilder = _defaultOnlinePackWidgetBuilder,
+  }) : fileWidgetBuilder = imageBuilder;
 
   const StreamAssetWidget.video({
     super.key,
     required this.assetName,
     required this.relativePath,
-    this.isShowConfirmationDialogIcon = true,
-  }) : width = null,
-       height = null,
-       isImage = false;
+    Widget Function(BuildContext context, File file) videoBuilder =
+        _defaultVideoBuilder,
+    this.streamErrorBuilder = _defaultStreamErrorBuilder,
+    this.onlinePackWidgetBuilder = _defaultOnlinePackWidgetBuilder,
+  }) : fileWidgetBuilder = videoBuilder;
 
   final String assetName;
   final String relativePath;
-  final double? width;
-  final double? height;
-  final bool isImage;
-  final bool isShowConfirmationDialogIcon;
+
+  /// If you want to pass some parameters to the widget (Image), use this builder
+  final Widget Function(BuildContext context, File file) fileWidgetBuilder;
+
+  /// If the error is null, it is a case where File could not be retrieved and File is null.
+  final Widget Function(BuildContext context, Object? error) streamErrorBuilder;
+
+  /// If you want to customize widget on downloading / failed / etc, use this builder
+  final Widget Function(BuildContext context, OnlinePack onlinePack)
+  onlinePackWidgetBuilder;
+
+  static Image _defaultImageBuilder(BuildContext context, File file) {
+    return Image.file(file);
+  }
+
+  static Widget _defaultVideoBuilder(BuildContext context, File file) {
+    return PlayVideoPage(file: file);
+  }
+
+  static Widget _defaultStreamErrorBuilder(
+    BuildContext context,
+    Object? error,
+  ) {
+    if (error == null) {
+      return const SizedBox.shrink();
+    }
+
+    return FittedBox(fit: BoxFit.scaleDown, child: Text("error: $error"));
+  }
+
+  static Widget _defaultOnlinePackWidgetBuilder(
+    BuildContext context,
+    OnlinePack onlinePack,
+  ) {
+    buildIndicator({double? progress}) {
+      return CircularProgressIndicator.adaptive(
+        value: progress,
+        constraints: BoxConstraints(
+          maxWidth: 20,
+          maxHeight: 20,
+          minWidth: 20,
+          minHeight: 20,
+        ),
+      );
+    }
+
+    return switch (onlinePack.status) {
+      OnlineAssetStatus.notInstalled => Visibility.maintain(
+        visible: false,
+        child: buildIndicator(),
+      ),
+      OnlineAssetStatus.pending => buildIndicator(),
+      OnlineAssetStatus.downloading => buildIndicator(
+        progress: onlinePack.progress,
+      ),
+      OnlineAssetStatus.completed => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: const Text('Completed. But failed to get file'),
+      ),
+      OnlineAssetStatus.failed => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: const Text('Failed to download. But failed to get Error'),
+      ),
+      OnlineAssetStatus.canceled => FittedBox(
+        child: const Text('Canceled to download'),
+      ),
+      OnlineAssetStatus.unknown => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: const Text('Unknown Status'),
+      ),
+      OnlineAssetStatus.requiresUserConfirmationOnAndroid =>
+        ValueListenableBuilder(
+          valueListenable: OnlineAssets.instance.confirmationDialogResult,
+          builder: (context, result, child) {
+            return switch (result) {
+              null || false => InkWell(
+                child: Icon(Icons.cloud_download),
+                onTap: () => OnlineAssets.instance.showConfirmationDialog(),
+              ),
+              true => buildIndicator(),
+            };
+          },
+        ),
+      OnlineAssetStatus.waitingForWifiOnAndroid => Wrap(
+        runAlignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          const Text('Waiting for Wi-Fi.'),
+          IconButton(
+            icon: Icon(Icons.cloud_download),
+            onPressed: () => OnlineAssets.instance.showConfirmationDialog(),
+          ),
+        ],
+      ),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: StreamBuilder<(File?, OnlinePack)>(
-        stream: OnlineAssets.instance.streamFile(
-          packName: assetName,
-          relativePath: relativePath,
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Text("snapshot.error: ${snapshot.error}");
-          } else if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
-          }
-
-          final (file, onlinePack) = snapshot.data!;
-          if (file != null) {
-            if (isImage) {
-              return Image.file(file, width: width, height: height);
-            } else {
-              return PlayVideoPage(file: file);
-            }
-          }
-
-          if (onlinePack.hasError) {
-            return switch (onlinePack) {
-              AndroidPack() => Text(onlinePack.androidErrorCode.name),
-              IOSPack() => Text(
-                '[${onlinePack.iOSError?.domain}] ${onlinePack.iOSError?.localizedDescription}',
-              ),
-            };
-          }
-
-          return switch (onlinePack.status) {
-            OnlineAssetStatus.notInstalled => Visibility.maintain(
-              visible: false,
-              child: const CircularProgressIndicator(),
-            ),
-            OnlineAssetStatus.pending => const CircularProgressIndicator(),
-            OnlineAssetStatus.downloading => CircularProgressIndicator(
-              value: onlinePack.progress,
-            ),
-            OnlineAssetStatus.completed => const Text(
-              'Completed. But failed to get file',
-            ),
-            OnlineAssetStatus.failed => const Text(
-              'Failed to download. But failed to get Error',
-            ),
-            OnlineAssetStatus.canceled => const Text('Canceled to download'),
-            OnlineAssetStatus.unknown => const Text('Unknown Status'),
-            OnlineAssetStatus.requiresUserConfirmationOnAndroid =>
-              ValueListenableBuilder(
-                valueListenable: OnlineAssets.instance.confirmationDialogResult,
-                builder: (context, result, child) {
-                  return switch (result) {
-                    null || false => InkWell(
-                      child: Icon(Icons.cloud_download),
-                      onTap:
-                          () => OnlineAssets.instance.showConfirmationDialog(),
-                    ),
-                    true => const CircularProgressIndicator(),
-                  };
-                },
-              ),
-            OnlineAssetStatus.waitingForWifiOnAndroid => Wrap(
-              runAlignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                const Text('Waiting for Wi-Fi.'),
-                ValueListenableBuilder(
-                  valueListenable:
-                      OnlineAssets.instance.confirmationDialogShownOnAndroid,
-                  builder: (context, dialogShown, child) {
-                    return Visibility(visible: !dialogShown, child: child!);
-                  },
-                  child: IconButton(
-                    icon: Icon(Icons.cloud_download),
-                    onPressed:
-                        () => OnlineAssets.instance.showConfirmationDialog(),
-                  ),
-                ),
-              ],
-            ),
-          };
-        },
+    return StreamBuilder<(File?, OnlinePack)>(
+      stream: OnlineAssets.instance.streamFile(
+        packName: assetName,
+        relativePath: relativePath,
       ),
+      builder: (context, snapshot) {
+        final error = snapshot.error;
+        final data = snapshot.data;
+
+        if (error != null) {
+          return streamErrorBuilder(context, error);
+        } else if (data == null) {
+          return streamErrorBuilder(context, null);
+        }
+        final (file, onlinePack) = data;
+
+        if (file != null) {
+          return fileWidgetBuilder(context, file);
+        }
+
+        return onlinePackWidgetBuilder(context, onlinePack);
+      },
     );
   }
 }

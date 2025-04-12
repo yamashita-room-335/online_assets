@@ -13,6 +13,157 @@ part of 'online_assets.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$OnlineTotalPack implements DiagnosticableTreeMixin {
+
+ Map<String, OnlinePack> get packMap; OnlineAssetStatus get totalStatus; double get progress;
+/// Create a copy of OnlineTotalPack
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OnlineTotalPackCopyWith<OnlineTotalPack> get copyWith => _$OnlineTotalPackCopyWithImpl<OnlineTotalPack>(this as OnlineTotalPack, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'OnlineTotalPack'))
+    ..add(DiagnosticsProperty('packMap', packMap))..add(DiagnosticsProperty('totalStatus', totalStatus))..add(DiagnosticsProperty('progress', progress));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnlineTotalPack&&const DeepCollectionEquality().equals(other.packMap, packMap)&&(identical(other.totalStatus, totalStatus) || other.totalStatus == totalStatus)&&(identical(other.progress, progress) || other.progress == progress));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(packMap),totalStatus,progress);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'OnlineTotalPack(packMap: $packMap, totalStatus: $totalStatus, progress: $progress)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OnlineTotalPackCopyWith<$Res>  {
+  factory $OnlineTotalPackCopyWith(OnlineTotalPack value, $Res Function(OnlineTotalPack) _then) = _$OnlineTotalPackCopyWithImpl;
+@useResult
+$Res call({
+ Map<String, OnlinePack> packMap, OnlineAssetStatus totalStatus, double progress
+});
+
+
+
+
+}
+/// @nodoc
+class _$OnlineTotalPackCopyWithImpl<$Res>
+    implements $OnlineTotalPackCopyWith<$Res> {
+  _$OnlineTotalPackCopyWithImpl(this._self, this._then);
+
+  final OnlineTotalPack _self;
+  final $Res Function(OnlineTotalPack) _then;
+
+/// Create a copy of OnlineTotalPack
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? packMap = null,Object? totalStatus = null,Object? progress = null,}) {
+  return _then(_self.copyWith(
+packMap: null == packMap ? _self.packMap : packMap // ignore: cast_nullable_to_non_nullable
+as Map<String, OnlinePack>,totalStatus: null == totalStatus ? _self.totalStatus : totalStatus // ignore: cast_nullable_to_non_nullable
+as OnlineAssetStatus,progress: null == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+}
+
+
+/// @nodoc
+
+
+class _OnlineTotalPack extends OnlineTotalPack with DiagnosticableTreeMixin {
+  const _OnlineTotalPack({required final  Map<String, OnlinePack> packMap, required this.totalStatus, required this.progress}): _packMap = packMap,super._();
+  
+
+ final  Map<String, OnlinePack> _packMap;
+@override Map<String, OnlinePack> get packMap {
+  if (_packMap is EqualUnmodifiableMapView) return _packMap;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_packMap);
+}
+
+@override final  OnlineAssetStatus totalStatus;
+@override final  double progress;
+
+/// Create a copy of OnlineTotalPack
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OnlineTotalPackCopyWith<_OnlineTotalPack> get copyWith => __$OnlineTotalPackCopyWithImpl<_OnlineTotalPack>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'OnlineTotalPack'))
+    ..add(DiagnosticsProperty('packMap', packMap))..add(DiagnosticsProperty('totalStatus', totalStatus))..add(DiagnosticsProperty('progress', progress));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnlineTotalPack&&const DeepCollectionEquality().equals(other._packMap, _packMap)&&(identical(other.totalStatus, totalStatus) || other.totalStatus == totalStatus)&&(identical(other.progress, progress) || other.progress == progress));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_packMap),totalStatus,progress);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'OnlineTotalPack(packMap: $packMap, totalStatus: $totalStatus, progress: $progress)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OnlineTotalPackCopyWith<$Res> implements $OnlineTotalPackCopyWith<$Res> {
+  factory _$OnlineTotalPackCopyWith(_OnlineTotalPack value, $Res Function(_OnlineTotalPack) _then) = __$OnlineTotalPackCopyWithImpl;
+@override @useResult
+$Res call({
+ Map<String, OnlinePack> packMap, OnlineAssetStatus totalStatus, double progress
+});
+
+
+
+
+}
+/// @nodoc
+class __$OnlineTotalPackCopyWithImpl<$Res>
+    implements _$OnlineTotalPackCopyWith<$Res> {
+  __$OnlineTotalPackCopyWithImpl(this._self, this._then);
+
+  final _OnlineTotalPack _self;
+  final $Res Function(_OnlineTotalPack) _then;
+
+/// Create a copy of OnlineTotalPack
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? packMap = null,Object? totalStatus = null,Object? progress = null,}) {
+  return _then(_OnlineTotalPack(
+packMap: null == packMap ? _self._packMap : packMap // ignore: cast_nullable_to_non_nullable
+as Map<String, OnlinePack>,totalStatus: null == totalStatus ? _self.totalStatus : totalStatus // ignore: cast_nullable_to_non_nullable
+as OnlineAssetStatus,progress: null == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$OnlinePackHolder implements DiagnosticableTreeMixin {
 
  Map<String, OnlinePack> get packMap;
