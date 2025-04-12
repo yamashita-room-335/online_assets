@@ -321,9 +321,11 @@ StreamBuilder<(File?, OnlinePack)>(
 
 あなたのアプリに実装を取り入れられるように、このサンプルアプリの実装の仕組みを説明します。
 
-最初にコミットしたファイルは、Android Studioの「New Project」で作成したものです。
+[最初にコミットしたファイル](https://github.com/yamashita-room-335/online_assets/commit/e5a5fc921c3d854f9a8ce4bd034a7baecec33758)は、Android Studioの「New Project」で作成したものです。
 
-そのため、サンプルアプリの実装で追加された内容は、最初のコミットと最新コミットの差分ファイルで確認できます。
+そのため、サンプルアプリの実装で追加された内容は、[最初のコミット](https://github.com/yamashita-room-335/online_assets/commit/e5a5fc921c3d854f9a8ce4bd034a7baecec33758)と最新コミットの差分ファイルで確認できます。
+
+https://github.com/yamashita-room-335/online_assets/compare/InitialCommit...main
 
 もしFlutterや各プラグインが古くなっても、この実装を理解して、新しくFlutterプロジェクトを作成して差分ファイルを移植すれば、動作させられると思います。
 

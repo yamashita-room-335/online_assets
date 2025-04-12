@@ -325,6 +325,8 @@ To help you implement it in your app, here is an explanation of the implementati
 
 Therefore, the contents added in the implementation of the sample app can be checked in the diff files between the [first commit](https://github.com/yamashita-room-335/online_assets/commit/e5a5fc921c3d854f9a8ce4bd034a7baecec33758) and the latest commit.
 
+https://github.com/yamashita-room-335/online_assets/compare/InitialCommit...main
+
 Even if Flutter or each plugin becomes outdated, you can understand this implementation and create a new Flutter project to migrate the diff files and make it work.
 
 ## Supported Platforms
