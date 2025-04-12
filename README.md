@@ -321,9 +321,9 @@ StreamBuilder<(File?, OnlinePack)>(
 
 To help you implement it in your app, here is an explanation of the implementation of this sample app.
 
-The files committed first were created with "New Project" in Android Studio.
+[The files committed first](https://github.com/yamashita-room-335/online_assets/commit/e5a5fc921c3d854f9a8ce4bd034a7baecec33758) were created with "New Project" in Android Studio.
 
-Therefore, the contents added in the implementation of the sample app can be checked in the diff files between the first commit and the latest commit.
+Therefore, the contents added in the implementation of the sample app can be checked in the diff files between the [first commit](https://github.com/yamashita-room-335/online_assets/commit/e5a5fc921c3d854f9a8ce4bd034a7baecec33758) and the latest commit.
 
 Even if Flutter or each plugin becomes outdated, you can understand this implementation and create a new Flutter project to migrate the diff files and make it work.
 
