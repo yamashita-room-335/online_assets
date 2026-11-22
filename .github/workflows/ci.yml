@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # pubspec.lock was resolved with this SDK (Dart 3.7.2)
+          flutter-version: 3.29.3
+          channel: stable
+          cache: true
+
+      - run: flutter pub get --enforce-lockfile
+
+      - name: Check formatting
+        # Pigeon output (*.g.dart) is generated, so it is not checked
+        run: >-
+          dart format --output=none --set-exit-if-changed
+          $(git ls-files 'lib/*.dart' 'test/*.dart' | grep -v '\.g\.dart$')
+
+      - run: flutter analyze
+
+      - run: flutter test
